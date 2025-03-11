@@ -1166,6 +1166,28 @@
         <p>* <strong>considerando que</strong> /dev/<mark>storageAP1</mark> é sua partição <em>ESP</em></p>
         <p>Nesse caso, o loader do refind será instalado como o loader padrão do disco (<em>esp/EFI/BOOT/bootx64.efi</em>), e funcionará independente da implementação de UEFI ou da mudança de placa-mãe. Você pode usar o código abaixo se quiser que o loader seja instalado em <mark>esp/EFI/refind/</mark> e tenha essa pasta como o carregador padrão na sua placa mãe:</p>
         <code>refind-install</code>
+        <p>Em alguns casos você pode precisar de uma entrada de boot customizada (chamada de <i>boot stanza</i> na documentação do rEFInd), para isso basta editar o arquivo <em>refind.conf</em> que está em <em>/efi/EFI/refind/</em> e adicionar uma entrada como no exemplo abaixo:</p>
+<code><pre>
+menuentry Arch {
+    icon    /EFI/refind/icons/os_arch.png
+    ostype  Linux
+    volume  UUID='fd52a804-e4bc-4c19-9751-72c81ccffc10'
+    loader  /vmlinuz-linux
+    initrd  /initramfs-linux.img
+    options "root=UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX rw quiet nowatchdog resume=UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    submenuentry "Boot using fallback initramfs" {
+        initrd /initramfs-linux-fallback.img
+    }
+    submenuentry "Boot to terminal" {
+        add_options "systemd.unit=multi-user.target"
+    }
+}
+</pre></code>
+        <ul>
+            <li><p>Se o nome da entrada tiver espaços ele <strong>PRECISA</strong> estar entre aspas, por exemplo: "Arch Linux"</p></li>
+            <li><p><em>volume</em> indica o dispositivo padrão (pra facilitar entenda como "onde estão os arquivos de boot"), também pode ser especificado apenas com o nome do label ou usando PARTUUID=''.</p></li>
+        </ul>
+        <p>Caso deseje você também pode apenas inserir o padrão para entradas do Linux modificando o arquivo <em>refind_linux.conf</em>.</p>
         <!-- OPÇÃO D -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção D (minha preferida) - EFISTUB (UEFI singleboot)</h3>
