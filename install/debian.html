@@ -103,9 +103,9 @@
             <p>Pronto! Agora basta acrescentar <mark>sudo</mark> antes de um comando e inserir a sua senha de usuário padrão para ter acesso administrativo.</p>
             <h3>Mudar o gerenciador de redes</h3>
             <p>Por padrão o Debian instala o <mark>ConnMan</mark> para gerenciar redes, para ter um gerenciamento mais intuitivo com ícone na barra de tarefas abra o terminal <mark>QTerminal</mark>, utilize o comando abaixo e depois tecle <mark>Enter</mark>:</p>
-            <code>sudo apt install -y network-manager nm-tray openresolv</code>
-            <code>sudo systemctl disable connman.service</code>
-            <code>sudo systemctl enable systemd-resolved.service NetworkManager.service</code>
+            <code>sudo apt install -y network-manager nm-tray</code>
+            <code>sudo systemctl disable connman</code>
+            <code>sudo systemctl enable NetworkManager</code>
             <h3>Aceleração de hardware</h3>
             <h4>Por VA-API</h4>
             <p>Para aceleração de hardware nos drivers <em>Noveau</em> ou <em>AMD</em> instale o pacote <mark>mesa-va-drivers</mark> com o comando abaixo:</p>
