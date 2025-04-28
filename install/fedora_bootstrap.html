@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalação do Fedora Bootstrap</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="Instalação de Sistemas Operacionais - Fedora Bootstrap"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="Aprenda a instalar Fedora na unha, excelente para programadores."/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="https://fedoraproject.org/favicon.ico">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+    <main id="main-area">
+        <h1>Instalação do Fedora bootstrap</h1>
+        <p><strong>Atenção!Isso ainda é um rascunho da documentação final!</strong></p>
+        <!-- INTRODUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Introdução</h2>
+        <p>Quando o assunto é "instala o Linux e deixa arder" existem 3 distribuições que se destacam: O Ubuntu, o Debian e o CentOS. O Ubuntu já foi excelente devido aos esforços da Canonical, mas hoje ele sofre bastante devido aos... Esforços da Canonical... Uma melhor alternativa seria o Debian, porém, a verdade é que para alguns usos o Debian tem pacotes jurássicos, e o CentOS foi meio que "assassinado" pela IBM. Então se você é um programador que quer manter os boletos e customização em dia o que te sobra é o Fedora meu amigo.</p>
+        <p>O Fedora é uma distro bem atualizada e sólida, porém seguindo o instalador da distro (o Anaconda se não me engano) é simplesmente insuficiente para quem quer alguma customização mais profunda, porém assim como o Arch (na verdade assim como qualquer Linux ou BSD 😂) o Fedora também pode ser instalado comando a comando (o famoso boostrap). Então vamos a isso!</p>
+        <!-- PREPARAÇÃO DA INSTALAÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Instalação</h2>
+        <p>Inicie o Fedora em live normalmente, faça as devidas configurações de resolução e teclado, internet e energia (inclusive eu altamente recomendo desabilitar a suspenção e desligamento de tela) e abra um terminal para começar a instalação e use o comando abaixo para se tornar administrador:</p>
+        <code>sudo -s</code>
+        <p>Mas caso você tenha uma carroça e o Gnome seja pesado demais você pode...</p>
+        <h3>(Opcional) Iniciar o Fedora em modo texto:</h3>
+        <p>Na tela de seleção de sistema do GRUB2 tecle <em>e</em>, ao final da linha que começa com <em>linux</em> adicione:</p>
+        <code>systemd.unit=multi-user.target</code>
+        <p>E por fim tecle <em>F10</em> para inicializar o Fedora em "modo texto".</p>
+        <p>Se subir o terminal e pedir o nome de usuário, utilize <em>root</em>.</p>
+        <p>Para deixar o teclado em abnt2 use o comando:</p>
+        <code>loadkeys br-abnt2</code>
+        <p>Eu recomendo a instalação através de cabo de rede, mas caso queira se conectar no wifi pode usar o comando abaixo para listar as redes:</p>
+        <code>nmcli dev wifi list</code>
+        <p>Conecte-se na sua rede usando o comando abaixo:</p>
+        <code>nmcli dev wifi connect <em>SSID</em> password <em>senha</em> </code>
+        <p>Se a rede não possui senha, você deve omitir o campo <em>password</em>, como no exemplo abaixo:</p>
+        <code>nmcli dev wifi connect <em>SSID</em></code>
+        <p>Se aparecer <i>Device wlp1s0 successfully activated with...</i> ou algo do tipo você está conectado, caso queira verificar o estado da conexão use o comando:</p>
+        <code>nmcli connection show</code>
+        <p>Já com acesso a internet e ambiente configurado, deixe o SELinux em modo permissivo para evitar dor de cabeça:</p>
+        <code>setenforce 0</code>
+        <!-- PARTICIONAMENTO DE DISCOS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Particionamento de disco</h2>
+        <p><strong>PS:</strong> Aqui eu recomendo que você vá ver o guia para a instalação do Arch nas seções de particionamento e formatação das partições, vou seguir este tutorial como referência simples de um sistema que utiliza BTRFS para raiz, mas fique a vontade para mudar conforme a sua necessidade 👍.</p>
+        <p>Comece instalando o gdisk com o comando:</p>
+        <code>dnf install gdisk -y</code>
+        <p>Você pode verificar as tabelas de partição da unidade de armazenamento com o comando:</p>
+        <code>sgdisk -p /dev/<mark>storageA</mark></code>
+        <p>Caso queira limpar a tabela de partição desse dispositivo (<strong>Leia-se apagar tudo!</strong>) pode usar o comando abaixo:</p>
+        <code>sgdisk -Z /dev/<mark>storageA</mark>, após isso use o <em>gdisk</em> para fazer as devidas alterações.</code>
+        <p>Para atualizar as informações de particionamento para o sistema use o comando:</p>
+        <code>partprobe -s /dev/<mark>storageA</mark></code>
+        <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>(Opcional) Criptografar as partições</h2>
+        <details class="spoiler" >
+            <summary>Preparando as partições</summary>
+            <p>Você precisa preparar de antemão um dispositivo de abstração para as partições que deseja criptografar, pois a partição não vai ser formatada diretamente e sim através do LUKS! Então antes de qualquer outra coisa vamos gerar um arquivo de senha no diretório atual (escolha uma das opções abaixo):</p>
+            <code>openssl rand -base64 32 > cryptroot.key</code>
+            <code>openssl rand -hex 32 > cryptroot.key</code>
+            <p>Esse comando usa o OpenSSL para gerar uma <i>string</i> randômica, do tipo base64 ou hex com 32 bytes e exporta para um arquivo com o nome de <em>cryptroot.key</em>.</p>
+            <p>Agora vamos criptografar a partição desejada usando o LUKS:</p>
+            <code>cryptsetup luksFormat --type luks2 /dev/<mark>storageAP4</mark> --key-file cryptroot.key</code>
+            <p>Agora vamos abrir essa partição através do LUKS para gerar uma abstração da partição com o nome de <em>cryptroot</em>:</p>
+            <code>cryptsetup luksOpen /dev/<mark>storageAP3</mark> <em>cryptroot</em> --key-file cryptroot.key</code>
+            <p>Uma vez que o dispotivo foi aberto, ele criará um dispositivo /dev/mapper/<em>cryptroot</em>, vamos então formatar essa abstração (e não o dispositivo em si!) mapeada pelo LUKS:</p>
+            <p><strong>Embora aqui esteja sendo formatado em btrfs, mude conforme a sua necessidade!</strong></p>
+            <code>mkfs.btrfs -f -L <em>"ROOT"</em> /dev/mapper/<em>cryptroot</em></code>
+            <p>Quando for montar essa partição, use o comando abaixo ao invés de montar algo como /dev/<mark>storageAP3</mark>:</p>
+            <code>mount /dev/mapper/<em>cryptroot</em> /mnt</code>
+            <p>Uma vez montada, você pode interagir com essa partição normalmente! Inclusive agora <strong>DEVE</strong> copiar o arquivo chave contendo a senha para /mnt:</p>
+            <code>cp cryptroot.key /mnt/cryptroot.key</code>
+        </details>
+        <!-- Formatar as partições -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Formatando a partição root em BTRFS</h3>
+        <p>A partição raiz do sistema <em>/</em> será formatada em <mark>BTRFS</mark>. Considerando que elas estão no endereço <mark>/dev/storageAP3</mark> utilize o comando abaixo para formatá-la:</p>
+        <code>mkfs.btrfs /dev/<mark>storageAP3</mark></code>
+        <details class="spoiler" >
+            <summary>Formatação avançada (Clique para ver)</summary>
+            <p>Diferentes sistemas de arquivo (e até mesmo ferramentas) podem ter por padrão o uso de tamanhos distintos de setor. Caso você queira especificar o tamanho do setor utilize o argumento <em>-s</em> como no exemplo abaixo:</p>
+            <code>mkfs.btrfs  <em>-s 4096</em> /dev/<mark>storageAP3</mark></code>
+            <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-L</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
+            <code>mkfs.btrfs <em>-L "ROOT"</em> /dev/<mark>storageAP3</mark></code>
+        </details>
+        <!-- MONTAGEM DE PARTIÇÕES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Montar as partições</h2>
+        <p>Até aqui temos o armazenamento particionado e formatado, pronto para a instalação do sistema, agora só é necessário montar as partições para que elas fiquem acessíveis para a instalação.</p>
+        <p>Montaremos a partição raiz do sistema em <em>/mnt</em>, basta substituir <mark>storageAP4</mark> pelo endereço da partição <em>raiz</em> (<mark>/</mark>) de acordo com o <em>seu</em> sistema:</p>
+        <code>mount /dev/<mark>storageAP4</mark> /mnt</code>
+        <!-- SUBVOLUMES BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p>Agora criaremos os subvolumes para o BTRFS, primeiro acesse a partição raiz:</p>
+        <code>cd /mnt</code>
+        <code>E crie os subvolumes um por um com os comandos (fique a vontade para mudar conforme a sua necessidade):</code>
+        <code>btrfs subvolume create @<br>btrfs subvolume create @home<br>btrfs subvolume create @snapshots<br>btrfs subvolume create @log<br>btrfs subvolume create @cache<br>btrfs subvolume create @images</code>
+        
+        <p>Uma vez que os subvolumes estão criados retorne para a pasta inicial com o comando cd:</p>
+        <code>cd</code>
+        <p>Agora vamos desmontar a raiz...</p>
+        <code>umount /mnt</code>
+        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>:</p>
+        <code>mount -o compress=zstd,noatime,subvol=@ /dev/<mark>storageAP4</mark> /mnt</code>
+        <p>Agora criaremos a seguinte estrutura de diretórios (fique a vontade para mudar conforme a sua necessidade)...</p>
+<pre><code>./boot
+./.snapshots
+./var
+./var/lib
+./var/lib/libvirt
+./var/lib/libvirt/images
+./var/log
+./var/cache
+./home
+</code></pre>
+        <p>...Com este comando:</p>
+        <code>mkdir -p /mnt/{boot,home,.snapshots,var/{log,cache,lib/libvirt/images}}</code>
+        <p>E agora vamos montar partição por partição:</p>
+        <code>mount -o compress=zstd,noatime,subvol=@home /dev/<mark>storageAP3</mark> /mnt/home</code>
+        <code>mount -o compress=zstd,noatime,subvol=@snapshots /dev/<mark>storageAP3</mark> /mnt/.snapshots</code>
+        <code>mount -o compress=zstd,noatime,subvol=@log /dev/<mark>storageAP3</mark> /mnt/var/log</code>
+        <code>mount -o compress=zstd,noatime,subvol=@cache /dev/<mark>storageAP3</mark> /mnt/var/cache</code>
+        <code>mount -o compress=zstd,noatime,subvol=@images /dev/<mark>storageAP3</mark> /mnt/var/lib/libvirt/images</code>
+        <p>É importante lembrar que o Fedora ainda utiliza o diretório <em>/boot/efi</em> para a ESP, então use os comandos abaixo considerando isso!</p>
+        <p>Para montar a XBOOTLDR (considerando que AP1 é a sua partição XBOOTLDR)</p>
+        <code>mount /dev/<mark>storageAP1</mark> /mnt/boot</code>
+        <code>mkdir /mnt/boot/efi</code>
+        <p>Para montar a ESP (considerando que <mark>storageAP1</mark> é a sua partição ESP):</p>
+        <code>mount /dev/<mark>storageAP1</mark> /mnt/boot/efi</code>
+        <p>Para montar a ESP (considerando que <mark>storageAP3</mark> é a sua partição SWAP):</p>
+        <code>swapon /dev/<mark>storageAP3</mark></code>
+        <p>Você pode verificar os pontos de montagem com o comando:</p>
+        <code>lsblk</code>
+        <p>Para ativar os eventos do UDEV (gerenciador de dispositivos) utilize o comando:</p>
+        <code>udevadm trigger</code>
+        <p>Para criar a seguinte estrutura de diretórios...</p>
+<pre><code>./proc
+./dev
+./dev/pts
+./sys
+</code></pre>
+        <p>Use o comando:</p>
+        <code>mkdir -p /mnt/{proc,sys,dev/pts}</code>
+        <p>Agora monte cada um deles com os comandos:</p>
+        <code>mount -t proc proc /mnt/proc</code>
+        <code>mount -t sysfs sys /mnt/sys</code>
+        <code>mount -B /dev /mnt/dev</code>
+        <code>mount -t devpts pts /mnt/dev/pts</code>
+        <p>Carregue as informações do sistema...</p>
+        <code>source /etc/os-release</code>
+        <code>export VERSION_ID="$VERSION_ID"</code>
+        <p>Caso queira verificar a versão use o comando:</p>
+        <code>env | grep -i version</code>
+        <!-- PACSTRAP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p>Para fazer o que seria relativo ao "pacstrap" do Archlinux e instalar o "core" do sistema use o comando:</p>
+        <code>dnf --installroot=/mnt --releasever=$VERSION_ID group install -y core --use-host-config</code>
+        <p>Agora vamos instalar o pacote de idiomas em pt-BR:</p>
+        <code>dnf --installroot=/mnt install -y glibc-langpack-pt</code>
+        <p>Agora vamos usar instalar um script do Arch para facilitar a nossa vida:</p>
+        <code>dnf install -y arch-install-scripts</code>
+        <p>Vamos gerar a fstab:</p>
+        <code>genfstab -U /mnt >> /mnt/etc/fstab</code>
+        <p>Caso exista as linhas do /dev/zram no fstab sinta-se a vontade para apagá-lo.</p>
+        <p><strong>Lembre-se:</strong> Copie os arquivos de chave de criptografia para a partição <em>/mnt</em> <strong>ANTES</strong> de prosseguir!</p>
+        <code>cp cryptroot.key /mnt/cryptroot.key</code>
+        <p>Finalmente vamos ao chroot:</p>
+        <code>chroot /mnt /bin/bash</code>
+        <p>E remontar as partições:</p>
+        <code>mount -a</code>
+        <p>E as variáveis efi:</p>
+        <code>mount -t efivars efivars /sys/firmware/efi/efivars</code>
+        <p>E vamos instalar alguns pacotes básicos para prosseguir:</p>
+        <code>dnf install -y btrfs-progs efi-filesystem efibootmgr fwupd kernel cryptsetup</code>
+        <!-- XBOOTLDR -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Configurando a <em>XBOOTLDR</em></h2>
+        <p>Vamos começar copiando o módulo de kernel Linux para a pasta <em>/boot</em>:</p>
+        <code>sudo cp /lib/modules/*/vmlinuz /boot/vmlinuz-$(basename /lib/modules/*)</code>
+        <p>Agora vamos configurar o Dracut para gerar o initramfs, já que o Dracut espera os keyfiles em <em>/etc/cryptsetup-keys.d/</em>, vamos começar movendo as chaves para esse diretório:</p>
+        <code>mkdir -p /etc/cryptsetup-keys.d</code>
+        <code>cp /cryptroot.key /etc/cryptsetup-keys.d/</code>
+        <p>Vamos certificar que as chaves estão com as permissões corretas:</p>
+        <code>chmod 600 /etc/cryptsetup-keys.d/cryptroot.key</code>
+        <p>Agora vamos editar o <em>/etc/crypttab</em> (sim, é a tabela dos dispositivos encriptados):</p>
+        <code>nano /etc/crypttab</code>
+        <p>E adicione:</p>
+        <code>cryptroot /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptroot.key luks</code>
+        <p><em>cryptroot</em> é o nome do mapeamento que vai aparecer em /dev/mapper/cryptroot.</p>
+        <p>Agora vamos editar a configuração de criptografia do dracut:</p>
+        <code>nano /etc/dracut.conf.d/crypt.conf</code>
+        <p>E adicione as linhas conforme o exemplo abaixo:</p>
+        <code>install_items+=" /etc/cryptsetup-keys.d/cryptroot.key /etc/crypttab "<br>add_dracutmodules+=" crypt "</code>
+        <p>O que essa configuração faz?</p>
+        <ul>
+            <li><p>Estamos embutindo o keyfile no initramfs.</p></li>
+            <li><p>Incluindo o módulo para desencriptação no initramfs.</p></li>
+            <li><p>Incluindo também uma tabela e uma chaves para desencriptação.</p></li>
+        </ul>
+        <p>Agora é só gerar um novo initramfs:</p>
+        <code>dracut -f /boot/initramfs-$(basename /lib/modules/*).img --kver $(basename /lib/modules/*) -v --no-compress</code>
+        <p>Caso queira ainda mais segurança ainda no futuro, depois de embutir as chaves no initramfs, você pode apagar elas do sistema (em baixo nível) com o comando:</p>
+        <code>shred -u /etc/cryptsetup-keys.d/cryptroot.key</code>
+        <!-- SYSTEMD-BOOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Instalando systemd-boot</h2>
+        <p>Primeiro precisamos do pacote do systemd-boot, instale com o comando:</p>
+        <code>dnf install -y systemd-boot-unsigned</code>
+        <p>Depois, instale o systemd-boot com o comando abaixo:</p>
+        <code>bootctl --esp-path=/boot/efi --boot-path=/boot install</code>
+        <p>Agora vamos setar uma entrada como padrão para o loader:</p>
+        <code>echo "default fedora.conf" >> /boot/loader/loader.conf</code>
+        <p>E agora vamos editar essa entrada:</p>
+        <code>nano /boot/loader/entries/fedora.conf</code>
+        <p>Para iniciar a raiz através do subvolume <em>@</em>, você deve indicar as rootflags como no exemplo abaixo:</p>
+        <code>title Fedora<br>linux /vmlinuz-linux<br>initrd /initramfs-linux.img<br>options root=/dev/storageAP3 <em>rootflags=subvol=@</em> rw quiet</code>
+        <p>Ou caso você tenha usado o LUKS, você precisa descrever o dispositivo real:dispositivo mapeado, e declarar a raiz no dispositivo mapeado, como no exemplo abaixo:</p>
+        <code>options cryptdevice=<em>/dev/<mark>storageAP4</mark>:cryptroot</em>  root=/dev/mapper/<em>cryptroot</em>  rootflags=subvol=@ rw quiet</code>
+        <!-- PREPARANDO FIRST-BOOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Configurando o firstboot</h2>
+        <p>Caso você queira configurar o ambiente do sistema recém instalado numa tacada só pode utilizar o comando abaixo:</p>
+<code><pre>systemd-firstboot \
+--timezone=<em>America/Sao_Paulo</em> \
+--hostname=<em>meu_hostname</em> \
+--locale=<em>pt_BR.UTF-8</em> \
+--keymap=<em>br-abnt2</em> \
+--root-password</pre></code>
+        <p>Vamos agendar a reetiquetação pelo SELinux:</p>
+        <code>fixfiles -F onboot</code>
+        <p>E agora você pode sair do chroot...</p>
+        <code>exit</code>
+        <p>Desmontar partições...</p>
+        <code>umount -n -R /mnt</code>
+        <p>E reiniciar o sistema:</p>
+        <code>reboot</code>
+        <!-- PÓS INSTALAÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Pós instalação</h2>
+        <p>Para criar um novo usuário, com uma pasta em <em>/home</em> e que possa utilizar sudo (por fazer parte do grupo <em>wheel</em>) utilize o comando abaixo substituindo o <mark>seunomedeusuário</mark> pelo nome de usuário que você deseja:</p>
+        <code>useradd -mG wheel seunomedeusuário</code>
+        <p>Para configurar a senha da conta desse usuário use o comando abaixo substituindo o <mark>seunomedeusuário</mark> pelo seu nome de usuário:</p>
+        <code>passwd seunomedeusuário</code>
+        <!-- PÓS INSTALAÇÃO - GRUPOS DE PACOTES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p>Caso você queira continuar com a instalação de outros pacotes pode fazer a listagem de grupos de pacotes com o comando:</p>
+        <code>dnf group list | less</code>
+        <p>Vamos supor que você queira Instalação de ambiente gráfico KDE, você pode fazer isso como no exemplo abaixo:</p>
+        <code>dnf group install -y "KDE Plasma Workspaces"</code>
+        <p>Agradecimentos ao Stephen's Tech Talks e ao Walian</p>     
+    </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
