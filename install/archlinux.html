@@ -28,13 +28,13 @@
         </ul>
     </header>
     <main id="main-area">
-        <h1>Instalação do Arch Linux v2.0</h1>
+        <h1>Instalação do Arch Linux v3.0</h1>
         <img class="responsiva" src="https://archlinux.org/static/logos/archlinux-logo-dark-90dpi.ebdee92a15b3.png" alt="">
         <h2>Introdução</h2>
         <p>Inicialmente essa página de instalação do Archlinux foi feita com a intenção de possibilitar a instalação deste sistema operacional em uma máquina de testes, mas como diversas pessoas passaram a utilizar essa documentação como referência de instalação pra uso final eu resolvi refazer este guia de instalação para deixar ele não só mais organizado como também mais completo. Ainda assim é necessário o mesmo <i>disclaimer</i> de antes: O Arch Linux é uma distribuição Linux absurdamente customizável e não existe uma maneira definitiva de instalá-lo contanto que você cumpra todos os passos necessários para a instalação, por via de regra todo tutorial de instalação completa do Archlinux tem uma espécie de "instalação alvo", ou seja, uma maneira específica entre diversas outras maneiras para executar cada passo da instalação e visando um resultado específico para essa instalação. </p>
         <h2>Instalação Alvo</h2>
         <p>A instalação alvo para essa documentação baseia-se em um sistema em modo <mark>BIOS</mark> com o <mark>GRUB</mark> como inicializador <strong>ou</strong> em modo <mark>UEFI</mark> com <mark>systemd-boot</mark> como inicializador; com a raiz do sistema com o sistema de arquivos <mark>EXT4</mark>; com rede baseada em <mark>iwd</mark> com <mark>openresolv</mark> para instalações minimalistas (como <i>laptops</i> menos potentes que só precisam de uma conexão sem fio) <strong>ou</strong> <mark>Network Manager</mark> com <mark>dnsmasq</mark> para um gerenciamento de rede com maior compatibilidade; utilizando o <mark>PipeWire</mark> como backend de áudio.</p>
-        <p>Se por acaso você tem interesse na instalação de um outro bootloader como o que não seja algum dos citados ou deseja utilizar outro sistema de arquivos para a raiz do sistema como o <mark>F2FS</mark>, <mark>BTRFS</mark> ou <mark>ZFS</mark> <strong>Não siga essa documentação como guia para fazer o particionamento do disco, formatação das partições e instalação!</strong>.</p>
+        <p>Eu adicionei mais opções de customização mas se por acaso você tem interesse na instalação de um outro bootloader que não seja algum dos citados aqui ou deseja utilizar outro sistema de arquivos para a raiz do sistema como o <mark>F2FS</mark>, ou <mark>ZFS</mark> que não estão sendo citados aqui, <strong>Não siga a risca essa documentação como guia para fazer o particionamento do disco, formatação das partições e instalação do Arch!</strong>. Mas nesses casos essa documentação ainda vai ser válida para guiar o processo, portando, se atente para as particularidades das alterações escolhidas.</p>
         <p><strong>⚠️&nbsp;Alerta: É necessário experiência prévia com terminais e sistemas Unixlike!</strong></p>
         <details class="spoiler" >
             <summary>Selecionando os mirror's <strong>Não recomendado!</strong> (Clique para ver)</summary>
@@ -59,6 +59,8 @@
         <h2>Opcional - Mudar a fonte padrão do terminal</h2>
         <p>Eu frequentemente tenho que instalar o ArchLinux em um <i>laptop</i> que possuo e a fonte fica pequena demais na tela para o meu gosto, caso você tenha o mesmo problema que eu e queira alterar a fonte para uma outra que fique mais visível você pode utilizar uma das fontes contidas em <mark>/usr/share/kbd/consolefonts/</mark> e o comando <mark>setfont</mark> como no comando abaixo:</p>
         <code>setfont ter-124b</code>
+        <p>Mas caso você só queira uma alternativa ainda maior:</p>
+        <code>setfont ter-132b</code>
         <!-- Passo opcional - Verificar o ambiente de inicialização -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 2 - Verificar o ambiente de inicialização</h2>
@@ -173,6 +175,30 @@
         <h2>Passo opcional - Verificar a hora</h2>
         <p>No ambiente de instalação o <em>systemd-timesyncd</em> é ativado por padrão e o horário será sincronizado automaticamente assim que uma conexão com a internet for estabelecida. Para garantir que o relógio do sistema está correto utilize o comando:</p>
         <code>timedatectl</code>
+        <p>Caso, por alguma razão, a hora não esteja correta, vamos começar listando as zonas de fuso-horário com o comando:</p>
+        <code>timedatectl list-timezones | less</code>
+        <p>Vamos supor que o seu fuso-horário é <em>America/Sao_Paulo</em>, nesse caso basta usar o comando:</p>
+        <code>timedatectl set-timezone America/Sao_Paulo</code>
+        <p>Por fim, habilite o ntp com o comando:</p>
+        <code>timedatectl set-ntp true</code>
+        <!-- Passo opcional - SSH -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo opcional - SSH</h2>
+        <p>Caso você queira fazer a instalação através de um outro computador via terminal, sem se limitar a tela de framebuffer do Linux pode usar o ssh, primeiro verifique se o serviço sshd está como <em>Active: está acive (running)</em> com o comando:</p>
+        <code>systemctl status sshd</code>
+        <p>Por padrão o Arch vem com ele ativo, mas caso não esteja, você pode ativá-lo com o comando:</p>
+        <code>systemctl start sshd</code>
+        <p>Então defina a senha de root com o comando:</p>
+        <code>passwd</code>
+        <p>Liste o ip da interface com o comando:</p>
+        <code>ip addr show</code>
+        <p>E agora basta se conectar através de um outro computador via ssh com o comando:</p>
+        <code>ssh root@<em>ip do arch</em></code>
+        <!-- Passo opcional - SSH -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo opcional - Atualizar os mirror's automaticamente</h2>
+        <p>Por padrão o Arch vai rodar o serviço <em>reflector</em> na inicialização e escolher os que tem a melhor velocidade em absoluto, no meu caso, eu prefiro limitar os mirrors a servidores nacionais, atualizados pelo menos nas últimas 24 horas, e só então <i>rankealos</i> por velocidade. Você pode atualizar a sua lista de servidores como no exemplo abaixo:</p>
+        <code>reflector -c BR -a 24 --sort rate --save /etc/pacman.d/mirrorlist</code>
         <!-- Passo 4 Particionar as unidades de armazenamento -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 4 - Particionar as unidades de armazenamento</h2>
@@ -205,6 +231,15 @@
             <code>nvme format --lbaf=1 /dev/<mark>nvme0n1</mark></code>
             <p>Isso deve levar apenas alguns segundos para finalizar.</p>
             <p>Observação: Fique atento para o passo <em>formatação avançada</em> abaixo.</p>
+        </details>
+        <!-- Passo extra para quem desejar utilizar BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <details class="spoiler" >
+            <summary>Nota para quem pretende usar BTRFS (Clique para ver)</summary>
+            <p>O BTRFS pode substiuir a necessidade do particionamento especifico para alguns volumes, então ao invés de uma partição específica para <mark>/home</mark> com um tamanho fixo, diversos subvolumes podem ser feitos desde uma mesma partição em BTRFS de modo que o sistema carregue esses subvolumes da mesma forma que seria como uma partição, inclusive com limites de tamanho e configurações específicas de montagem.</p>
+            <p>A minha recomendação é que você <em>sempre</em> tenha ao menos uma partição real <mark>BIOS BOOT</mark> para sistemas baseados em BIOS, uma partição <mark>ESP</mark> para sistemas baseados em UEFI, e uma partição separada para <mark>SWAP</mark> (embora seja possível fazer a montagem de um subvolume no BTRFS com as configurações específicas para um <mark>swapfile</mark>).</p>
+            <p>Fora essas partições, todo o resto dos pontos de montagem podem ser feitos em subvolumes de BTRFS, com seus limites e configurações específicas, se atente para isso <strong>antes</strong> de começar o particionamento.</p>
+            <p>Ah! E esteja avisado de antemão: Subvolumes BTRFS <em>só podem ser criados uma vez que a raiz do sistema está formatada em BTRFS e montada!</em> Então você vai ter que pelo menos ler a documentação abaixo e criar a partição <mark>BIOS BOOT</mark> ou <mark>ESP</mark>, a partição de raiz do sistema, formatá-la e montá-la e só então criar os subvolumes.</p>
         </details>
         <!-- Passo 4 Opção A - armazenamento em sistemas baseados em BIOS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -866,7 +901,8 @@
         <!-- Passo 5 - Formatar as partições / e /home -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Formatando a partição / e /home</h3>
-        <p>Tanto a partição raiz do sistema <em>/</em> quanto a partição <em>/home</em> devem ser formatadas em <mark>EXT4</mark>. Considerando que elas estão no endereço <mark>/dev/storageAP3</mark> utilize o comando abaixo para formatar cada uma delas:</p>
+        <p>Tanto a partição raiz do sistema <em>/</em> quanto a partição <em>/home</em> podem ser formatadas em <mark>EXT4</mark> <strong>ou</strong> <mark>BTRFS</mark> (embora se for utilizar BTRFS seria mais interessante fazer apenas um subvolume para <mark>/home</mark>). Considerando que elas estão no endereço <mark>/dev/storageAP3</mark> utilize o comando abaixo para formatar cada uma delas:</p>
+        <h4>Em EXT4</h4>
         <code>mkfs.ext4 /dev/<mark>storageAP3</mark></code>
         <details class="spoiler" >
             <summary>Formatação avançada (Clique para ver)</summary>
@@ -877,37 +913,104 @@
             <p>Ou</p>
             <code>mkfs.ext4 <em>-L "ROOT"</em> /dev/<mark>storageAP3</mark></code>
         </details>
+        <h4>Em BTRFS</h4>
+        <code>mkfs.btrfs /dev/<mark>storageAP3</mark></code>
+        <details class="spoiler" >
+            <summary>Formatação avançada (Clique para ver)</summary>
+            <p>Diferentes sistemas de arquivo (e até mesmo ferramentas) podem ter por padrão o uso de tamanhos distintos de setor. Caso você queira especificar o tamanho do setor utilize o argumento <em>-s</em> como no exemplo abaixo:</p>
+            <code>mkfs.btrfs  <em>-s 4096</em> /dev/<mark>storageAP3</mark></code>
+            <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-L</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
+            <code>mkfs.btrfs <em>-L "ROOT"</em> /dev/<mark>storageAP3</mark></code>
+        </details>
         <!-- Passo 6 - Montar as partições -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2 id="passo-6" >Passo 6 - Montar as partições</h2>
         <p>Até aqui temos o armazenamento particionado e formatado, pronto para a instalação do sistema, agora só é necessário montar as partições para que elas fiquem acessíveis para a instalação.</p>
-        <!-- Passo 6 - Montar a raiz -->
+        <p>Porém, a maneira de montar o sistema muda consideravelmente a depender se você está utilizando <mark>EXT4</mark> ou <mark>BTRFS</mark>, portanto, siga com <strong>uma das </strong> alternativas adiante:</p>
+        <!-- Passo 6 - Montar as partições EXT4 -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Montagem da <em>/</em> (raiz) do sistema</h3>
+        <h3>Passo 6A - para EXT4:</h3>
+        <!-- Passo 6 - Montar a raiz EXT4 -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Montagem da partição <em>/</em> (raiz) do sistema</h4>
         <p>Montaremos a partição raiz do sistema em <em>/mnt</em>, basta substituir <mark>storageAP3</mark> pelo endereço da partição <em>raiz</em> (<mark>/</mark>) de acordo com o <em>seu</em> sistema:</p>
         <code>mount /dev/<mark>storageAP3</mark> /mnt</code>
-        <!-- Passo 6 - Montar a home -->
+        <!-- Passo 6 - Montar a home EXT4 -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Montagem da <em>/home</em></h3>
+        <h4>Montagem da partição <em>/home</em></h4>
         <p><strong>Se e somente se</strong> você fez uma partição separada para o diretório <em>/home</em> você deve montar o diretório <em>/mnt/home</em> nessa partição como no comando abaixo, basta substituir <mark>storageAP4</mark> pelo endereço da partição <em>/home</em> de acordo com o <em>seu</em> sistema:</p>
         <code>mount --mkdir /dev/<mark>storageAP4</mark> /mnt/home</code>
+        <!-- Passo 6 - Montar as partições BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Passo 6B - para BTRFS:</h3>
+        <!-- Passo 6 - Montar a raiz BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Montagem da partição <em>/</em> (raiz) do sistema</h4>
+        <p>Montaremos a partição raiz do sistema em <em>/mnt</em>, basta substituir <mark>storageAP3</mark> pelo endereço da partição <em>raiz</em> (<mark>/</mark>) de acordo com o <em>seu</em> sistema:</p>
+        <code>mount /dev/<mark>storageAP3</mark> /mnt</code>
+        <!-- SWAPFILE BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>BTRFS swapfile</h4>
+        <p>Caso tenha optado por deixar a raiz do disco em BTRFS, mas deseja utilizar um swapfile ao invés de uma partição, você primeiro terá de criar um subvolume não-<i>"snapshottado"</i> para hospedar o arquivo:</p>
+        <code>btrfs subvolume create /swap</code>
+        <p>Depois crie os arquivos com a especificação do BTRFS:</p>
+        <code>btrfs filesystem mkswapfile --size <mark>3</mark>G /swap/swapfile</code>
+        <p>Após isso siga o <mark>Passo opcional - Configurando swapfile</mark> para terminar de configurar a swapfile em BTRFS. </p>
+        <!-- SUBVOLUMES BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Continuando...</h4>
+        <p>Agora criaremos os subvolumes para o BTRFS, primeiro acesse a partição raiz:</p>
+        <code>cd /mnt</code>
+        <p>E crie os subvolumes um por um com os comandos abaixo (fique a vontade para omitir, renomear ou incluir mais subvolumes conforme a sua necessidade):</p>
+        <code>btrfs subvolume create @<br>btrfs subvolume create @home<br>btrfs subvolume create @snapshots<br>btrfs subvolume create @log<br>btrfs subvolume create @cache<!--<br>btrfs subvolume create @tmp--><br>btrfs subvolume create @images</code>
+        <p>Uma vez que os subvolumes estão criados retorne para a pasta inicial com o comando cd:</p>
+        <code>cd</code>
+        <p>Então vamos desmontar a raiz padrão...</p>
+        <code>umount /mnt</code>
+        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>, além de <mark>compress=zstd,noatime</mark> considere o uso da adição da flag <mark>ssd</mark> caso seja um dispositivo SSD e da flag <mark>discard=async</mark> caso o dispositivo suporte TRIM.</p>
+        <code>mount -o compress=zstd,noatime,subvol=<em>@</em> /dev/<mark>storageAP4</mark> /mnt</code>
+        <p>Agora criaremos a seguinte estrutura de diretórios (fique a vontade para mudar conforme a sua necessidade)...</p>
+<pre><code>./boot
+./home
+./.snapshots
+./var
+./var/log
+./var/cache<!--./tmp-->
+./var/lib
+./var/lib/libvirt
+./var/lib/libvirt/images
+</code></pre>
+        <p>...Com este comando:</p>
+        <code>mkdir -p /mnt/{boot,home,.snapshots,var/{log,cache,lib/libvirt/images}<!--,tmp-->}</code>
+        <p>Relembrando: Além de <mark>compress=zstd,noatime</mark> considere o uso da adição da flag <mark>ssd</mark> caso seja um dispositivo SSD e da flag <mark>discard=async</mark> caso o dispositivo suporte TRIM.</p>
+        <p>E agora vamos montar partição por partição:</p>
+        <code>mount -o compress=zstd,noatime,subvol=@home /dev/<mark>storageAP3</mark> /mnt/home</code>
+        <code>mount -o compress=zstd,noatime,subvol=@snapshots /dev/<mark>storageAP3</mark> /mnt/.snapshots</code>
+        <code>mount -o compress=zstd,noatime,subvol=@log /dev/<mark>storageAP3</mark> /mnt/var/log</code>
+        <code>mount -o compress=zstd,noatime,subvol=@cache /dev/<mark>storageAP3</mark> /mnt/var/cache</code>
+        <!--
+        <code>mount -o compress=zstd,noatime,subvol=@tmp /dev/<mark>storageAP3</mark> /mnt/tmp</code>
+        -->
+        <code>mount -o compress=zstd,noatime,subvol=@images /dev/<mark>storageAP3</mark> /mnt/var/lib/libvirt/images</code>
+        <h2>Continuação da montagem</h2>
+        <p>Independente se você utilizou <mark>EXT4</mark> ou <mark>BTRFS</mark> esses passos são iguais:</p>
         <!-- Passo 6 - Montar a swap -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Montagem da <em>swap</em></h3>
+        <h4>Montagem da partição <em>SWAP</em></h4>
         <p><strong>Se e somente se</strong> você fez uma partição separada para swap é recomendável você montar ela agora com o comando abaixo, basta substituir <mark>storageAP2</mark> pelo endereço da partição <em>swap</em> de acordo com o <em>seu</em> sistema:</p>
         <code>swapon /dev/<mark>storageAP2</mark></code>
+        <!-- Passo 6 - Montar a XBOOTLDR -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Montagem da partição <em>XBOOTLDR</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI" e fez a partição <em>XBOOTLDR</em>)</strong> </h4>
+        <p><strong>Se e somente se</strong> você está instalando o sistema em modo UEFI e fez a partição <em>XBOOTLDR</em>, será necessário montar o diretório <em>/mnt/boot</em> nessa partição como no comando abaixo, basta substituir <mark>storageAP1</mark> pelo endereço da partição <em>ESP</em> de acordo com o <em>seu</em> sistema:</p>
+        <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
         <!-- Passo 6 - Montar a ESP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Montagem da partição <em>ESP</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI")</strong> </h3>
+        <h4>Montagem da partição <em>ESP</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI")</strong> </h4>
         <p><strong>Se e somente se</strong> você está instalando o sistema em modo UEFI, será necessário montar o diretório <em>/mnt/boot</em> nessa partição como no comando abaixo (caso tenha feito a partição <em>XBOOTLDR</em> deve ser montado como <em>/mnt/efi</em> ), basta substituir <mark>storageAP1</mark> pelo endereço da partição <em>ESP</em> de acordo com o <em>seu</em> sistema:</p>
         <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
         <p><strong>OU</strong> caso tenha feito a partição <em>XBOOTLDR</em>:</p>
         <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/efi</code>
-        <!-- Passo 6 - Montar a XBOOTLDR -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Montagem da partição <em>XBOOTLDR</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI" e fez a partição <em>XBOOTLDR</em>)</strong> </h3>
-        <p><strong>Se e somente se</strong> você está instalando o sistema em modo UEFI e fez a partição <em>XBOOTLDR</em>, será necessário montar o diretório <em>/mnt/boot</em> nessa partição como no comando abaixo, basta substituir <mark>storageAP1</mark> pelo endereço da partição <em>ESP</em> de acordo com o <em>seu</em> sistema:</p>
-        <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
         <!-- Passo 7 Instalar sistema -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 7 - Instalar sistema</h2>
@@ -954,19 +1057,25 @@
         <code>arch-chroot /mnt</code>
         <p>Uma vez que fez o chroot para a partição do sistema instalado, é interessante a instalação de um editor de texto para configurar o sistema, você pode usar o que desejar, mas para fins de exemplo vamos instalar o <em>GNU/Nano</em>:</p>
         <code>pacman -S nano</code>
-        <h2>Passo opcional - Criar swapfile </h2>
-        <p><strong>Se e somente se</strong> você não tenha feito uma partição dedicada para swap mas ainda deseja utilizar swap através de arquivo swap, você pode gerar o arquivo swap com o comando abaixo (lembre se de mudar o valor de <mark>3</mark>GB para o <em>seu</em> caso conforme a <a class="link" href="#tabela-swap">tabela</a>):</p>
+        <h2>Passo opcional - Configurando swapfile </h2>
+        <p><strong>Se e somente se</strong> você não tenha feito uma partição dedicada para swap e também não fez o swapfile dentro do BTRFS conforme o exemplo acima, mas ainda assim deseja utilizar swap através de um arquivo swapfile comum, você pode gerar o arquivo swap com o comando abaixo (lembre se de mudar o valor de <mark>3</mark>GB para o <em>seu</em> caso conforme a <a class="link" href="#tabela-swap">tabela</a>):</p>
+        <!--
         <code>fallocate -l <mark>3</mark>GB /swapfile</code>
+        -->
+        <code>mkswap -U clear --size <mark>3</mark>G --file /swapfile</code>
+        <p>Bom, os passos abaixo são idênticos, seja caso você use o swapfile dentro ou fora do BTRFS, então mude o endereço conforme o seu caso:</p>
         <p>Mude a permissão do swapfile com o comando abaixo:</p>
-        <code>chmod 600 /swapfile</code>
+        <code>chmod 600 <em>caminho_do_swapfile</em></code>
+        <!--
         <p>Configure o arquivo como área para troca de swap com o comando abaixo:</p>
         <code>mkswap /swapfile</code>
+        -->
         <p>Ative a swap com o comando abaixo:</p>
-        <code>swapon /swapfile</code>
+        <code>swapon <em>caminho_do_swapfile</em></code>
         <p>Para fazer com que este arquivo seja montado automaticamente basta adicioná-lo na tabela de sistema de arquivos, para acessar o arquivo da tabela de sistema de arquivos utilize o comando:</p>
         <code>nano /etc/fstab</code>
         <p>E aqui podemos adicionar ao final do arquivo uma linha para a montagem do arquivo swap, conforme o exemplo abaixo:</p>
-        <code>/swapfile     none    swap    defaults    0   0</code>
+        <code><em>caminho_do_swapfile</em>     none    swap    defaults    0   0</code>
         <!-- Passo 10 Configurar o sistema instalado -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 10 - Configurar o sistema instalado</h2>
@@ -974,15 +1083,22 @@
         <!-- Fuso-horário -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Fuso-horário</h3>
-        <p>Você pode setar o fuso-horário com um link simbólico como no comando abaixo:</p>
-        <code>ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime</code>
-        <p><strong>Observação:</strong> Caso você precise escolher uma outra região de fuso horário basta verificar as regiões disponíveis com o comando abaixo:</p>
+        <p>Para listar as regiões de fuso-horário basta usar o comando abaixo:</p>
         <code>ls -R /usr/share/zoneinfo | more</code>
-        <p>Agora execute o hwclock para gerar o ajuste de relógio com o comando abaixo:</p>
+        <p>Então "sete" o fuso-horário com um link simbólico como no comando abaixo:</p>        
+        <code>ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime</code>        
+        <p>Por fim execute o hwclock para gerar o ajuste de relógio com o comando abaixo:</p>
         <code>hwclock --systohc</code>
         <!-- Localização -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Localização</h3>
+        <p>Para "setar" com o <mark>sed</mark> o <mark>locale</mark> para <mark>pt_BR.UTF-8</mark> use o comando:</p>
+        <code>sed -i -e "/^#"pt_BR.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
+        <p>Embora não seja estritamente necessário, alguns aplicativos exigem também o locale <mark>eu_US.UTF-8</mark> (como é o caso da Steam), nesse caso use também o comando:</p>
+        <code>sed -i -e "/^#"en_US.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
+        <p>Por fim gere a localização com o comando:</p></p>
+        <code>locale-gen</code>
+        <!--
         <p>Edite o <em>/etc/locale.gen</em> com o nano com o comando:</p>
         <code>nano /etc/locale.gen</code>
         </p>Descomente a linha "pt_BR.UTF-8 UTF-8" e gere a localização com o comando:</p>
@@ -993,6 +1109,7 @@
             <code>echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen</code>
             <p>O que esse comando vai fazer é simplesmente adicionar outra linha de locale ao final do arquivo e gerar o locale-gen através dela.</p>
         </details>
+        -->
         <p>Para setar a configuração padrão de localização do sistema utilize o comando:</p>
         <code>echo "LANG=pt_BR.UTF-8" >> /etc/locale.conf</code>
         <p>Para fazer com que a mudança de layout de teclado seja persistente para o virtual console utilize o comando:</p>
@@ -1102,6 +1219,8 @@
         <code>sudo env EDITOR=nano visudo</code>
         <p>Habilite a elevação de privilégio para o grupo <mark>wheel</mark> descomentando a linha deletando o <mark>#</mark> antes dele em:</p>
         <code>%wheel ALL=(ALL:ALL) ALL</code>
+        <p>Você também pode fazer isso com um comando único pelo <mark>sed</mark> (embora não é nada recomendado!):</p>
+        <code>sed -i -e '/^# %wheel ALL=(ALL:ALL) ALL/s/^# //' /mnt/etc/sudoers</code>
         <!-- Passo 13 Instalação de inicializador -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 13 - Instalação de inicializador</h2>
