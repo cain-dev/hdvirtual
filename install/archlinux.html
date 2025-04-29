@@ -1230,6 +1230,10 @@
         <p><strong>OU</strong></p>
         <p>- Para processadores <em>Intel</em> instale o pacote:</p>
         <code>pacman -S intel-ucode</code>
+        <h3>Adendo para BTRFS</h3>
+        <p>Se você instalou o seu disco em BTRFS e instalou a sua raiz no subvolume <em>@</em>, lembre-se de utilizar o parâmetro de kernel abaixo para direcionar a raiz do sistema para o subvolume <em>@</em>:</p>
+        <code>rootflags=subvol=@</code>
+        <p>Caso você esteja usando a raiz em BTRFS</p>
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1609,6 +1613,8 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <code>options amdgpu si_support=1<br>options amdgpu cik_support=1</code>
         <p>Por fim edite o arquivo <mark>/etc/modprobe.d/radeon.conf</mark> e insira uma das linhas abaixo:</p>
         <code>options radeon si_support=0<br>options radeon cik_support=0</code>
+        <p>Caso prefira, você também pode fazer essa alteração através de parâmetros de kernel com as linhas abaixo:</p>
+        <code>amdgpu.si_support=1 amdgpu.cik_support=1 radeon.si_support=0 amdgpu.cik_support=0</code>
         <h4>blacklisting o driver radeon</h4>
         <p>Talvez o seu kernel ainda carregue o driver <mark>radeon</mark>, para verificar utilize o comando:</p>
         <code>lspci -k | grep -A 3 -E "(VGA|3D)"</code>
