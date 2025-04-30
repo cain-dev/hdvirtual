@@ -67,8 +67,8 @@
         <p>Você pode verificar as tabelas de partição da unidade de armazenamento com o comando:</p>
         <code>sgdisk -p /dev/<mark>storageA</mark></code>
         <p>Caso queira limpar a tabela de partição desse dispositivo (<strong>Leia-se apagar tudo!</strong>) pode usar o comando abaixo:</p>
-        <code>sgdisk -Z /dev/<mark>storageA</mark>, após isso use o <em>gdisk</em> para fazer as devidas alterações.</code>
-        <p>Para atualizar as informações de particionamento para o sistema use o comando:</p>
+        <code>sgdisk -Z /dev/<mark>storageA</mark></code>
+        <p>E após isso use o <em>gdisk</em> para fazer as devidas alterações. Para atualizar as informações de particionamento para o sistema use o comando:</p>
         <code>partprobe -s /dev/<mark>storageA</mark></code>
         <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
