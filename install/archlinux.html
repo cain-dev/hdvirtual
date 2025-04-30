@@ -868,6 +868,24 @@
         <h4>Gravar as alterações</h4>
         <p>Para gravar as alterações da tabela de partição e sair do programa utilize o comando abaixo:</p>
         <code>w</code>
+        <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo 4.9 - (Opcional) Criptografar as partições</h2>
+        <details class="spoiler" >
+            <summary>Preparando as partições para formatação</summary>
+            <p>Para criptografar as partições, você precisa preparar de antemão um dispositivo de abstração para representar as partições que deseja criptografar. Desse modo, pois a partição <strong>não vai ser formatada diretamente</strong> e sim através da unidade mapeada pelo LUKS! Então, antes de qualquer outra coisa vamos gerar um arquivo (ou os arquivos) de senha no diretório atual, escolha uma das opções abaixo:</p>
+            <code>openssl rand -base64 32 > cryptroot.key</code>
+            <p>Caso queira um código em hexa de 32 bytes ao invés de base64 pode usar o comando:</p>
+            <code>openssl rand -hex 32 > cryptroot.key</code>
+            <p>Esse comando faz com que o OpenSSL gere uma <i>string</i> randômica, do tipo base64 ou hex com 32 bytes e exporta para um arquivo com o nome de <em>cryptroot.key</em> (você também pode mudar o nome para cryptswap.key ou qualquer outro que achar melhor).</p>
+            <p>Agora vamos criptografar a partição desejada usando o LUKS:</p>
+            <code>cryptsetup luksFormat --type luks2 /dev/<mark>storageAP3</mark> --key-file cryptroot.key</code>
+            <p>Agora vamos abrir essa partição através do LUKS, usando o arquivo de senha criado para gerar uma abstração da partição com o nome de <em>cryptroot</em>:</p>
+            <code>cryptsetup luksOpen /dev/<mark>storageAP3</mark> <em>cryptroot</em> --key-file cryptroot.key</code>
+            <p>Uma vez que o dispotivo foi aberto, ele criará um dispositivo <mark>/dev/mapper/cryptroot</mark>, e quando for seguir o passo abaixo de formatar partições, lembre-se de formatar essa abstração e não o dispositivo em si! Como no exemplo abaixo:</p>
+            <p><strong>Embora aqui esteja sendo formatado em btrfs, mude conforme a sua necessidade!</strong></p>
+            <code>mkfs.btrfs -f -L <em>"ROOT"</em> <em>/dev/mapper/cryptroot</em></code>
+        </details>
         <!-- Passo 5 - Formatar as partições -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 5 - Formatar as partições</h2>
@@ -921,6 +939,15 @@
             <code>mkfs.btrfs  <em>-s 4096</em> /dev/<mark>storageAP3</mark></code>
             <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-L</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
             <code>mkfs.btrfs <em>-L "ROOT"</em> /dev/<mark>storageAP3</mark></code>
+        </details>
+        <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo 5.9 - (Opcional) Criptografar as partições</h2>
+        <details class="spoiler" >
+            <summary>Preparando as partições para serem montadas</summary>
+            <p>Quando for montar a partição encriptada, lembre-se de usar como destino a abstração como no comando abaixo ao invés de montar algo como /dev/<mark>storageAP3</mark>:</p>
+            <code>mount <em>/dev/mapper/cryptroot</em> /mnt</code>
+            <p>Uma vez montada, você pode interagir com essa partição normalmente.
         </details>
         <!-- Passo 6 - Montar as partições -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1050,6 +1077,14 @@
         <code>genfstab -U /mnt >> /mnt/etc/fstab</code>
         <p>Caso queira verificar o arquivo da tabela do sistema de arquivos pra ver se está tudo certo utilize o comando abaixo:</p>
         <code>cat /mnt/etc/fstab</code>
+        <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo 8.9 - (Opcional) Criptografar as partições</h2>
+        <details class="spoiler" >
+            <summary>Copiando os arquivos chave</summary>
+            </p>Se você encriptou a partição (ou partições) através de arquivo chave, agora você <strong>DEVE</strong> copiar o arquivo (ou os arquivos) chave contendo a senha para <mark>/mnt</mark> <strong>antes de fazer o chroot!</strong></p>
+            <code>cp cryptroot.key /mnt/cryptroot.key</code>
+        </details>
         <!-- Passo 9 "CHROOT" para a instalação -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 9 - "CHROOT" para a instalação</h2>
@@ -1230,10 +1265,49 @@
         <p><strong>OU</strong></p>
         <p>- Para processadores <em>Intel</em> instale o pacote:</p>
         <code>pacman -S intel-ucode</code>
-        <h3>Adendo para BTRFS</h3>
-        <p>Se você instalou o seu disco em BTRFS e instalou a sua raiz no subvolume <em>@</em>, lembre-se de utilizar o parâmetro de kernel abaixo para direcionar a raiz do sistema para o subvolume <em>@</em>:</p>
-        <code>rootflags=subvol=@</code>
-        <p>Caso você esteja usando a raiz em BTRFS</p>
+        <p>⚠️ Dica: Uma vez que o pacote de <mark>microcode</mark> está instalado, você pode verificar se nos <em>HOOKS</em> do <mark>/etc/mkinitcpio.conf</mark> tem <mark>microcode</mark>, gerar os novos initramfs com o comando <mark>mkinitcpio -P</mark> e então não precisará mais declarar o initrd do microcode no bootloader.</p>
+        <!-- (OPCIONAL) SUBVOLUME BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3><strong>Passo obrigatório para quem usou BTRFS</strong></h3>
+        <details class="spoiler" >
+            <summary>Declarando o subvolume para a raiz</summary>
+            <p>Se você instalou o sistema em BTRFS com sua raiz no subvolume <em>@</em>, lembre-se de utilizar o parâmetro de kernel abaixo para direcionar a raiz do sistema para o subvolume <em>@</em>:</p>
+            <code>rootflags=subvol=@</code>
+        </details>
+        <!-- (OPCIONAL) SUBVOLUME BTRFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3><strong>Passo obrigatório para quem criptografou partições</strong></h3>
+        <details class="spoiler" >
+            <summary>Inicializando o dispositivo criptografado como raiz</summary>
+            <!-- Preparando /etc/crypttab e /etc/cryptsetup-keys.d -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <p>Vamos editar o arquivo <mark>/etc/crypttab</mark> (sim, é a tabela dos dispositivos encriptados):</p>
+            <code>nano /etc/crypttab</code>
+            <p>Agora crie o diretório para as chaves:</p>
+            <code>mkdir /etc/cryptsetup-keys.d</code>
+            <p>Copie as chaves para esse diretório:</p>
+            <code>cp cryptroot.key /etc/cryptsetup-keys.d/cryptroot.key</code>
+            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>):</p>
+            <code>cryptroot /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptroot.key luks</code>
+            <!-- Configurando mkinitcpio -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o <mark>/etc/mkinitcpio.conf</mark>:</p>
+            <code>nano /etc/mkinitcpio.conf</code>
+            <p>E os HOOKs dependem de quais módulos são utilizados, para o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
+            <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
+            <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
+            <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
+            <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar tanto para o arquivo (ou arquivos) de chave quanto para a tabela:</p>
+            <code>FILES="/etc/cryptsetup-keys.d/cryptroot.key /etc/crypttab"</code>
+            <p>Agora precisamos gerar os arquivos initramfs, para gerar todos os presets basta usar o comando:</p>
+            <code>mkinitcpio -P</code>
+            <!-- Configurando os parâmetros de kernel -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
+            <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
+            <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
+            <code>rd.luks.uuid=<mark>UUID_DO_DISCO</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
+        </details>
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
