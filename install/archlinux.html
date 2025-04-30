@@ -1275,8 +1275,12 @@
             <summary>Declarando o subvolume para a raiz</summary>
             <p>Se você instalou o sistema em BTRFS com sua raiz no subvolume <em>@</em>, lembre-se de utilizar o parâmetro de kernel abaixo para direcionar a raiz do sistema para o subvolume <em>@</em>:</p>
             <code>rootflags=subvol=@</code>
+            <p>Caso esteja usando um único volume btrfs em múltiplos dispositivos também é necessário acrescentar o módulo <em>btrfs</em> aos hooks, editando o arquivo <mark>/etc/mkinitcpio.conf</mark> e inserindo como no exemplo abaixo:</p>
+            <code>HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems <em>btrfs</em> fsck)</code>
+            <p>E depois gerar o initramfs com:</p>
+            <code>mkinitcpio -P</code>
         </details>
-        <!-- (OPCIONAL) SUBVOLUME BTRFS -->
+        <!-- (OPCIONAL) DESENCRIPTAÇÃO -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3><strong>Passo obrigatório para quem criptografou partições</strong></h3>
         <details class="spoiler" >
@@ -1972,6 +1976,34 @@ vm.page-cluster = 0</pre></code>
             pacman-key --init && pacman-key --populate<br>
             pacman-key --refresh-keys</code>
         <p>Depois disso tente atualizar novamente que vai dar certo.</p>
+        <!-- Remover UDEV -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Remover o UDEV do initramfs</h3>
+        <p>Existem diversas otimizações para initramfs mas a que de longe é mais simples e efetiva é a substituição dos gatilhos <em>udev</em>, <em>keymap</em> e <em>consolefont</em> para <em>systemd</em> e <em>sd-vconsole</em>. Para isso altere o arquivo <mark>/etc/mkinitcpio.conf</mark> e altere:</p>
+        <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms keyboard <em>keymap consolefont</em> block encrypt filesystems fsck)</code>
+        <p>Para:</p>
+        <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms keyboard <em>sd-vconsole</em> block sd-encrypt filesystems fsck)</code>
+        <p>Depois basta gerar novamente a initramfs com o comando:</p>
+        <code>mkinitcpio -P</code>
+        <!-- Dracut ao invés de Mkinitcpio -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Usar Dracut ao invés de Mkinitcpio</h3>
+        <p>Essa é uma modificação não recomendada, mas que mesmo assim ainda pode gerar frutos para tipos específicos de usuários. O Dracut é o gerador de init do lado RHEL da força, embora não seja tão customizável, muitas pessoas preferem utilizá-lo devida a pouca necessidade de intervenção. </p>
+        <code>sudo pacman -S dracut</code>
+        <p>Examine o arquivo de configuração e edite conforme as suas necessidades:</p>
+        <code>nano /etc/dracut.conf</code>
+        <p>Gere uma initramfs de testes:</p>
+        <code>sudo dracut /boot/initramfs-linux-test.img</code>
+        <p>Agora crie uma entrada no seu bootloader para testar a inicialização com essa imagem. Se o sistema iniciou sem problemas você pode copiar o hook de atualização que era usado pelo mkinitcpio para ser usado pelo Dracut:</p>
+        <code>sudo cp /usr/share/libalpm/hooks/90-mkinitcpio-install.hook /usr/share/libalpm/hooks/90-dracut-install.hook</code>
+        <p>E na linha:</p>
+        <code>Exec = /usr/bin/mkinitcpio -P</code>
+        <p>Altere para:</p>
+        <code>Exec = /usr/bin/dracut --force /boot/initramfs-linux.img</code>
+        <p>Caso queira testar o gatilho basta atualizar ou reinstalar o kernel e verificar se a imagem está sendo gerada:</p>
+        <code>sudo pacman -S linux</code>
+        <p>Se deseja remover o mkinitcpio (o que eu também não recomendo) você pode utilizar o comando:</p>
+        <code>sudo pacman -Rs mkinitcpio</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
