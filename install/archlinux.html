@@ -585,6 +585,10 @@
                 <li><p>Para alterar o tipo da partição, coloque o cursor sobre a partição e selecione a opção <em>[ Type ]</em>.</p></li>
                 <li><p>Por fim selecione a opção <em>[ Write ]</em> e confirme digitando <em>yes</em> e teclando <em>Enter</em>.</p></li>
             </ul>
+            <!-- Modo Easy CGDISK - LUKS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
+            <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
             <!-- Modo Easy CGDISK - ESP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>ESP</em> (EFI system partition)</h4>
@@ -697,7 +701,11 @@
             <h4>Terminado!</h4>
             <p>Pule para o <em>Passo 5 - Formatar as partições</em></p>
         </details>
-        <!-- Modo Nomal CGDISK ESP -->
+        <!-- Modo Normal GDISK - LUKS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
+        <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
+        <!-- Modo Normal GDISK ESP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
         <h4>Partição <em>ESP</em> (EFI system partition)</h4>
         <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, que é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. Para criar a partição <em>ESP</em> use o comando:</p>
@@ -713,7 +721,7 @@
         <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>ESP</mark> devemos digitar o tipo <mark>ef00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
         <code>Hex code or GUID (L to show codes, Enter = 8300): ef00</code>
         <p>Com isso temos uma partição no início do armazenamento, de 550M e do tipo EFI system partition.</p>
-        <!-- Modo Nomal CGDISK XBOOTLDR -->
+        <!-- Modo Nomal GDISK XBOOTLDR -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
         <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. Para criar a nova partição use o comando:</p>
@@ -728,7 +736,7 @@
         <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>XBOOTLDR</mark> devemos digitar o tipo <mark>ea00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
         <code>Hex code or GUID (L to show codes, Enter = 8300): ea00</code>
         <p>Com isso temos uma partição de 1G e do tipo Extended Boot Loader.</p>
-        <!-- Modo Nomal CGDISK SWAP -->
+        <!-- Modo Nomal GDISK SWAP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
         <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
