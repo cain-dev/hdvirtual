@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Boot & TPM</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="Instalação de Sistemas Operacionais - Secure Boot"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="Aprenda a instalar o famoso Arch Linux, acredite: Não é tão difícil quanto falam"/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="https://uefi.org//themes/custom/uefi_d10_olivero/favicon.ico">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+    <main id="main-area">
+        <h1>Secure Boot</h1>
+        <!-- INTRODUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Introdução</h2>
+        <p>Embora eu desconfio bastante dos motivos da Microsoft passar a exigir Secure Boot e TPM2.0 para utilização do Windows 11, e desconfiar mais ainda de como os fabricantes implementaram essas tecnologias, a verdade é que as tecnologias em si são bem interessantes e podem garantir a proteção para muita dor de cabeça dependendo do seu caso.</p>
+        <p>O problema é que em todo lugar que você buscar, tanto o Secure Boot quanto o TPM2.0 são descritos apenas como nada mais que "requisitos do Windows 11", e a verdade é que eles são muito mais que isso, assim como também o discurso de "basta atualizar a sua BIOS e manter o Windows 11 atualizado com o Secure Boot ativo" não vale de nada, e se a minha placa mãe já não tem mais suporte? E se eu não utilizar Windows 11? E se essas chaves "originais" forem prejudiciais (sim isso existe, explico mais adiante)? </p>
+        <p>A verdade é que quando você entende essas tecnologias, esse uso "estático", é de longe o pior caso! A verdade é que as chaves usadas no Secure Boot podem ser modificadas, anexadas a outras chaves, removidas, você mesmo pode até criar as suas chaves! E o mesmo serve para o módulo TPM, você pode gerar nele as chaves para usar em diversas atividades fora da inicialização do sistema e uma simples trava de disco, eu vou até além: Se você tem um computador mais antigo e não utiliza Windows as chaces são que você pode se beneficiar de Secure Boot e seu módulo TPM muito mais do que quem tem computador novo! A menos que queira usar Windows 11...</p>
+        <!-- O QUE É SECURE BOOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Então o que é Secure Boot?</h2>
+        <p>Bom, o Secure Boot pode ser entendido como uma checagem de segurança pré-boot, basicamente, um mecanismo que garante que nenhum executável seja carregado sem que seja previamente autenticado pelo fabricante do equipamento e/ou o usuário do equipamento e que além disso não esteja listado em nenhuma <i>blacklist</i>, se e somente se o software obedece essas condições ele será inicializado. A genialidade disso é que mesmo que você seja infectado com algum código muito cabuloso de <i>early-loading</i>, ele simplesmente não terá condições de ser carregado. o Secure Boot sozinho (se devidamente configurado) é mais do que suficiente para impedir a esmagadora maioria dos ransomwares.</p>
+        <!-- O QUE É TPM -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>E o que é TPM?</h2>
+        <p>Para entender o que é o maldito do TPM primeiro você precisa entender o que é Trusted Computing, a Trusted Computing Group é uma organização sem fins lucrativos (aham, duvido...) que estabelesce padrões de hardware e software para a tal "computação confiável", entenda isso como "como garantir que o computador confie nele mesmo e não em você" (acho que deu pra começar e entender a razão da galera do software livre ser pé atrás com esse tipo de coisa...). TPM, nada mais é que um módulo que você tem na sua placa mãe (ou que você adiciona na sua placa mãe) para usar funções de computação confiável, como por exemplo, a criação e gerência de chaves de dentro do módulo, sem a exposição dessas chaves para nenhum outro ambiente. Ou seja: Qualquer que seja a autenticação que você deseja utilizar, a chave será gerada DENTRO do módulo TPM e ficará lá, e só vai ser utilizado no processo da autenticação.</p>
+        <p>Sendo assim, não é possível nem utilizar um keylogger para roubar as chaves para desencriptar algo! A desvantagem é que isso transforma os ambientes de sistema em ambientes completamente efêmeros, pois se este módulo for comprometido de alguma forma, sejá lá o que dependa desse módulo vai ficar sem autenticação.</p>
+        <p>Então TPM nada mais é do que a sigla para <i>Trusted Platform Module</i>, hoje em dia a maioria das placas-mãe já vem com um módulo desse desde o firmware (também chamado de fTPM), e também é importante lembrar que placas-mãe mais antigas (pré intel 99, placas mãe DDR3) podem ter o módulo TPM 1.2 adicionado, não é o mesmo que exigido para o Windows 11 mas ainda assim é uma opção interessante para quem quer fazer uso desse tipo de segurança.</p>
+        <!-- CONTRAS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Então se é tão bom assim, não deveriamos usar?</h2>
+        <p>Ehhrr... Aí que tá... O conceito da tecnologia em si é muito bom, porém a implementação pode ser BEM porca, e é bom lembrar que a segurança para uma plataforma é tão boa quanto a sua implementação, não só existem casos de chaves de autenticação que foram vazadas por fabricantes de componentes, como chaves de teste que foram validadas pelo firmware do aparelho em pós produção para usuário final e até mesmo a mera data de expiração dessas chaves. O módulo TPM por si só é uma caixa preta que funciona com tipos muito específicos de algoritmos e não trabalha só como um gerador + memória, na data que estou escrevendo isso temos os módulos 1.2 e 2.0, o padrão para o módulo 1.2 tende a rsa2048/sha1 e o famigerado 2.0 rsa2048/sha256... Por mais que o 2.0 permite o uso de curva elíptica mas... Não é o que você vai achar por aí.</p>
+        <p>Sem contar que a grande maioria dos fabricantes simplesmente enfiam assinaturas Microsoft goela abaixo, algumas vezes até chaves sabidamente exploráveis, e manutenção que é bom nada, em alguns casos (como nas plataformas ARM) você pode ser simplesmente impedido de carregar outro sistema ou mesmo <i>brickar</i> o seu dispositivo caso tente mudar as chaves! Então sim, por mais que é uma tecnologia que tem bastante potencial elas funcionaram basicamente como um cavalo de tróia para o usuário final.</p>
+        <p>Porém, em certas circustâncias, você pode atualizar a <i>blacklist</i> manualmente, fazendo com que chaves sabidamente exploradas não sejam carregadas, mesmo que a sua placa mãe já não tenha mais atualizações de firmware, você pode criar as suas chaves, com ou sem o uso de um módulo TPM, e você pode até mesmo remover todas as chaves usadas nesse processo e usar SOMENTE as SUAS chaves! E é aí que essa tecnologia brilha, longe de padronização de fabricantes, longe de implementações estáticas, especialmente uso para quem tem computadores mais antigos.</p>
+        <!-- MODOS DE OPERAÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>User mode? Windows mode?</h2>
+        <p>É, eu sei que isso é confuso mas são coisas diferentes, porém é bem fácil de entender a partir do momento que você consegue separar as coisas. Para o Secure Boot ser implementado para para os parâmetros do Windows, ele precisa seguir a especificação da Microsoft, então a sua placa mãe vai possibilitar dois tipos de "métodos" para usar o Secure Boot: O modo "<em>Windows</em>", que segue as especificações da Microsoft, e o modo "<em>OtherOS/Custom</em>", que te da a liberdade de configurar conforme a sua vontade... Ao menos <em>deveria</em> ser assim, mas o que efetivamente ocorre com a esmagadora maioria das implementações é que o modo "Windows" ativa a checagem de Secure Boot e o modo "OtherOS" ignora a checagem de Secure Boot...</p>
+        <p>Independente do modo que escolha, seja <em>Windows</em>, seja <em>OtherOS/Custom</em>, a placa mãe que suporta Secure Boot vai trabalhar com a inicialização baseado em 2 "correntes" de inicialização: O modo <em>Setup mode</em>, ou seja, o modo pré-configuração, e o <em>User mode</em>, ou seja, o modo pós-configuração, quando o Secure boot está devidamente habilitado.</p>
+        <p>Resumo:</p>
+        <ul>
+            <li><p>Windows Mode = Checagem de Secure Boot Ativada;</p></li>
+            <li><p>OtherOS Mode = Checagem de Secure Boot Desativada;</p></li>
+            <li><p>Setup Mode = As chaves não foram configuradas, o Secure Boot não está em funcionamento;</p></li>
+            <li><p>User Mode = As chaves foram configuradas, o Secure Boot está em funcionamento.</p></li>
+        </ul>
+        <p>Bem contraintuitivo, eu sei... Essa é só uma das diversas controvérsias do Secure Boot...</p>
+        <h2>Controvérsias? Quais controvérsias?</h2>
+        <p>Tá... Vamos começar pelo básico... Secure Boot é um termo muito mais comercial do que um termo técnico, o que ele faz é nada mais nada menos do que uma verificação pré-boot, ele não é a única ferramenta de verificação pré-boot e eu duvido muito que em algum momento ele seja categorizado como a "melhor"... Eu creio que o funcionamento de verificação do Android em dispositivos móveis é muito mais interessante do que isso.</p>
+        <p>Parte do problema está não só no que o Secure Boot é, mas também no que ele <strong>não é!</strong> Ao ver na BIOS uma opção como "Deseja ativar o boot seguro?" Parece que é uma opção que você ativa e vai ganhar mais "1000 pontos de segurança", e nada poderia estar mais longe da verdade.</p>
+        <p>O Secure Boot, em muitos casos é desnecessário, redundante, pode ser incoveniente, muitas vezes inútil e em alguns casos até mesmo <strong>prejudicial</strong> Sim, você não leu isso errado, mas vamos por partes...</p>
+        <p>Quando falamos em Secure Boot, falamos em UEFI, quando falamos em UEFI estamos falando largamente em X86, entendido até aí? Ótimo. Então você vai instalar o Linux Mint no seu computador, você baixou a iso e verificou o <em>MD5</em> dessa iso, você instalou o sistema e usou o sistema apenas com pacotes assinados pela distribuição, parabéns, você acabou de fazer o mesmo trabalho que o Secure Boot ia fazer na sua máquina... É sério... </p>
+        <p>Parece idiota quando se coloca nesses termos mas é exatamente a mesma coisa, se você verificou algo pré-boot, você tem o mesmo benefício que o Secure Boot pode te proporcionar. As chaves nesses pacotes podem ser tão comprometidas quanto as chaves certificadas, na verdade as verificações nos pacotes tendem a ser mais dinâmicas e úteis do que aquelas contidas na sua placa mãe. Esse termo, <i>Secure Boot</i>, passa a impressão de que as coisas estão MAIS seguras, quando em muitos casos (como esse que acabei de citar), basicamente não há ganhos.</p>
+        <p>Eu recomendo fortemente que você leia <a class="link" href="https://github.com/pbatard/rufus/wiki/FAQ#user-content-Why_do_I_need_to_disable_Secure_Boot_to_use_UEFINTFS">aqui</a> o FAQ do conhecidíssimo Rufus, uma das senão a ferramenta mais utilizada para preparação de dispositivos <i>bootáveis</i>, e como é dito aí um nome mais preciso para Secure Boot poderia ser  "Imposição da Assinatura do Bootloader", pois é isso que ele efetivamente faz... No melhor dos casos...</p>
+        <p>E você me pergunta: "Como assim no melhor dos casos?", e eu te respondo de maneira muito fácil, imposição de assinaturas não necessariamente, repito: <mark>Não necessariamente!</mark> Vai ter influência sobre o estado de segurança da sua plataforma. Não ativar o Secure Boot <strong>Não significa de forma alguma deixar o seu computador em um estado inseguro!</strong> E isso precisa ser dito.</p>
+        <p>A grande verdade é que a impressão comum é que os motivos dessa imposição feita pela Microsoft aos fabricantes para a padronização para seus sistemas está longe de ser por uma questão de segurança e muito mais por questões abusivas, quem efetivamente trouxe essa tecnologia foi ela, em meados de lançamento do Windows 8 (salvo engano), e obviamente causou muitas dores de cabeça para quem tentava instalar outros sistemas e até mesmo quem tentava reinstalar o Windows nessas máquinas. Esse período de transição teve uma implementação muito porca, em alguns casos com técnicos pedindo aos fabricantes que "pelo amor de Deus me dá uma atualização de BIOS que me permite voltar pro Windows 7".</p>
+        <p>Ah, a razão pela qual eu falei que você tem mais segurança usando o Secure Boot longe do Windows? É simples: Windows é um sistema ubíquo quando o assunto é usuário final comum, por isso os fabricantes tendem a assinar seus produtos com as chaves para esses usuários finais comuns... Se todo mundo, usa as mesmas chaves para validar tudo, logo, se essa entidade certificadora é comprometida então a segurança do Secure Boot também é!</p>
+        <p>Não meu caro, você não leu errado: Se 1 - O Secure Boot só permite iniciar o que contém as chaves reconhecidas e 2 - As chaves da Microsoft sempre são reconhecidas e estão em todo lugar, logo 3 - O Secure Boot permite tudo! Então, se você conseguir usar o Secure Boot sem as chaves da Microsoft, você vai ter mais segurança pelo Secure Boot no Linux que no Windows! Inclusive podendo (como na parte inferior deste guia) você mesmo assinar o loader do Windows para que inicie sem as chaves Microsoft.</p>
+        <p>O problema é que são grandes as chances que dispositivos na sua máquina parem de funcionar, e, dependendo do dispositivo, que o seu computador entre em <i>soft brick</i> ou mesmo <i>hard brick</i>! É sério! O secure boot não trabalha com "meia autenticação", ou todas as chaves são conhecidas e seu sistema vai iniciar, ou alguma chave não é conhecida e ou não vai iniciar ou pelo menos não vai iniciar o seu dispositivo... Boa sorte se a sua placa de vídeo depender de uma chave comprometida...</p>
+        <p>Em resumo:</p>
+        <ul>
+            <li><p>Secure Boot é antes de mais nada um termo comercial;</p></li>
+            <li><p>Ele não necessariamente influencia na segurança;</p></li>
+            <li><p>A impressão que passa é de que os motivos para a Microsoft impor o seu uso não tem nada haver com segurança;</p></li>
+            <li><p>O Secure Boot falhou absurdamente em entregar o prometido;</p></li>
+            <li><p>Na esmagadora maioria das vezes, a implementação mais comum dele o torna quase inútil;</p></li>
+            <li><p>O seu uso pode ser prejudicial, inclusive podendo <i>brickar</i> plataformas.</p></li>
+        </ul>
+        <p>Só pra fechar esse capítulo com chave de diamante... Parte dos requisitos de assinatura é a... Acredite se quiser... <strong>Não utilização de código GPLv3!</strong> Você não leu isso errado, ao mesmo tempo em que existe o Shim para fazer o intercessor entre as chaves Microsoft e o loader do Linux, códigos em GPLv3 não estão dentro do escopo para serem assinados... Se isso não é perseguição e abuso eu não sei o que é.</p>
+
+
+        <!-- PREPARANDO O SISTEMA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>E se eu quiser usar isso? Por onde começo?</h2>
+        <p>Bom, a minha primeira recomendação é que você <mark>salve as configurações da sua BIOS!</mark>, a maioria esquece disso e depois vai perder bem um tempo configurando tudo novamente. A segunda coisa a se fazer é <mark>voltar para as configurações de fábrica da placa mãe</mark> e, se possível <mark>apagar todas as chaves do secure boot</mark> através da própria placa mãe. A terceira coisa a se fazer é (se possível) <mark>regravar a última versão da bios da sua placa mãe</mark>, e caso você tenha comprado um módulo TPM, <mark>conectar este módulo na sua placa mãe</mark>. Por fim <mark>retorne a sua placa mãe para as configurações de fábrica mais uma vez</mark> e <mark>carregue as chaves padrão da sua placa mãe</mark>, porém, sem ativar o modo Windows! (ou seja, sem efetivamente ativar o secure boot).</p>
+        <p>Apesar da dor de cabeça, tudo isso vai garantir que você tenha um ambiente limpo e com chaves válidas (ou tão válidas quanto possível).</p>
+        <h3>Fazendo backup das chaves</h3>
+        <p>Então você subiu o seu sistema operacional, com as chaves carregadas porém sem o secure boot ativo, a primeira coisa a se fazer é o backup de cada uma dessas chaves usando a ferramenta <em>efi-readvar</em> do pacote <em>efitools</em>.</p>
+        <p>Vamos criar os diretórios para começar os trabalhos com o comando:</p>
+        <code>mkdir -vp keys/{auth,backup,cfg,esl,ms,oem}</code>
+        <p>E agora vamos aos backups das chaves do seu sistema...</p>
+        <code>for var in PK KEK db dbx ; do efi-readvar -v $var -o keys/backup/old_${var}.esl; done</code>
+        <p>Caso queira fazer manualmente:</p>
+        <code>efi-readvar -v PK  -o keys/backup/PK-backup.esl<br>efi-readvar -v KEK -o keys/backup/KEK-backup.esl<br>efi-readvar -v db  -o keys/backup/db-backup.esl<br>efi-readvar -v dbx -o keys/backup/dbx-backup.esl</code>
+        <p>Uma vez que você tem o arquivo de backup dessas chaves, eu recomendo que você acesse o setup com o comando:</p>
+        <code>systemctl reboot --firmware-setup</code>
+        <p>E de lá você <mark>mais uma vez apague todas as chaves!</mark> Não tem como fazer um tutorial para todos os casos, você vai ter que pegar o manual da sua placa mãe e realizar essa tarefa conforme o seu caso específico. Você pode verificar se o Secure Boot foi desabilitado com o comando abaixo:</p>
+        <code>sudo bootctl status 2>&1 | grep 'Secure Boot'<br>Secure Boot: disabled (setup)</code>
+        <!-- MÉTODO SBCTL COM MICROSOFT KEYS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Eu não tenho paciência pra isso... Só quero ativar o Secure Boot pra jogar o meu "Vavá"</h2>
+        <p>Ok, pro teu caso existe uma ferramenta muito boa chamada <em>sbctl</em>, que automatiza todo o processo de carregamento das chaves, basta usar o comando abaixo para gerar as chaves (que se você tiver usando algo Arch-based ficarão no diretório <mark>/var/lib/sbctl/keys/</mark>):</p>
+        <code>sbctl create-keys</code>
+        <p>Depois o comando abaixo para carregar as chaves (junto com as chaves Microsoft):</p>
+        <code>sbctl enroll-keys -m</code>
+        <details class="spoiler" >
+            <summary>Carregar as chaves sem as assinaturas da Microsoft</summary>
+            <p><strong>Alerta:</strong> Isso pode <i>brickar</i> o seu dispositivo! Só use esse comando se você tiver certeza do que está fazendo!</p>
+            <code>sbctl enroll-keys</code>
+            <p>Bônus!</p>
+            <p>Se você (for muito do ignorante) estiver usando dual-boot com Windows, você pode assinar o próprio bootloader do Windows (<em>bootmgfw.efi</em>) para que o Windows inicie EM secure boot SEM as chaves Microsoft... Isso é do caralho!  </p>
+        </details>
+        <p>Agora basta assinar seu bootloader e/ou kernel e/ou unified kernel image ou seja lá que diabos você use pra subir o seu sistema 😂 basta seguir o exemplo abaixo:</p>
+        <code>sbctl sign -s /boot/vmlinuz-linux</code>
+        <code>sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI</code>
+        <!--
+        <code>sbctl sign -s -o /boot/vmlinuz-linux.signed /boot/vmlinuz-linux</code>
+        <code>sbctl sign -s -o /boot/EFI/BOOT/BOOTX64.EFI.signed /boot/EFI/BOOT/BOOTX64.EFI</code>
+        -->
+        <p>Depois reiniciar o seu computador, acessar o setup da placa-mãe, colocar o Secure Boot em modo <mark>Windows</mark> e ser feliz jogando o seu "Vavá". Ah, e caso queira verificar a validade do Secure Boot você pode utilizar o comando:</p>
+        <code>sbctl status</code>
+        <p>E vai o resultado vai ser mais ou menos assim:</p>
+<pre><code>Installed: ✓ sbctl is installed
+Owner GUID:	xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Setup Mode: ✓ Disabled
+Secure Boot: ✓ Enabled
+Vendor Keys: microsoft
+</code></pre>
+        <!-- MÉTODO AVANÇADO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Eu não confio em Microsoft nem fabricante, eu não quero carregar nada que eu não assino, eu quero fazer as minhas chaves!</h2>
+        <p>Primeiro: Você é dos meus! Nós precisamos de mais pessoas assim na computação! Mas pro seu caso... Precisamos antes entender o que diabos são cada uma dessas chaves...</p>
+        <h3>PK</h3>
+        <p>Basicamente a "<i>masterkey</i>" do processo de Secure Boot, basicamente a chave de autoridade máxima da plataforma: Essa chave que autoriza toda e qualquer modificação nas chaves subsequentes. É como se essa chave fosse o <i>handshake</i> entre o proprietário da plataforma e o firmware da plataforma.</p>
+        <h3>noPK</h3>
+        <p>Não é oficialmente um tipo de chave, algumas vezes chamada de <i>reset key</i>, nada mais é do que um arquivo vazio assinado com a <em>Platform Key (PK)</em>, que por ser um arquivo devidamente assinado, quando carregado ele efetivamente apaga o conteúdo da <em>PK</em>, desativando assim o Secure Boot. É um recurso bastante engenhoso.</p>
+        <h3>KEK (Key Exchange Key)</h3>
+        <p>Se a PK Key atua como o <i>handshake</i> entre o proprietário da plataforma e o firmware da plataforma, essa chave atua como o <i>handshake</i> entre o firmware e o sistema operacional. Se a chave PK é a <i>masterkey</i>, a chave KEK é como uma simples chave de acesso que valida as alterações do sistema para o firmware (como nas chaves <em>DB/DBX</em>) sem comprometer a autoridade maior naquela plataforma.</p>
+        <h3>DB (Signature Database)</h3>
+        <p>Em resumo, essa chave contém as assinaturas dos softwares <em>confiáveis</em>.</p>
+        <h3>DBX (Revoked Signature Database)</h3>
+        <p>Em resumo, essa chave contém as assinaturas dos softwares <em>não</em>-confiáveis. É interessante ressaltar que o <em>uefi.org</em> mantém um binário com uma lista pública de chaves revogadas, você pode acessar essa lista através <a class="link" href="https://uefi.org/revocationlistfile">desse link</a>.</p>
+        <p>E quanto a hierarquia de autenticação é simples: As chaves PK (ou seja, a masterkey, que são únicas) assinam os certificados PK, noPK e KEK. As chaves KEK (que podem ser mais de uma) por sua vez assinam o DB e o DBX, por fim o DB assina os executáveis confiáveis.</p>
+        <h2>Gerando as chaves</h2>
+        <!-- MÉTODO AVANÇADO - CHAVE PK -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p>Para gerar as chaves tenha de referência os comandos abaixo:</p>
+        <h3>PK</h3>
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private PK" -keyout PK.key -out PK.crt -days 3650 -sha256</code>          
+        <h3>KEK</h3>
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private KEK" -keyout KEK.key -out KEK.crt -days 3650 -sha256 </code>
+        <h3>DB</h3>
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private db" -keyout db.key -out db.crt -days 3650 -sha256</code>
+        <p>Por padrão se usa <em>rsa:2048</em> com <em>sha256</em> com <em>3650</em> dias (basicamente 10 anos), mas fique a vontade para testar conforme sua necessidade como usar <em>rsa:4096</em> para mais segurança ou <em>sha1</em> para especificações mais antigas, de qualquer modo lembre-se de que deve ser compatível com as especificações da sua plataforma!</p>
+        <details class="spoiler" >
+            <summary>Usando config files</summary>
+            <p>Lembrando também que o argumento <em>-subj</em> pode receber mais parâmetros conforme a sua necessidade, por exemplo:</p>
+            <code>openssl req -new -key chave_privada.pem -subj "/C=BR/ST=São Paulo/L=São Paulo/O=Minha Empresa/OU=Departamento de TI/CN=meusite.com/emailAddress=contato@meusite.com/GN=João/SN=Silva/UID=joaozinho" -out pedido.csr</code>
+            <ul>
+                <li><p>C=BR, o parâmetro <em>Country</em> recebe o identificador de país, nesse caso Brasil.</p></li>
+                <li><p>ST=São Paulo, o parâmetro <em>State</em> recebe o identificador de estado ou província, nesse caso São Paulo.</p></li>
+                <li><p>L=São Paulo, o parâmetro <em>Locality</em> recebe o identificador de cidade ou região, nesse caso São Paulo.</p></li>
+                <li><p>O=Minha Empresa, o parâmetro <em>Organization</em> recebe o identificador de organização ou empresa, nesse caso Minha Empresa.</p></li>
+                <li><p>OU=Departamento de TI, o parâmetro <em>Organization Unit</em> recebe o identificador de unidade ou departamento da organização ou empresa, nesse caso Departamento de TI.</p></li>
+                <li><p>CN=meusite.com, o parâmetro <em>Common name</em> recebe o de nome comum, que pode ser um identificador geral ou de domínio, nesse caso meusite.com.</p></li>
+                <li><p>emailAddress=contato@meusite.com, o parâmetro <em>emailAddress</em> recebe o endereço de email, nesse caso contato@meusite.com.</p></li>
+                <li><p>GN=João, o parâmetro <em>Given name</em> recebe o nome próprio, nesse caso João.</p></li>
+                <li><p>SN=Silva, o parâmetro <em>Surname</em> recebe o sobrenome, nesse caso Silva.</p></li>
+                <li><p>UID=joaozinho, o parâmetro <em>User ID</em> recebe o identificador de usuário, nesse caso joaozinho.</p></li>
+            </ul>
+            <p>Você também pode gerar essa chave através de um config file como no exemplo abaixo:</p>
+            <code>nano keys/cfg/PK.cfg</code>
+<pre><code>
+[ req ]
+default_bits         = <em>4096</em>
+encrypt_key          = no
+string_mask          = utf8only
+utf8                 = yes
+prompt               = no
+distinguished_name   = req_distinguished_name
+x509_extensions      = my_x509_exts
+    
+[ req_distinguished_name ]
+countryName             = <em>BR</em>
+stateOrProvinceName     = <em>São Paulo</em>
+localityName            = <em>São Paulo</em>
+organizationName        = <em>Minha Empresa</em>
+organizationalUnitName  = <em>Departamento de TI</em>
+commonName              = <em>meusite.com Platform Key</em>
+emailAddress            = <em>contato@meusite.com</em>
+givenName               = <em>João</em>
+surname                 = <em>Silva</em>
+userId                  = <em>joaozinho</em>
+
+<!--
+[ req_distinguished_name ]
+C                    = BR
+ST                   = São Paulo
+L                    = São Paulo
+O                    = Minha Empresa
+OU                   = Departamento de TI
+CN                   = meusite.com
+emailAddress         = contato@meusite.com
+GN                   = João
+SN                   = Silva
+UID                  = joaozinho
+-->
+    
+[ my_x509_exts ]
+keyUsage             = digitalSignature
+extendedKeyUsage     = codeSigning
+basicConstraints     = critical,CA:FALSE
+subjectKeyIdentifier = hash
+</code></pre>
+            <p>Lembre-se de não usar <em>-subj</em> quando for fazer a chave através de um arquivo de configuração, pois qualquer parâmetro passado para esse argumento vai sobreescrever os parâmetros dados pelo arquivo.</p>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/PK.cfg -keyout keys/PK.key -out keys/PK.pem</code>
+            <p>Você pode verificar a chave com:</p>
+            <code>openssl x509 -text -noout -inform PEM -in keys/PK.pem</code>
+            <p>Agora vamos copiar este arquivo como KEK.cfg:</p>
+            <code>cp -v keys/cfg/{PK,KEK}.cfg</code>
+            <p>E vamos editar o parâmetro <em>Platform Key</em> para <em>Key Exchange Key</em>:</p>
+            <code>sed -i 's/Platform Key/Key Exchange Key/g' /keys/cfg/KEK.cfg</code>
+            <p>E gerar as chaves agora usando o <em>KEK.cfg</em>:</p>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/KEK.cfg -keyout keys/KEK.key -out keys/KEK.pem</code>
+            <p>Confira com:</p>
+            <code>openssl x509 -text -noout -inform PEM -in keys/KEK.pem</code>
+            <p>Mesmo esquema para o <em>db.cfg</em>, primeiro copiar o arquivo:</p>
+            <code>cp -v keys/cfg/{PK,db}.cfg</code>
+            <p>Depois alterar o commonName:</p>
+            <code>sed -i 's/Platform Key/Signature Database/g' keys/cfg/db.cfg</code>
+            <p>Gerar a chave:</p>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/db.cfg -keyout keys/db.key -out keys/db.pem</code>
+            <p>E depois verificar a chave:</p>
+            <code>openssl x509 -text -noout -inform PEM -in keys/db.pem</code>
+        </details>
+        <h2>Por que não estamos criando chaves DBX?</h2>
+        <p>Pelo fato de DBX ser uma lista de revogação de hashes sabidamente maliciosos, expirados ou revogados, o interessante é adicionar o máximo de assinaturas revogadas possível, de preferência extendendo as chaves que já vieram na sua placa mãe com listas de revogações mais novas, jamais tenha uma chave DBX nova.</p>
+        <!-- MÉTODO AVANÇADO - GERAR UUID -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Converter para formato AUTH</h2>
+        <p>Agora com as chaves devidamente criadas precisamos gerar um identificador único para converter os certificados para o formato <em>AUTH</em> , para isso use o comando:</p>
+        <!--
+        <code>uuidgen > uuid.txt</code>
+        -->
+        <code>echo "$(uuidgen -r)" > keys/guid.txt</code>
+        <p>Para verificar o código gerado use o comando:</p>
+        <code>cat keys/guid.txt</code>
+        <p>Vai retornar uma como a do exemplo abaixo:</p>
+        <code>XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code>
+        <h3>Gerando PK ESL</h3>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/PK.pem keys/esl/PK.esl</code>
+        <h3>Gerando PK AUTH</h3>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
+        <!--    
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%d-%m-%Y %H-%M-%S')" -c keys/PK.pem -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
+        -->
+        <h3>Gerando KEK ESL</h3>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/KEK.pem keys/esl/KEK.esl</code>
+        <h3>Gerando KEK AUTH</h3>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key KEK keys/esl/KEK.esl keys/auth/KEK.auth</code>
+        <h3>Gerando DB ESL</h3>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/db.pem keys/esl/db.esl</code>
+        <h3>Gerando DB AUTH</h3>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/KEK.pem -k keys/KEK.key db keys/esl/db.esl keys/auth/db.auth</code> 
+        <h3>Gerando noPK ESL (opcional)</h3>
+        <code>touch keys/esl/noPK.esl</code>
+        <h3>Gerando noPK AUTH (opcional)</h3>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key PK keys/esl/noPK.esl keys/auth/noPK.auth</code>        
+        <h2>Instalando as chaves (presumindo que você está em Setup Mode)</h2>
+        <h3>DBX</h3>
+        <code>sudo efi-updatevar -f dbx.auth dbx</code>
+        <h3>DB</h3>
+        <code>sudo efi-updatevar -f db.auth db</code>
+        <h3>KEK</h3>
+        <code>sudo efi-updatevar -f KEK.auth KEK</code>
+        <h3>PK</h3>
+        <code>sudo efi-updatevar -f PK.auth PK</code>
+        <p>A execução bem-sucedida desse comando finaliza o <em>Setup mode</em> e deixa o Secure Boot em <em>User mode</em>.</p>
+        <p>Para verificar se as chaves foram devidamente incorporadas você pode usar o comando:</p>
+        <code>efi-readvar</code>
+        <h2>Como assinar módulos?</h2>
+        <p>Aqui é um exemplo de como assinar o Kernel usando as chaves <em>db</em>:</p>
+        <code>sbsign --key keys/db.key --cert keys/db.pem --output /boot/vmlinuz.signed /boot/vmlinuz</code>
+        <h2>Retornando para Setup Mode</h2>
+        <code>sudo efi-updatevar -f noPK.auth PK</code>
+        <p>Como foi dito acima a execução bem-sucedida desse comando efetivamente apaga o conteúdo da PK, desativando assim o Secure Boot.</p>
+        <h2>Caso queira apagar as variáveis:</h2>
+        <h3>DBX</h3>
+        <code>sudo efi-updatevar -d dbx</code>
+        <h3>DB</h3>
+        <code>sudo efi-updatevar -d db</code>
+        <h3>KEK</h3>
+        <code>sudo efi-updatevar -d KEK</code>
+        <h3>PK</h3>
+        <code>sudo efi-updatevar -d PK</code>
+
+        
+
+
+        <!--
+        <h3>Overview</h3>
+        <p>Para ver quem é dono da chave</p>
+        <code>efi-readvar -v PK</code>
+        <p>Para ver a chave pública</p>
+        <code>mokutil --pk</code>
+        <p>Para ver quem é dono da chave</p>
+        <code>efi-readvar -v KEK</code>
+        <p>Para ver a chave pública</p>
+        <code>mokutil --kek</code>
+        <p>Para ver quem é dono da chave</p>
+        <code>efi-readvar -v db</code>
+        <p>Para ver a chave pública</p>
+        <code>mokutil --db</code>
+        <p>Para ver quem é dono da chave</p>
+        <code>efi-readvar -v dbx</code>
+        <p>Para ver a chave pública</p>
+        <code>mokutil --dbx</code>
+        <h3>Backup das chaves</h3>
+        <code>mkdir -vp keys/{auth,bak,cfg,esl,ms,oem}</code>
+        -->
+
+    </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
