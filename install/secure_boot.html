@@ -2,7 +2,7 @@
 <html lang="pt-BR" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="">
+    <meta name="description" content="Aprendendo sobre Secure Boot e TPM e como usar essas tecnologias no Linux.">
     <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
     <meta name="author" content="Cain">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
     <meta property="og:title" content="Instalação de Sistemas Operacionais - Secure Boot"/>
     <meta property="og:url" content="https://cain-dev.github.io/default/"/>
     <meta property="og:type" content="article"/>
-    <meta property="og:description" content="Aprenda a instalar o famoso Arch Linux, acredite: Não é tão difícil quanto falam"/>
+    <meta property="og:description" content="Aprendendo sobre Secure Boot e TPM e como usar essas tecnologias no Linux."/>
     <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
     <!--/Social Media Open Graph-->
     <!--Links-->
@@ -86,8 +86,6 @@
             <li><p>O seu uso pode ser prejudicial, inclusive podendo <i>brickar</i> plataformas.</p></li>
         </ul>
         <p>Só pra fechar esse capítulo com chave de diamante... Parte dos requisitos de assinatura é a... Acredite se quiser... <strong>Não utilização de código GPLv3!</strong> Você não leu isso errado, ao mesmo tempo em que existe o Shim para fazer o intercessor entre as chaves Microsoft e o loader do Linux, códigos em GPLv3 não estão dentro do escopo para serem assinados... Se isso não é perseguição e abuso eu não sei o que é.</p>
-
-
         <!-- PREPARANDO O SISTEMA -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>E se eu quiser usar isso? Por onde começo?</h2>
@@ -103,11 +101,15 @@
         <code>efi-readvar -v PK  -o keys/backup/PK-backup.esl<br>efi-readvar -v KEK -o keys/backup/KEK-backup.esl<br>efi-readvar -v db  -o keys/backup/db-backup.esl<br>efi-readvar -v dbx -o keys/backup/dbx-backup.esl</code>
         <p>Uma vez que você tem o arquivo de backup dessas chaves, eu recomendo que você acesse o setup com o comando:</p>
         <code>systemctl reboot --firmware-setup</code>
-        <p>E de lá você <mark>mais uma vez apague todas as chaves!</mark> Não tem como fazer um tutorial para todos os casos, você vai ter que pegar o manual da sua placa mãe e realizar essa tarefa conforme o seu caso específico. Você pode verificar se o Secure Boot foi desabilitado com o comando abaixo:</p>
+        <p>E de lá você <mark>mais uma vez apague todas as chaves!</mark> Não tem como fazer um tutorial para todos os casos, você vai ter que pegar o manual da sua placa-mãe e realizar essa tarefa conforme o seu caso específico. Assim que o sistema iniciar você pode verificar se o Secure Boot foi desabilitado com o comando abaixo:</p>
         <code>sudo bootctl status 2>&1 | grep 'Secure Boot'<br>Secure Boot: disabled (setup)</code>
         <!-- MÉTODO SBCTL COM MICROSOFT KEYS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Eu não tenho paciência pra isso... Só quero ativar o Secure Boot pra jogar o meu "Vavá"</h2>
+        <section class="alert">
+            <p>⚠️ <strong>Alerta!</strong> ⚠️</p>
+            <p>Tenha em mente que em alguns sistemas a utilização desse método pode ativar um gatilho automático para assinatura de kernel! A minha recomendação é que se você vai usar esse método use APENAS ele!</p>
+        </section>
         <p>Ok, pro teu caso existe uma ferramenta muito boa chamada <em>sbctl</em>, que automatiza todo o processo de carregamento das chaves, basta usar o comando abaixo para gerar as chaves (que se você tiver usando algo Arch-based ficarão no diretório <mark>/var/lib/sbctl/keys/</mark>):</p>
         <code>sbctl create-keys</code>
         <p>Depois o comando abaixo para carregar as chaves (junto com as chaves Microsoft):</p>
@@ -304,6 +306,7 @@ subjectKeyIdentifier = hash
         <code>sudo efi-updatevar -d PK</code>
 
         
+        
 
 
         <!--
@@ -326,6 +329,17 @@ subjectKeyIdentifier = hash
         <code>mokutil --dbx</code>
         <h3>Backup das chaves</h3>
         <code>mkdir -vp keys/{auth,bak,cfg,esl,ms,oem}</code>
+        -->
+
+
+
+        <!--
+        
+        <aside>
+            <p>Nota:</p>
+            <p>Você não deveria estar vendo isso!</p>
+        </aside>
+
         -->
 
     </main>
