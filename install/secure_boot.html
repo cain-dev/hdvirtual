@@ -98,7 +98,10 @@
         <p>E agora vamos aos backups das chaves do seu sistema...</p>
         <code>for var in PK KEK db dbx ; do efi-readvar -v $var -o keys/backup/old_${var}.esl; done</code>
         <p>Caso queira fazer manualmente:</p>
-        <code>efi-readvar -v PK  -o keys/backup/PK-backup.esl<br>efi-readvar -v KEK -o keys/backup/KEK-backup.esl<br>efi-readvar -v db  -o keys/backup/db-backup.esl<br>efi-readvar -v dbx -o keys/backup/dbx-backup.esl</code>
+        <code>efi-readvar -v PK  -o keys/backup/PK-backup.esl</code>
+        <code>efi-readvar -v KEK -o keys/backup/KEK-backup.esl</code>
+        <code>efi-readvar -v db  -o keys/backup/db-backup.esl</code>
+        <code>efi-readvar -v dbx -o keys/backup/dbx-backup.esl</code>
         <p>Uma vez que você tem o arquivo de backup dessas chaves, eu recomendo que você acesse o setup com o comando:</p>
         <code>systemctl reboot --firmware-setup</code>
         <p>E de lá você <mark>mais uma vez apague todas as chaves!</mark> Não tem como fazer um tutorial para todos os casos, você vai ter que pegar o manual da sua placa-mãe e realizar essa tarefa conforme o seu caso específico. Assim que o sistema iniciar você pode verificar se o Secure Boot foi desabilitado com o comando abaixo:</p>
@@ -154,26 +157,40 @@ Vendor Keys: microsoft
         <p>E quanto a hierarquia de autenticação é simples: As chaves PK (ou seja, a masterkey, que são únicas) assinam os certificados PK, noPK e KEK. As chaves KEK (que podem ser mais de uma) por sua vez assinam o DB e o DBX, por fim o DB assina os executáveis confiáveis.</p>
         <h3>E quanto a MOK Key?</h3>
         <p>Ehhrr... Então... Lembra das críticas ao Secure Boot aí acima? A MOK Key não existe como parte da especificação do Secure Boot. Eu explico...</p>
-        <p>Devido a questão falada sobre a ubiquidade do Windows e da quantidade de coisas que se escoram nessas assinaturas, foi criado um mini-bootloader de primeiro estágio chamado Shim (que vou me segurar muito pra não chamar de gambiarra...), que é assinado com uma dessas chaves e permite ao usuário criar as suas <em>Machine Owner Keys</em> (ou <em>MOK Keys</em>), e então o usuário pode criar as suas chaves, assinar os seus executáveis e inserir essas chaves "dentro do Shim" para que ele faça o <i>handshake</i> para possibilitar a inicialização dos seus (usuário) executáveis...</p>
+        <p>Devido a questão falada sobre a ubiquidade do Windows e da quantidade de coisas que se escoram nessas assinaturas, foi criado um mini-bootloader de primeiro estágio chamado Shim (que vou me segurar muito pra não chamar de gambiarra...), que é assinado com uma dessas chaves e permite ao usuário criar as suas <em>Machine Owner Keys</em> (ou <em>MOK Keys</em>), e então o usuário pode criar as suas chaves, assinar os seus executáveis e inserir essas chaves "dentro do Shim" para que ele faça o <i>handshake</i> para possibilitar a inicialização dos seus (usuáriof) executáveis...</p>
         <p>Se você for no site do Debiam, por exemplo, vai encontrar um <i>disclaimer</i> sobre como o <i>"Secure Boot não é uma tentativa de obstruir o mercado"</i>, que <i>"A Microsoft age como intermediária para certificar as organizações autorizadas"</i> e sobre como <i>"os usuários podem inserir as suas chaves, e alguns usuários podem até mesmo forçar o firmware a reconhecer apenas chaves de usuário"</i>... O ponto é: Eu entendo a Microsoft, como parte da ponta de lança do projeto, ter participação na padronização dessa tecnologia. Eu entendo Microsoft ser uma das autoridades que podem emitir esse tipo de certificado... Mas não estamos falando de chaves da Canonical, Debian e Red Hat já presentes na placa mãe e mecanismos de adição de chaves de usuário diretamente desde o firmware, estamos falando de um bootloader criado como vetor para lidar com as chaves do usuário de dentro de um sistema Linux!</p>
         <p>Eu entendo a Asus ter a chave <em>Platform Key</em> em suas placas mãe, e já ter nos bancos de dado chaves permissivas para Red Hat, Canonical ou Debian e até mesmo da Microsoft... Mas a necessidade de um bootloader assinado pela Microsoft que vai então carregar as minhas chaves é um cuspe na minha cara!</p>
         <p>Perceba: Eu não estou dizendo que o Shim não é uma boa ferramenta, isso ele é! Eu não estou dizendo que para alguns Setups ele não é uma boa alternativa, isso ele também é, mas, se a Microsoft tem poder para exigir o reconhecimento das suas assinaturas diretamente nas placas mães ela também tem poder para colocar ao menos Red Hat, Canonical, Debian e até mesmo uma chave para o FreeBSD no mesmo barco, ou não?</p>
         <p>Então isso é a MOK key: É uma chave de usuário, que você insere numa lista de chaves confiáveis de um mini-bootloader, para que esse permita as aplicações assinadas por você.</p>
+        <h3>E quanto aos formatos de arquivo?</h3>
+        <ul>
+            <li><p><em>.key</em> - <i>PEM (Privacy-Enhanced Mail)</i> - Usado para chaves privadas</p></li>
+            <li><p><em>.crt</em> - <i>PEM (Privacy-Enhanced Mail)</i> - Usado para chaves públicas.</p></li>
+            <li><p><em>.cer</em> - <i>DER (Distinguished Encoding Rules)</i> - Usado para chaves públicas.</p></li>
+            <li><p><em>.esl</em> - <i>EFI Signature List</i> - Usedo pelo EFI, uma coleção de chaves públicas e hashes.</p></li>
+            <li><p><em>.auth</em> - <i>Signed EFI Signature List</i> - Usedo pelo EFI, é um formato de esl assinado.</p></li>
+        </ul>
+        <p>Se você não entende nada de criptografia basta entender que chaves privadas assinam (no sentido de autenticar a pessoa que é responsável por aquilo, como num contrato), por isso elas são <em>privadas</em>, chaves públicas são provas de assinatura (no sentido de verificar o responsável pela assinatura), por isso elas são <em>publicas</em>. PEM é uma codificação baseada em texto, contém cabeçalhos e rodapés, mais fácil para ser integrada e/ou editada; DER é uma codificação binária, mais compacto e eficiente porém sem cabeçalhos e rodapés, mais difícil para ser integrada e/ou editada; .auth podem ser usados em <em>Setup Mode</em> ou <em>User Mode</em> ESL só podem ser usados em <em>Setup Mode</em>.</p>
         <h2>Gerando as chaves</h2>
+        
+        <section class="alert">
+            <p>De começo um alerta... É quase que impossível para mim mostrar aqui toda variação de criação de chave, seja estrita, seja protegida por GPG... Eu recomendo você utilizar isso como uma base para criar as suas chaves mas não se limite ao que está aqui, aqui estou diluindo o método para que você entenda o processo.</p>
+        </section>
         <!-- MÉTODO AVANÇADO - CHAVE PK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <p>Para gerar as chaves tenha de referência os comandos abaixo:</p>
-        <h3>PK</h3>
-        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private PK" -keyout PK.key -out PK.crt -days 3650 -sha256</code>          
-        <h3>KEK</h3>
-        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private KEK" -keyout KEK.key -out KEK.crt -days 3650 -sha256 </code>
-        <h3>DB</h3>
-        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private db" -keyout db.key -out db.crt -days 3650 -sha256</code>
-        <p>Por padrão se usa <em>rsa:2048</em> com <em>sha256</em> com <em>3650</em> dias (basicamente 10 anos), mas fique a vontade para testar conforme sua necessidade como usar <em>rsa:4096</em> para mais segurança ou <em>sha1</em> para especificações mais antigas, de qualquer modo lembre-se de que deve ser compatível com as especificações da sua plataforma!</p>
+        <p>Para gerar as chaves use o comandos abaixo:</p>
+        <code>for key_type in PK KEK db; do openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private ${key_type}" -keyout ${key_type}.key -out ${key_type}.crt -days 3650 -sha256 -nodes; done</code>
+        <p>Caso queira criar manualmente cada uma delas:</p>
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private PK" -keyout PK.key -out PK.crt -days 3650 -sha256 -nodes</code>          
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private KEK" -keyout KEK.key -out KEK.crt -days 3650 -sha256 -nodes</code>
+        <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private db" -keyout db.key -out db.crt -days 3650 -sha256 -nodes</code>
+        <p>Esse comando vai gerar chaves do tipo <em>PEM</em>, por padrão se usa <em>rsa:2048</em> com <em>sha256</em> com <em>3650</em> dias (basicamente 10 anos), mas fique a vontade para testar conforme sua necessidade como usar <em>rsa:4096</em> para mais segurança, remover o argumento <em>-nodes</em> e proteger a chave privada com senha,  ou mesmo usar <em>sha1</em> para especificações mais antigas, de qualquer modo lembre-se de que deve ser compatível com as especificações da sua plataforma (e só o manual pode te dizer isso)!</p>
+        <p>(Opcional) Caso queira gerar um arquivo de tipo <em>DER</em> das chaves geradas acima você pode usar o comando:</p>
+        <code>for key_type in PK KEK db; do openssl x509 -outform DER -in ${key_type}.crt -out ${key_type}.cer ; done</code>
         <details class="spoiler" >
-            <summary>Usando config files</summary>
+            <summary>Usando config files (Clique para exibir)</summary>
             <p>Lembrando também que o argumento <em>-subj</em> pode receber mais parâmetros conforme a sua necessidade, por exemplo:</p>
-            <code>openssl req -new -key chave_privada.pem -subj "/C=BR/ST=São Paulo/L=São Paulo/O=Minha Empresa/OU=Departamento de TI/CN=meusite.com/emailAddress=contato@meusite.com/GN=João/SN=Silva/UID=joaozinho" -out pedido.csr</code>
+            <code>... -subj "/C=BR/ST=São Paulo/L=São Paulo/O=Minha Empresa/OU=Departamento de TI/CN=meusite.com/emailAddress=contato@meusite.com/GN=João/SN=Silva/UID=joaozinho" ...</code>
             <ul>
                 <li><p>C=BR, o parâmetro <em>Country</em> recebe o identificador de país, nesse caso Brasil.</p></li>
                 <li><p>ST=São Paulo, o parâmetro <em>State</em> recebe o identificador de estado ou província, nesse caso São Paulo.</p></li>
@@ -209,7 +226,6 @@ emailAddress            = <em>contato@meusite.com</em>
 givenName               = <em>João</em>
 surname                 = <em>Silva</em>
 userId                  = <em>joaozinho</em>
-
 <!--
 [ req_distinguished_name ]
 C                    = BR
@@ -222,8 +238,7 @@ emailAddress         = contato@meusite.com
 GN                   = João
 SN                   = Silva
 UID                  = joaozinho
--->
-    
+-->    
 [ my_x509_exts ]
 keyUsage             = digitalSignature
 extendedKeyUsage     = codeSigning
@@ -231,25 +246,25 @@ basicConstraints     = critical,CA:FALSE
 subjectKeyIdentifier = hash
 </code></pre>
             <p>Lembre-se de não usar <em>-subj</em> quando for fazer a chave através de um arquivo de configuração, pois qualquer parâmetro passado para esse argumento vai sobreescrever os parâmetros dados pelo arquivo.</p>
-            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/PK.cfg -keyout keys/PK.key -out keys/PK.pem</code>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/PK.cfg -keyout keys/PK.key -out keys/PK.crt</code>
             <p>Você pode verificar a chave com:</p>
-            <code>openssl x509 -text -noout -inform PEM -in keys/PK.pem</code>
+            <code>openssl x509 -text -noout -inform PEM -in keys/PK.crt</code>
             <p>Agora vamos copiar este arquivo como KEK.cfg:</p>
             <code>cp -v keys/cfg/{PK,KEK}.cfg</code>
             <p>E vamos editar o parâmetro <em>Platform Key</em> para <em>Key Exchange Key</em>:</p>
             <code>sed -i 's/Platform Key/Key Exchange Key/g' /keys/cfg/KEK.cfg</code>
             <p>E gerar as chaves agora usando o <em>KEK.cfg</em>:</p>
-            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/KEK.cfg -keyout keys/KEK.key -out keys/KEK.pem</code>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/KEK.cfg -keyout keys/KEK.key -out keys/KEK.crt</code>
             <p>Confira com:</p>
-            <code>openssl x509 -text -noout -inform PEM -in keys/KEK.pem</code>
+            <code>openssl x509 -text -noout -inform PEM -in keys/KEK.crt</code>
             <p>Mesmo esquema para o <em>db.cfg</em>, primeiro copiar o arquivo:</p>
             <code>cp -v keys/cfg/{PK,db}.cfg</code>
             <p>Depois alterar o commonName:</p>
             <code>sed -i 's/Platform Key/Signature Database/g' keys/cfg/db.cfg</code>
             <p>Gerar a chave:</p>
-            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/db.cfg -keyout keys/db.key -out keys/db.pem</code>
+            <code>openssl req -x509 -sha256 -days 3650 -outform PEM -config keys/cfg/db.cfg -keyout keys/db.key -out keys/db.crt</code>
             <p>E depois verificar a chave:</p>
-            <code>openssl x509 -text -noout -inform PEM -in keys/db.pem</code>
+            <code>openssl x509 -text -noout -inform PEM -in keys/db.crt</code>
         </details>
         <h2>Por que não estamos criando chaves DBX?</h2>
         <p>Pelo fato de DBX ser uma lista de revogação de hashes sabidamente maliciosos, expirados ou revogados, o interessante é adicionar o máximo de assinaturas revogadas possível, de preferência extendendo as chaves que já vieram na sua placa mãe com listas de revogações mais novas, jamais tenha uma chave DBX nova.</p>
@@ -265,90 +280,52 @@ subjectKeyIdentifier = hash
         <code>cat keys/guid.txt</code>
         <p>Vai retornar uma como a do exemplo abaixo:</p>
         <code>XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code>
-        <h3>Gerando PK ESL</h3>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/PK.pem keys/esl/PK.esl</code>
-        <h3>Gerando PK AUTH</h3>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
-        <!--    
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%d-%m-%Y %H-%M-%S')" -c keys/PK.pem -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
-        -->
-        <h3>Gerando KEK ESL</h3>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/KEK.pem keys/esl/KEK.esl</code>
-        <h3>Gerando KEK AUTH</h3>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key KEK keys/esl/KEK.esl keys/auth/KEK.auth</code>
-        <h3>Gerando DB ESL</h3>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/db.pem keys/esl/db.esl</code>
-        <h3>Gerando DB AUTH</h3>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/KEK.pem -k keys/KEK.key db keys/esl/db.esl keys/auth/db.auth</code> 
-        <h3>Gerando noPK ESL (opcional)</h3>
+        <!-- GERANDO OS ARQUIVOS ESL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Gerando os arquivos ESL</h3>
+        <p>O arquivo <em>.esl</em> (EFI Signature List) é o arquivo usado no EFI para gerar lista de assinatura de binários confiáveis, para gerar os .esl use o comando:</p>
+        <code>for key_type in PK KEK db; do cert-to-efi-sig-list -g $(< uuid.txt) keys/${key_type}.crt keys/esl/${key_type}.esl; done</code>
+        <p>Caso queira gerar manualmente:</p>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/PK.crt keys/esl/PK.esl</code>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/KEK.crt keys/esl/KEK.esl</code>
+        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/db.crt keys/esl/db.esl</code>
+        <p>(opcional) Gerando noPK esl:</p>
         <code>touch keys/esl/noPK.esl</code>
-        <h3>Gerando noPK AUTH (opcional)</h3>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.pem -k keys/PK.key PK keys/esl/noPK.esl keys/auth/noPK.auth</code>        
+        <!-- GERANDO OS ARQUIVOS AUTH -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Gerando os arquivos AUTH</h3>
+        <p>O arquivo <em>.auth</em> é o arquivo usado no EFI para atalizar ou modificar as chaves de Secure Boot, observe que existe uma ordem para gerá-lo, primeiro usamos a chave PK privada com o PK ESL para gerar o PK AUTH:</p>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
+        <p>Depois usamos a chave privada PK com o certificado PK para gerar o KEK AUTH:</p>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key KEK keys/esl/KEK.esl keys/auth/KEK.auth</code>
+        <p>Por fim usamos a chave privada KEK com o certificado KEK para gerar o DB AUTH:</p>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/KEK.crt -k keys/KEK.key db keys/esl/db.esl keys/auth/db.auth</code> 
+        <p>(opcional) Gerando noPK AUTH (reset key):</p>
+        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/noPK.esl keys/auth/noPK.auth</code>  
+        <!-- INSTALANDO AS CHAVES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Instalando as chaves (presumindo que você está em Setup Mode)</h2>
-        <h3>DBX</h3>
         <code>sudo efi-updatevar -f dbx.auth dbx</code>
-        <h3>DB</h3>
         <code>sudo efi-updatevar -f db.auth db</code>
-        <h3>KEK</h3>
         <code>sudo efi-updatevar -f KEK.auth KEK</code>
-        <h3>PK</h3>
         <code>sudo efi-updatevar -f PK.auth PK</code>
-        <p>A execução bem-sucedida desse comando finaliza o <em>Setup mode</em> e deixa o Secure Boot em <em>User mode</em>.</p>
+        <p>A execução bem-sucedida desse comando em <em>Windows mode</em> finaliza o <em>Setup mode</em> e deixa o Secure Boot em <em>User mode</em>.</p>
         <p>Para verificar se as chaves foram devidamente incorporadas você pode usar o comando:</p>
         <code>efi-readvar</code>
+        <p>Ou, para verificar de maneira independente:</p>
+        <code>efi-readvar -v PK</code>
+        <code>efi-readvar -v KEK</code>
+        <code>efi-readvar -v db</code>
+        <code>efi-readvar -v dbx</code>
         <h2>Como assinar módulos?</h2>
         <p>Aqui é um exemplo de como assinar o Kernel usando as chaves <em>db</em>:</p>
-        <code>sbsign --key keys/db.key --cert keys/db.pem --output /boot/vmlinuz.signed /boot/vmlinuz</code>
+        <code>sbsign --key keys/db.key --cert keys/db.crt --output /boot/vmlinuz.signed /boot/vmlinuz</code>
         <h2>Retornando para Setup Mode</h2>
         <code>sudo efi-updatevar -f noPK.auth PK</code>
         <p>Como foi dito acima a execução bem-sucedida desse comando efetivamente apaga o conteúdo da PK, desativando assim o Secure Boot.</p>
-        <h2>Caso queira apagar as variáveis:</h2>
-        <h3>DBX</h3>
-        <code>sudo efi-updatevar -d dbx</code>
-        <h3>DB</h3>
-        <code>sudo efi-updatevar -d db</code>
-        <h3>KEK</h3>
-        <code>sudo efi-updatevar -d KEK</code>
-        <h3>PK</h3>
-        <code>sudo efi-updatevar -d PK</code>
-
-        
-        
-
-
         <!--
-        <h3>Overview</h3>
-        <p>Para ver quem é dono da chave</p>
-        <code>efi-readvar -v PK</code>
-        <p>Para ver a chave pública</p>
-        <code>mokutil --pk</code>
-        <p>Para ver quem é dono da chave</p>
-        <code>efi-readvar -v KEK</code>
-        <p>Para ver a chave pública</p>
-        <code>mokutil --kek</code>
-        <p>Para ver quem é dono da chave</p>
-        <code>efi-readvar -v db</code>
-        <p>Para ver a chave pública</p>
-        <code>mokutil --db</code>
-        <p>Para ver quem é dono da chave</p>
-        <code>efi-readvar -v dbx</code>
-        <p>Para ver a chave pública</p>
-        <code>mokutil --dbx</code>
-        <h3>Backup das chaves</h3>
-        <code>mkdir -vp keys/{auth,bak,cfg,esl,ms,oem}</code>
+        Como apagar as chaves?
         -->
-
-
-
-        <!--
-        
-        <aside>
-            <p>Nota:</p>
-            <p>Você não deveria estar vendo isso!</p>
-        </aside>
-
-        -->
-
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
