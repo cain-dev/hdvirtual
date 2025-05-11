@@ -98,10 +98,10 @@
         <p>E agora vamos aos backups das chaves do seu sistema...</p>
         <code>for var in PK KEK db dbx ; do efi-readvar -v $var -o keys/backup/old_${var}.esl; done</code>
         <p>Caso queira fazer manualmente:</p>
-        <code>efi-readvar -v PK  -o keys/backup/PK-backup.esl</code>
-        <code>efi-readvar -v KEK -o keys/backup/KEK-backup.esl</code>
-        <code>efi-readvar -v db  -o keys/backup/db-backup.esl</code>
-        <code>efi-readvar -v dbx -o keys/backup/dbx-backup.esl</code>
+        <code>efi-readvar -v PK  -o keys/backup/old_PK.esl</code>
+        <code>efi-readvar -v KEK -o keys/backup/old_KEK.esl</code>
+        <code>efi-readvar -v db  -o keys/backup/old_db.esl</code>
+        <code>efi-readvar -v dbx -o keys/backup/old_dbx.esl</code>
         <p>Uma vez que você tem o arquivo de backup dessas chaves, eu recomendo que você acesse o setup com o comando:</p>
         <code>systemctl reboot --firmware-setup</code>
         <p>E de lá você <mark>mais uma vez apague todas as chaves!</mark> Não tem como fazer um tutorial para todos os casos, você vai ter que pegar o manual da sua placa-mãe e realizar essa tarefa conforme o seu caso específico. Assim que o sistema iniciar você pode verificar se o Secure Boot foi desabilitado com o comando abaixo:</p>
@@ -172,11 +172,10 @@ Vendor Keys: microsoft
         </ul>
         <p>Se você não entende nada de criptografia basta entender que chaves privadas assinam (no sentido de autenticar a pessoa que é responsável por aquilo, como num contrato), por isso elas são <em>privadas</em>, chaves públicas são provas de assinatura (no sentido de verificar o responsável pela assinatura), por isso elas são <em>publicas</em>. PEM é uma codificação baseada em texto, contém cabeçalhos e rodapés, mais fácil para ser integrada e/ou editada; DER é uma codificação binária, mais compacto e eficiente porém sem cabeçalhos e rodapés, mais difícil para ser integrada e/ou editada; .auth podem ser usados em <em>Setup Mode</em> ou <em>User Mode</em> ESL só podem ser usados em <em>Setup Mode</em>.</p>
         <h2>Gerando as chaves</h2>
-        
         <section class="alert">
             <p>De começo um alerta... É quase que impossível para mim mostrar aqui toda variação de criação de chave, seja estrita, seja protegida por GPG... Eu recomendo você utilizar isso como uma base para criar as suas chaves mas não se limite ao que está aqui, aqui estou diluindo o método para que você entenda o processo.</p>
         </section>
-        <!-- MÉTODO AVANÇADO - CHAVE PK -->
+        <!-- MÉTODO AVANÇADO - GERAR CHAVES MANUALMENTE -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <p>Para gerar as chaves use o comandos abaixo:</p>
         <code>for key_type in PK KEK db; do openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private ${key_type}" -keyout ${key_type}.key -out ${key_type}.crt -days 3650 -sha256 -nodes; done</code>
@@ -185,8 +184,12 @@ Vendor Keys: microsoft
         <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private KEK" -keyout KEK.key -out KEK.crt -days 3650 -sha256 -nodes</code>
         <code>openssl req -new -x509 -newkey rsa:2048 -subj "/CN=Private db" -keyout db.key -out db.crt -days 3650 -sha256 -nodes</code>
         <p>Esse comando vai gerar chaves do tipo <em>PEM</em>, por padrão se usa <em>rsa:2048</em> com <em>sha256</em> com <em>3650</em> dias (basicamente 10 anos), mas fique a vontade para testar conforme sua necessidade como usar <em>rsa:4096</em> para mais segurança, remover o argumento <em>-nodes</em> e proteger a chave privada com senha,  ou mesmo usar <em>sha1</em> para especificações mais antigas, de qualquer modo lembre-se de que deve ser compatível com as especificações da sua plataforma (e só o manual pode te dizer isso)!</p>
+        <p>Caso queira verificar isoladamente as chaves você pode usar o comando como referência:</p>
+        <code>openssl x509 -text -noout -inform PEM -in /keys/PK.pem</code>
         <p>(Opcional) Caso queira gerar um arquivo de tipo <em>DER</em> das chaves geradas acima você pode usar o comando:</p>
         <code>for key_type in PK KEK db; do openssl x509 -outform DER -in ${key_type}.crt -out ${key_type}.cer ; done</code>
+        <!-- MÉTODO AVANÇADO - GERAR CHAVES POR CONFIG FILE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
             <summary>Usando config files (Clique para exibir)</summary>
             <p>Lembrando também que o argumento <em>-subj</em> pode receber mais parâmetros conforme a sua necessidade, por exemplo:</p>
@@ -320,12 +323,26 @@ subjectKeyIdentifier = hash
         <h2>Como assinar módulos?</h2>
         <p>Aqui é um exemplo de como assinar o Kernel usando as chaves <em>db</em>:</p>
         <code>sbsign --key keys/db.key --cert keys/db.crt --output /boot/vmlinuz.signed /boot/vmlinuz</code>
+        <h3>E isso funciona para qualquer bootloader?</h3>
+        <p>Sim... E não...</p>
+        <p>Perceba: Existe uma diferença entre uma aplicação ser assinada para funcionar em Secure Boot e uma aplicação funcionar junto com o Secure Boot. No sentido de que existem maneiras de iniciar o sistema sem problema algum com o Secure Boot ativado, porém esses mecanismos não vão manter a cadeia de confiança. Um exemplo desses mecanismos é o <em>EFISTUB</em>, se você (assim como eu) gosta de fazer uso de EFISTUB você vai poder iniciar o seu sistema sem grandes problemas com o Secure Boot ativo porém (ao menos até a presente data) o EFISTUB não é capaz de fazer a gerência dessa cadeia de segurança. Salvo engano, a maneira mais enxuta de ter um sistema Linux compatível com Secure Boot é o uso de <em>Unified Kernel Images</em> ( ou <em>UKI's</em>), salvo engano o Clover, o GRUB, o rEFInd, systemd-boot também são compatíveis.</p>
+        <!--
+        Como gerar UKI's?
+        -->
         <h2>Retornando para Setup Mode</h2>
         <code>sudo efi-updatevar -f noPK.auth PK</code>
         <p>Como foi dito acima a execução bem-sucedida desse comando efetivamente apaga o conteúdo da PK, desativando assim o Secure Boot.</p>
         <!--
         Como apagar as chaves?
         -->
+        <!-- COMBINANDO AS CHAVES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Combinando as chaves</h2>
+        <p><i>"Ah, mas você disse que existia a possibilidade de brickar a máquina sem as chaves Windows, não existe nenhuma maneira de mitigar isso?"</i></p>
+        <p>Tem sim e na verdade é bem simples... Basta combinar as chaves.</p>
+        <p>É sério. Exemplo:</p>
+        <code>cat keys/backup/old_db.esl keys/esl/db.esl > combined_db.esl</code>
+        <p>Obviamente, fora a chave PK que é única você pode fazer isso com todas as listas de chaves, só se lembre depois de assinar na mesma ordem que o exemplo acima.</p>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
