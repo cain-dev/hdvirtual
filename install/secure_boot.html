@@ -118,7 +118,7 @@
         <p>Depois o comando abaixo para carregar as chaves (junto com as chaves Microsoft):</p>
         <code>sbctl enroll-keys -m</code>
         <details class="spoiler" >
-            <summary>Carregar as chaves sem as assinaturas da Microsoft</summary>
+            <summary>Carregar as chaves sem as assinaturas da Microsoft (Clique para ver)</summary>
             <p><strong>Alerta:</strong> Isso pode <i>brickar</i> o seu dispositivo! Só use esse comando se você tiver certeza do que está fazendo!</p>
             <code>sbctl enroll-keys</code>
             <p>Bônus!</p>
@@ -308,10 +308,10 @@ subjectKeyIdentifier = hash
         <!-- INSTALANDO AS CHAVES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Instalando as chaves (presumindo que você está em Setup Mode)</h2>
-        <code>sudo efi-updatevar -f dbx.auth dbx</code>
-        <code>sudo efi-updatevar -f db.auth db</code>
-        <code>sudo efi-updatevar -f KEK.auth KEK</code>
-        <code>sudo efi-updatevar -f PK.auth PK</code>
+        <code>sudo efi-updatevar -f keys/auth/dbx.auth dbx</code>
+        <code>sudo efi-updatevar -f keys/auth/db.auth db</code>
+        <code>sudo efi-updatevar -f keys/auth/KEK.auth KEK</code>
+        <code>sudo efi-updatevar -f keys/auth/aPK.auth PK</code>
         <p>A execução bem-sucedida desse comando em <em>Windows mode</em> finaliza o <em>Setup mode</em> e deixa o Secure Boot em <em>User mode</em>.</p>
         <p>Para verificar se as chaves foram devidamente incorporadas você pode usar o comando:</p>
         <code>efi-readvar</code>
@@ -326,11 +326,100 @@ subjectKeyIdentifier = hash
         <h3>E isso funciona para qualquer bootloader?</h3>
         <p>Sim... E não...</p>
         <p>Perceba: Existe uma diferença entre uma aplicação ser assinada para funcionar em Secure Boot e uma aplicação funcionar junto com o Secure Boot. No sentido de que existem maneiras de iniciar o sistema sem problema algum com o Secure Boot ativado, porém esses mecanismos não vão manter a cadeia de confiança. Um exemplo desses mecanismos é o <em>EFISTUB</em>, se você (assim como eu) gosta de fazer uso de EFISTUB você vai poder iniciar o seu sistema sem grandes problemas com o Secure Boot ativo porém (ao menos até a presente data) o EFISTUB não é capaz de fazer a gerência dessa cadeia de segurança. Salvo engano, a maneira mais enxuta de ter um sistema Linux compatível com Secure Boot é o uso de <em>Unified Kernel Images</em> ( ou <em>UKI's</em>), salvo engano o Clover, o GRUB, o rEFInd, systemd-boot também são compatíveis.</p>
+        <!-- GERANDO UKI's -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>E como gerar Unified Kernel Images?</h3>
+        <p>Olha... Existem inúmeras maneiras de se fazer isso, desde concatenar manualmente do microcode até o initrd (que nem ferrando que eu vou explicar aqui 😂), até usar o mkinitcpio para fazer. Vamos começar duplicando o preset do arquivo <em>/etc/mkinitcpio.d/linux.preset</em> <strong>ou</strong> <em>/etc/mkinitcpio.d/linux-lts.preset</em> (caso você prefira usar o kernel LTS para o seu UKI):</p>
+        <code>sudo cd /etc/mkinitcpio.d/linux.preset /etc/mkinitcpio.d/linux-uki.preset</code>
+        <p><strong>OU</strong></p>
+        <code>sudo cd /etc/mkinitcpio.d/linux-lts.preset /etc/mkinitcpio.d/linux-lts-uki.preset</code>
+        <p>Edite o recém criado, seja ele o <em>linux-uki.preset</em> ou o <em>linux-lts-uki.preset</em>, o seu arquivo deve estar mais ou menos assim:</p>
+<pre><code>
+# mkinitcpio preset file for the 'linux' package
+
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+    
+PRESETS=('default' 'fallback')
+    
+#default_config="/etc/mkinitcpio.conf"
+default_image="/boot/initramfs-linux.img"
+#default_uki="/efi/EFI/Linux/arch-linux.efi"
+#default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+    
+#fallback_config="/etc/mkinitcpio.conf"
+fallback_image="/boot/initramfs-linux-fallback.img"
+#fallback_uki="/efi/EFI/Linux/arch-linux-fallback.efi"
+fallback_options="-S autodetect"
+</code></pre>
+        <p>Vamos entender essas linhas:</p>
+        <ul>
+            <li><p><em>#ALL_config</em> indica explicitamente qual arquivo de configuração base deve ser usado para todos os presets dentro desse arquivo, considerando que o arquivo padrão será usado então não faz diferença descomentar essa linha agora;</p></li>
+            <li><p><em>ALL_kver</em> indica o caminho de kernel que vai ser utilizado, como se trata do preset <em>linux</em> logo o arquivo daqui é o <em>/boot/vmlinuz-linux</em>, se você quiser usar outro kernel basta alterar aqui;</p></li>
+            <li><p><em>PRESETS</em> indica quais dos presets serão gerados, nesse caso o preset 'default' e 'fallback' estão ativos, você pode remover o fallback caso tenha certeza de manter outro kernel e/ou entrada de reserva (como farei no exemplo abaixo);</p></li>
+            <li><p><em>default_config</em> indica a configuração base que será utilizada dentro do preset <em>'default'</em> ;</p></li>
+            <li><p><em>default_image</em> indica o nome da imagem padrão de initrd para ser gerada, nesse caso comentaremos essa linha pois ele estará embutido;</p></li>
+            <li><p><em>default_uki</em> indica o caminho onde será gerado o UKI padrão, descomentaremos essa linha, embora não recomendado você pode alterar para <mark>/efi/EFI/BOOT/BOOTX64.EFI</mark> para deixar a UKI como loader padrão e não ter mais necessidade de criação de entrada de boot;</p></li>
+            <li><p><em>default_options</em> indica opções para a imagem padrão, você pode descomentar ela para possibilitar o splash mas não use ela para os parâmetros de kernel;</p></li>
+            <li><p>As linhas abaixo contendo <em>fallback_</em> são exatamente a mesma coisa só que para o preset <em>'fallback'</em> , edite conforme a sua necessidade.</p></li>
+        </ul>
+        <p>No fim o meu ficará assim:</p>
+<pre><code>
+# mkinitcpio preset file for the 'linux' package
+            
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+                
+PRESETS=('default')
+                
+#default_config="/etc/mkinitcpio.conf"
+#default_image="/boot/initramfs-linux.img"
+default_uki="/efi/EFI/Linux/arch-linux.efi"
+#default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+                
+#fallback_config="/etc/mkinitcpio.conf"
+fallback_image="/boot/initramfs-linux-fallback.img"
+#fallback_uki="/efi/EFI/Linux/arch-linux-fallback.efi"
+fallback_options="-S autodetect"
+</code></pre>
+        <p>Para inserir parâmetros de kernel para a imagem você pode usar o diretório <mark>/etc/cmdline.d/</mark> e criar os arquivo <em>seu_arquivo.conf</em> ou editar diretamente o arquivo <mark>/etc/kernel/cmdline</mark>. Como eu quase sempre uso zswap, vou usar de exemplo a criação de um arquivo de configuração de parâmetro de kernel para ele:</p>
+        <code>sudo nvim /etc/cmdline.d/zswap.conf</code>
+        <p>Inserir as linhas:</p>
+        <code>zswap.enabled=1 zswap.zpool=zsmalloc</code>
+        <section class="alert">
+            <p>Eu recomendo fortemente você adicionar o argumento <em>microcode</em> dentro dos <i>HOOKS</i> do <mark>/etc/mkinitcpio.conf</mark> <strong>antes</strong> de gerar o UKI!</p>
+        </section>
+        <p>E por fim vou gerar a UKI do preset linux com o comando:</p>
+        <code>mkinitcpio -p linux-uki</code>
+        <p>Se você fez tudo corretamente, vai ver tanto a linha indicando o uso do <em>cmdline</em> quando a mensagem de sucesso na geração do UKI:</p>
+        <code>-> Using cmdline file: '/etc/cmdline.d/zswap.conf'<br>==> Unified kernel image generation successful</code>
         <!--
-        Como gerar UKI's?
+        <h2>Gerando <em>HOOK</em> de assinatura</h2>
+        <p>Independente se você está usando ou não UKI é interessante criar um <i>HOOK</i> em <em>/etc/initcpio/post/kernel-sbsign</em> com o conteúdo:</p>
+<pre><code>
+#!/usr/bin/env bash
+
+kernel="$1"
+[[ -n "$kernel" ]] || exit 0
+    
+# use already installed kernel if it exists
+[[ ! -f "$KERNELDESTINATION" ]] || kernel="$KERNELDESTINATION"
+    
+keypairs=(<em>caminho_da_db</em>.key <em>caminho_da_db</em>.crt)
+    
+for (( i=0; i<${#keypairs[@]}; i+=2 )); do
+    key="${keypairs[$i]}" cert="${keypairs[(( i + 1 ))]}"
+    if ! sbverify --cert "$cert" "$kernel" &>/dev/null; then
+        sbsign --key "$key" --cert "$cert" --output "$kernel" "$kernel"
+    fi
+done
+</code></pre>
         -->
+        <p>Uma vez que a UKI já está gerada e assinada, basta definir a sua entrada para o bootloader, para o meu caso vou usar de exemplo o carregamento direto da UKI desde a UEFI usando o <em>efibootmgr</em>:</p>
+        <code>sudo efibootmgr --create --disk /dev/nvme0n1 --part 2 --label "Arch Linux UKI" --loader 'EFI\Linux\arch-linux.efi' --verbose</code>
+        <p>Adendo: Não adicionei o argumento <em>--unicode</em> por não usar nenhum caractere não ASCII, mas lembre-se de colocar --unicde para qualquer tipo de caractere não ASCII no seu comando.</p>
         <h2>Retornando para Setup Mode</h2>
-        <code>sudo efi-updatevar -f noPK.auth PK</code>
+        <code>sudo efi-updatevar -f keys/auth/noPK.auth PK</code>
         <p>Como foi dito acima a execução bem-sucedida desse comando efetivamente apaga o conteúdo da PK, desativando assim o Secure Boot.</p>
         <!--
         Como apagar as chaves?
@@ -342,7 +431,7 @@ subjectKeyIdentifier = hash
         <p>Tem sim e na verdade é bem simples... Basta combinar as chaves.</p>
         <p>É sério. Exemplo:</p>
         <code>cat keys/backup/old_db.esl keys/esl/db.esl > combined_db.esl</code>
-        <p>Obviamente, fora a chave PK que é única você pode fazer isso com todas as listas de chaves, só se lembre depois de assinar na mesma ordem que o exemplo acima.</p>
+        <p>Obviamente, fora a chave PK que é única você pode fazer isso com todas as listas de chaves, mas <strong>lembre-se depois de assinar todas as outras chaves na mesma ordem que o exemplo acima!</strong>.</p>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
