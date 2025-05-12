@@ -278,40 +278,40 @@ subjectKeyIdentifier = hash
         <!--
         <code>uuidgen > uuid.txt</code>
         -->
-        <code>echo "$(uuidgen -r)" > keys/guid.txt</code>
+        <code>echo "$(uuidgen -r)" > keys/uuid.txt</code>
         <p>Para verificar o código gerado use o comando:</p>
-        <code>cat keys/guid.txt</code>
+        <code>cat keys/uuid.txt</code>
         <p>Vai retornar uma como a do exemplo abaixo:</p>
         <code>XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code>
         <!-- GERANDO OS ARQUIVOS ESL -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Gerando os arquivos ESL</h3>
         <p>O arquivo <em>.esl</em> (EFI Signature List) é o arquivo usado no EFI para gerar lista de assinatura de binários confiáveis, para gerar os .esl use o comando:</p>
-        <code>for key_type in PK KEK db; do cert-to-efi-sig-list -g $(< uuid.txt) keys/${key_type}.crt keys/esl/${key_type}.esl; done</code>
+        <code>for key_type in PK KEK db; do cert-to-efi-sig-list -g $(< keys/uuid.txt) keys/${key_type}.crt keys/esl/${key_type}.esl; done</code>
         <p>Caso queira gerar manualmente:</p>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/PK.crt keys/esl/PK.esl</code>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/KEK.crt keys/esl/KEK.esl</code>
-        <code>cert-to-efi-sig-list -g "$(< keys/guid.txt)" keys/db.crt keys/esl/db.esl</code>
+        <code>cert-to-efi-sig-list -g "$(< keys/uuid.txt)" keys/PK.crt keys/esl/PK.esl</code>
+        <code>cert-to-efi-sig-list -g "$(< keys/uuid.txt)" keys/KEK.crt keys/esl/KEK.esl</code>
+        <code>cert-to-efi-sig-list -g "$(< keys/uuid.txt)" keys/db.crt keys/esl/db.esl</code>
         <p>(opcional) Gerando noPK esl:</p>
         <code>touch keys/esl/noPK.esl</code>
         <!-- GERANDO OS ARQUIVOS AUTH -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Gerando os arquivos AUTH</h3>
         <p>O arquivo <em>.auth</em> é o arquivo usado no EFI para atalizar ou modificar as chaves de Secure Boot, observe que existe uma ordem para gerá-lo, primeiro usamos a chave PK privada com o PK ESL para gerar o PK AUTH:</p>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
+        <code>sign-efi-sig-list -g "$(< keys/uuid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/PK.esl keys/auth/PK.auth</code>
         <p>Depois usamos a chave privada PK com o certificado PK para gerar o KEK AUTH:</p>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key KEK keys/esl/KEK.esl keys/auth/KEK.auth</code>
+        <code>sign-efi-sig-list -g "$(< keys/uuid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key KEK keys/esl/KEK.esl keys/auth/KEK.auth</code>
         <p>Por fim usamos a chave privada KEK com o certificado KEK para gerar o DB AUTH:</p>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/KEK.crt -k keys/KEK.key db keys/esl/db.esl keys/auth/db.auth</code> 
+        <code>sign-efi-sig-list -g "$(< keys/uuid.txt)" -t "$(date +'%F %T')" -c keys/KEK.crt -k keys/KEK.key db keys/esl/db.esl keys/auth/db.auth</code> 
         <p>(opcional) Gerando noPK AUTH (reset key):</p>
-        <code>sign-efi-sig-list -g "$(< keys/guid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/noPK.esl keys/auth/noPK.auth</code>  
+        <code>sign-efi-sig-list -g "$(< keys/uuid.txt)" -t "$(date +'%F %T')" -c keys/PK.crt -k keys/PK.key PK keys/esl/noPK.esl keys/auth/noPK.auth</code>  
         <!-- INSTALANDO AS CHAVES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Instalando as chaves (presumindo que você está em Setup Mode)</h2>
         <code>sudo efi-updatevar -f keys/auth/dbx.auth dbx</code>
         <code>sudo efi-updatevar -f keys/auth/db.auth db</code>
         <code>sudo efi-updatevar -f keys/auth/KEK.auth KEK</code>
-        <code>sudo efi-updatevar -f keys/auth/aPK.auth PK</code>
+        <code>sudo efi-updatevar -f keys/auth/PK.auth PK</code>
         <p>A execução bem-sucedida desse comando em <em>Windows mode</em> finaliza o <em>Setup mode</em> e deixa o Secure Boot em <em>User mode</em>.</p>
         <p>Para verificar se as chaves foram devidamente incorporadas você pode usar o comando:</p>
         <code>efi-readvar</code>
@@ -323,6 +323,8 @@ subjectKeyIdentifier = hash
         <h2>Como assinar módulos?</h2>
         <p>Aqui é um exemplo de como assinar o Kernel usando as chaves <em>db</em>:</p>
         <code>sbsign --key keys/db.key --cert keys/db.crt --output /boot/vmlinuz.signed /boot/vmlinuz</code>
+        <p>Para verificar a assinatura no executável use o comando:</p>
+        <code>sbverify --list /boot/vmlinuz.signed</code>
         <h3>E isso funciona para qualquer bootloader?</h3>
         <p>Sim... E não...</p>
         <p>Perceba: Existe uma diferença entre uma aplicação ser assinada para funcionar em Secure Boot e uma aplicação funcionar junto com o Secure Boot. No sentido de que existem maneiras de iniciar o sistema sem problema algum com o Secure Boot ativado, porém esses mecanismos não vão manter a cadeia de confiança. Um exemplo desses mecanismos é o <em>EFISTUB</em>, se você (assim como eu) gosta de fazer uso de EFISTUB você vai poder iniciar o seu sistema sem grandes problemas com o Secure Boot ativo porém (ao menos até a presente data) o EFISTUB não é capaz de fazer a gerência dessa cadeia de segurança. Salvo engano, a maneira mais enxuta de ter um sistema Linux compatível com Secure Boot é o uso de <em>Unified Kernel Images</em> ( ou <em>UKI's</em>), salvo engano o Clover, o GRUB, o rEFInd, systemd-boot também são compatíveis.</p>
@@ -396,28 +398,9 @@ fallback_options="-S autodetect"
         <!--
         <h2>Gerando <em>HOOK</em> de assinatura</h2>
         <p>Independente se você está usando ou não UKI é interessante criar um <i>HOOK</i> em <em>/etc/initcpio/post/kernel-sbsign</em> com o conteúdo:</p>
-<pre><code>
-#!/usr/bin/env bash
-
-kernel="$1"
-[[ -n "$kernel" ]] || exit 0
-    
-# use already installed kernel if it exists
-[[ ! -f "$KERNELDESTINATION" ]] || kernel="$KERNELDESTINATION"
-    
-keypairs=(<em>caminho_da_db</em>.key <em>caminho_da_db</em>.crt)
-    
-for (( i=0; i<${#keypairs[@]}; i+=2 )); do
-    key="${keypairs[$i]}" cert="${keypairs[(( i + 1 ))]}"
-    if ! sbverify --cert "$cert" "$kernel" &>/dev/null; then
-        sbsign --key "$key" --cert "$cert" --output "$kernel" "$kernel"
-    fi
-done
-</code></pre>
         -->
         <p>Uma vez que a UKI já está gerada e assinada, basta definir a sua entrada para o bootloader, para o meu caso vou usar de exemplo o carregamento direto da UKI desde a UEFI usando o <em>efibootmgr</em>:</p>
-        <code>sudo efibootmgr --create --disk /dev/nvme0n1 --part 2 --label "Arch Linux UKI" --loader 'EFI\Linux\arch-linux.efi' --verbose</code>
-        <p>Adendo: Não adicionei o argumento <em>--unicode</em> por não usar nenhum caractere não ASCII, mas lembre-se de colocar --unicde para qualquer tipo de caractere não ASCII no seu comando.</p>
+        <code>sudo efibootmgr --create --disk /dev/<em>storageA</em>  --part <em>P2</em> --label "Arch Linux UKI" --loader '\EFI\Linux\arch-linux.efi' --unicode --verbose</code>
         <h2>Retornando para Setup Mode</h2>
         <code>sudo efi-updatevar -f keys/auth/noPK.auth PK</code>
         <p>Como foi dito acima a execução bem-sucedida desse comando efetivamente apaga o conteúdo da PK, desativando assim o Secure Boot.</p>
@@ -432,6 +415,16 @@ done
         <p>É sério. Exemplo:</p>
         <code>cat keys/backup/old_db.esl keys/esl/db.esl > combined_db.esl</code>
         <p>Obviamente, fora a chave PK que é única você pode fazer isso com todas as listas de chaves, mas <strong>lembre-se depois de assinar todas as outras chaves na mesma ordem que o exemplo acima!</strong>.</p>
+
+
+        <!--
+        
+        bootctl status --no-pager
+
+        pesign -S -i /boot/efi/EFI/fedora/shimx64.efi
+
+        -->
+
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
