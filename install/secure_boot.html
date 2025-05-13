@@ -328,7 +328,7 @@ subjectKeyIdentifier = hash
         <p>Para verificar a assinatura no executável use o comando:</p>
         <code>sbverify --list /boot/vmlinuz.signed</code>
         <h2>Gerando <em>HOOK</em> de assinatura</h2>
-        <p>Para não ter que ficar assinando o kernel manualmente, é interessante criar um <i>HOOK</i> no pacman para que sempre que o pacote <em>linux</em> ou <em>linux-lts</em> for instalado ou atualizado ele vai ser assinado automaticamente, comece criando o arquivo de HOOK em <mark>/etc/initcpio/post/sbsign-linux.hook</mark> com o conteúdo:</p>
+        <p>Para não ter que ficar assinando o kernel manualmente, é interessante criar um <i>HOOK</i> no pacman para que sempre que o pacote <em>linux</em> ou <em>linux-lts</em> for instalado ou atualizado ele vai ser assinado automaticamente, comece criando o arquivo de HOOK em <mark>/etc/pacman.d/hooks/sbsign-linux.hook</mark> com o conteúdo:</p>
 <pre><code>
 [Trigger]
 Operation = Upgrade
@@ -343,7 +343,7 @@ Exec = /usr/bin/sbsign \
  --cert <em>caminho_da_db.crt</em> \
  --output /boot/vmlinuz-linux /boot/vmlinuz-linux
 </code></pre>
-        <p>Entendeu né? Caso você também use o kernel LTS crie o arquivo <mark>/etc/initcpio/post/sbsign-linux-lts.hook</mark> com o conteúdo:</p>
+        <p>Entendeu né? Caso você também use o kernel LTS crie o arquivo <mark>/etc/pacman.d/hooks/sbsign-linux-lts.hook</mark> com o conteúdo:</p>
 <pre><code>
 [Trigger]
 Operation = Upgrade
@@ -358,6 +358,8 @@ Exec = /usr/bin/sbsign \
 --cert <em>caminho_da_db.crt</em> \
 --output /boot/vmlinuz-linux-lts /boot/vmlinuz-linux-lts
 </code></pre>
+        <p>Lembrando que você pode fazer esse <em>HOOK</em> para qualquer outro pacote, inclusive usando essa mesma estrutura você pode assinar seus bootloaders e até mesmo pode usar esse gatilho para gerar automaticamente seus presets de UKI usando o comando:</p>
+        <code>Exec = /usr/bin/mkinitcpio -p linux-uki</code>
         <h3>E isso funciona para qualquer bootloader?</h3>
         <p>Sim... E não...</p>
         <p>Perceba: Existe uma diferença entre uma aplicação ser assinada para funcionar em Secure Boot e uma aplicação funcionar junto com o Secure Boot. No sentido de que existem maneiras de iniciar o sistema sem problema algum com o Secure Boot ativado, porém esses mecanismos não vão manter a cadeia de confiança. Um exemplo desses mecanismos é o <em>EFISTUB</em>, se você (assim como eu) gosta de fazer uso de EFISTUB você vai poder iniciar o seu sistema sem grandes problemas com o Secure Boot ativo porém (ao menos até a presente data) o EFISTUB não é capaz de fazer a gerência dessa cadeia de segurança. Salvo engano, a maneira mais enxuta de ter um sistema Linux compatível com Secure Boot é o uso de <em>Unified Kernel Images</em> ( ou <em>UKI's</em>), salvo engano o Clover, o GRUB, o rEFInd, systemd-boot também são compatíveis.</p>
@@ -428,10 +430,33 @@ fallback_options="-S autodetect"
         <code>mkinitcpio -p linux-uki</code>
         <p>Se você fez tudo corretamente, vai ver tanto a linha indicando o uso do <em>cmdline</em> quando a mensagem de sucesso na geração do UKI:</p>
         <code>-> Using cmdline file: '/etc/cmdline.d/zswap.conf'<br>==> Unified kernel image generation successful</code>
-        <h2>hook de assinatura do uki</h2>
-        
+        <!-- HOOK ASSINATURA UKI -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>HOOK de assinatura da Unified Kernel Image (UKI)</h2>
+        <!--
+        <p><mark>/etc/initcpio/post/kernel-sbsign</mark> com o conteúdo:</p>
+<code><pre>
+#!/usr/bin/env bash
 
-
+kernel="$1"
+[[ -n "$kernel" ]] || exit 0
+    
+# use already installed kernel if it exists
+[[ ! -f "$KERNELDESTINATION" ]] || kernel="$KERNELDESTINATION"
+    
+keypairs=(<em>'caminho_para_db.key'</em> <em>'caminho_para_db.crt'</em>)
+    
+for (( i=0; i<${#keypairs[@]}; i+=2 )); do
+    key="${keypairs[$i]}" cert="${keypairs[(( i + 1 ))]}"
+    if ! sbverify --cert "$cert" "$kernel" &>/dev/null; then
+        sbsign --key "$key" --cert "$cert" --output "$kernel" "$kernel"
+    fi
+done
+</pre></code>
+        <p>Após editar o caminho para as chaves e salvar o arquivo, deixe ele executável com o comando:</p>
+        <code>sudo chmod+x /etc/initcpio/post/kernel-sbsign</code>
+        <p>Assim, toda vez que </p>
+        -->
         <p>Uma vez que a UKI já está gerada e assinada, basta definir a sua entrada para o bootloader, para o meu caso vou usar de exemplo o carregamento direto da UKI desde a UEFI usando o <em>efibootmgr</em>:</p>
         <code>sudo efibootmgr --create --disk /dev/<em>storageA</em>  --part <em>P2</em> --label "Arch Linux UKI" --loader '\EFI\Linux\arch-linux.efi' --unicode --verbose</code>
         <h2>Retornando para Setup Mode</h2>
@@ -448,8 +473,6 @@ fallback_options="-S autodetect"
         <p>É sério. Exemplo:</p>
         <code>cat keys/backup/old_db.esl keys/esl/db.esl > combined_db.esl</code>
         <p>Obviamente, fora a chave PK que é única você pode fazer isso com todas as listas de chaves, mas <strong>lembre-se depois de assinar todas as outras chaves na mesma ordem que o exemplo acima!</strong>.</p>
-
-
         <!--
         
         bootctl status --no-pager
@@ -457,7 +480,6 @@ fallback_options="-S autodetect"
         pesign -S -i /boot/efi/EFI/fedora/shimx64.efi
 
         -->
-
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
