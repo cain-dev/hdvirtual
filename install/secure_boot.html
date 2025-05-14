@@ -45,6 +45,11 @@
         <p>Para entender o que é o maldito do TPM primeiro você precisa entender o que é Trusted Computing, a Trusted Computing Group é uma organização sem fins lucrativos (aham, duvido...) que estabelesce padrões de hardware e software para a tal "computação confiável", entenda isso como "como garantir que o computador confie nele mesmo e não em você" (acho que deu pra começar e entender a razão da galera do software livre ser pé atrás com esse tipo de coisa...). TPM, nada mais é que um módulo que você tem na sua placa mãe (ou que você adiciona na sua placa mãe) para usar funções de computação confiável, como por exemplo, a criação e gerência de chaves de dentro do módulo, sem a exposição dessas chaves para nenhum outro ambiente. Ou seja: Qualquer que seja a autenticação que você deseja utilizar, a chave será gerada DENTRO do módulo TPM e ficará lá, e só vai ser utilizado no processo da autenticação.</p>
         <p>Sendo assim, não é possível nem utilizar um keylogger para roubar as chaves para desencriptar algo! A desvantagem é que isso transforma os ambientes de sistema em ambientes completamente efêmeros, pois se este módulo for comprometido de alguma forma, sejá lá o que dependa desse módulo vai ficar sem autenticação.</p>
         <p>Então TPM nada mais é do que a sigla para <i>Trusted Platform Module</i>, hoje em dia a maioria das placas-mãe já vem com um módulo desse desde o firmware (também chamado de fTPM), e também é importante lembrar que placas-mãe mais antigas (pré intel 99, placas mãe DDR3) podem ter o módulo TPM 1.2 adicionado, não é o mesmo que exigido para o Windows 11 mas ainda assim é uma opção interessante para quem quer fazer uso desse tipo de segurança.</p>
+        <!-- O QUE É fTPM -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Adendo sobre fTPM</h3>
+        <p>É muito importante dizer, que embora o fTPM seja suficiente para garantir algum funcionamento em questões de compatibilidade, ele <strong>não é a mesma coisa que um módulo TPM dedicado!</strong> O módulo fTPM que tem na sua placa mãe mais nova, está aí usando recursos e contexto multifunção, por uma questão de compatibilidade com o Windows 11, o módulo TPM é um chip isolado, acrecentado a uma placa, com um <i>header</i> para uma comunicação específica com a plataforma.</p>
+        <p>como o próprio site da <i>Dell</i> indica: <i>"Um TPM discreto tem controle total sobre os recursos internos dedicados (como memória volátil, memória não volátil e lógica criptográfica), e é a única função que acessa e utiliza esses recursos. Um TPM baseado em firmware não tem seu próprio armazenamento dedicado. Ele conta com os serviços do sistema operacional e da plataforma para obter acesso ao armazenamento dentro da plataforma."</i></p>
         <!-- CONTRAS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Então se é tão bom assim, não deveriamos usar?</h2>
@@ -483,8 +488,14 @@ done
 
         -->
         <h2>Tá... Mas e quanto ao TPM?</h2>
-        <p>Bom, lidar com o TPM é bem mais tranquilo, </p>
-
+        <p>Bom, lidar com o módulo TPM é bem mais tranquilo, e embora ele seja um adjacente do entendimento do UEFI e do Secure Boot, a documentação a respeito do TPM é bem menos obtusa vamos entender algumas coisinhas antes de começar colocar a mão na massa...</p>
+        <h3>TPM1.2 e TPM2.0</h3>
+        <p>Quando se fala em TPM, o TPM2.0 é apresentado como o único na face da terra, e o TPM1.2 como uma tecnologia distinta e morta... E não está tão errado não.</p>
+        <p>A grande verdade é que o TPM1.2 era um módulo adicional em seu lançamento, basicamente não teve suporte em sua vida útil, e acabou por ter suas medidas de segurança superadas antes de sua adoção. Quando o TPM1.2 teve seu suporte pedido no <em>systemd-cryptenroll</em>, Lennart Poettering responde tratando o TPM1.2 como uma tecnologia distinta e obsoleta... E seja lá qual opinião você tenha do Lennart, ele está completamente certo nisso.</p>
+        <p>Eu não vou dizer que o TPM1.2 é uma tecnologia inútil, longe disso, ele continua sendo bastante funcional, o ponto é que quando você pensar em TPM1.2 e TPM2.0, não pense em um versionamento linear e uma melhoria tecnológica como de <i>Resident Evil 1</i> para <i>Resident Evil 2</i>, pense em uma mudança drástica e de gênero completamente distinto, algo como de <i>Dino Crisis 2</i> para <i>Dino Crisis 3</i>... E se você já jogou essas franquias entende perfeitamente o que estou dizendo.</p>
+        <p>Então, para que não seja subentendido: TPM1.2 e TPM2.0 são dispositivos equivalentes sim, porém de tecnologia completamente distinta, ok? Então, a menos que daqui pra baixo tenha algo específico para o TPM1.2 (e sim, terá) considere que estou lidando com o TPM2.0, ok? Ok!</p>
+        <h3>As sementes (<i>seeds</i>) e as chaves internas (<i>keys</i>)</h3>
+        <p>O TPM trabalha basicamente com 3 </p>
         <h3>PCR</h3>
         <p><em>Platform Configuration Registers</em> (ou <em>PCR</em>), são basicamente registradores que podem guardar (e selar) versões de software ou estado de máquina através de hashes.</p>
         <table>
@@ -512,6 +523,7 @@ done
             <tr><td>PCR161</td><td>Depuração. Pode ser usada e redefinida a qualquer momento. Pode estar ausente em uma versão oficial do firmware.</td><td></td></tr>
             <tr><td>PCR23</td><td>Suporte a aplicativos. O sistema operacional pode definir e redefinir esse PCR.</td><td></td></tr>
         </table>
+        <p>Podemos implementar essas funções para automatizar a segurança em certas tarefas, como por exemplo...</p>
         <h3>Desbloqueando um disco com o TPM 2.0</h3>
         <p>Vamos supor que você seguiu o meu tutorial de instalação do Archlinux e para criar um pendrive encriptado em <em>/dev/storageAP4</em>, seja usando um arquivo de chave ou uma senha simples, mas agora quer que o módulo TPM faça todo o trabalho sozinho e desbloqueie isso automaticamente porém <strong>se e somente se</strong> o estado da máquina não foi alterado. A primeira coisa que você precisa fazer é abrir o dispositivo com o LUKS. Vou usar de exemplo o comando abaixo:</p>
         <code>cryptsetup luksOpen <em>/dev/storageAP4</em> <em>cryptroot</em></code>
@@ -523,10 +535,9 @@ done
         <p>Mas ok, vamos supor que o TPM2.0 foi encontrado, o volume encriptado está acessível e agora queremos fazer com que uma chave seja criada e armazenada no TPM2.0, essa mesma chave seja gravada num dos slots de senha do LUKS no disco, e criar um vínculo entre a liberação da chave e ao estado do PCR 7 do TPM, para isso use o comando abaixo:</p>
         <code>systemd-cryptenroll --tpm2-device=<em>caminho_do_seu_tpm2.0</em> --tpm2-pcrs=7 <em>/dev/storageAP4</em></code>
         <p>Você pode usar o dispositivo <em>/dev/gpt-auto-root-luks</em> para apontar para a partição raiz criptografada antes do desbloqueio (que eu não recomendo), pode usar <em>tpm2-device=auto</em> para não ter que especificar manualmente o dispotivo, e por fim lembre-se que caso vá usar o endereço, <em>/dev/storageAP4</em> se trata do endereço real do dispotivo e não do endereço em <em>/dev/mapper</em>! Você também pode atrelar a mais estados PCR, vamos supor que você queira atrelar não só ao estado de secure boot (PCR7) como também ao estado do firmware (PCR0), nesse caso você pode usar o argumento <em>tpm2-pcrs=0+7</em>.</p>
-
-
-
+        <!--
         <code>tpm2_createpolicy --policy-pcr --pcr-list sha256:0,7 --pcr safestate.pcrread --policy trusted_policy.pol</code>
+        -->
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
