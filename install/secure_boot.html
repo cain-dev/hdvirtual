@@ -479,7 +479,54 @@ done
 
         pesign -S -i /boot/efi/EFI/fedora/shimx64.efi
 
+        sbctl
+
         -->
+        <h2>Tá... Mas e quanto ao TPM?</h2>
+        <p>Bom, lidar com o TPM é bem mais tranquilo, </p>
+
+        <h3>PCR</h3>
+        <p><em>Platform Configuration Registers</em> (ou <em>PCR</em>), são basicamente registradores que podem guardar (e selar) versões de software ou estado de máquina através de hashes.</p>
+        <table>
+            <tr>
+                <th>PCR</th>
+                <th>Descrição</th>
+                <th>Extendido por</th>
+            </tr>
+            <tr><td>PCR0</td><td>Código executável do firmware do sistema principal (Firmware). Pode mudar se você atualizar seu UEFI.</td><td>Firmware</td></tr>
+            <tr><td>PCR1</td><td>Dados do firmware do sistema principal (configurações do UEFI).</td><td>Firmware</td></tr>
+            <tr><td>PCR2</td><td>Código executável estendido ou conectável (OpROMs).</td><td>Firmware</td></tr>
+            <tr><td>PCR3</td><td>Dados do firmware estendidos ou conectáveis. Definido durante a fase de seleção do dispositivo de inicialização do UEFI.</td><td>Firmware</td></tr>
+            <tr><td>PCR4</td><td>Código do Gerenciador de Inicialização e Tentativas de Inicialização. Mede o gerenciador de inicialização e os dispositivos que o firmware tentou inicializar.</td><td>Firmware</td></tr>
+            <tr><td>PCR5</td><td>Configuração e dados do Gerenciador de Inicialização. Pode medir a configuração de carregadores de inicialização; inclui a tabela de partição GPT.</td><td>Firmware</td></tr>
+            <tr><td>PCR6</td><td>Eventos de retomada dos estados de energia S4 e S5.</td><td>Firmware</td></tr>
+            <tr><td>PCR7</td><td>Estado de Secure Boot. Contém o conteúdo completo de PK/KEK/db, bem como os certificados específicos usados para validar cada aplicativo de inicialização.</td><td>Firmware, shim (adiciona MokList, MokListX e MokSBState)</td></tr>
+            <tr><td>PCR81</td><td>Hash da linha de comando do kernel.</td><td>GRUB</td></tr>
+            <tr><td>PCR91</td><td>Hash do initrd e das opções de carregamento EFI.</td><td>Linux (mede initrd e opções EFI, essencialmente os parâmetros do kernel)</td></tr>
+            <tr><td>PCR101</td><td>Reservado para uso futuro.</td><td></td></tr>
+            <tr><td>PCR111</td><td>Hash da imagem unificada do kernel.</td><td>systemd-stub(7)</td></tr>
+            <tr><td>PCR121</td><td>Linha de comando do kernel substituída, credenciais.</td><td>systemd-stub(7)</td></tr>
+            <tr><td>PCR131</td><td>Extensões do sistema.</td><td>systemd-stub(7)</td></tr>
+            <tr><td>PCR141</td><td>MokList, MokListX e MokSBState do shim.</td><td>shim</td></tr>
+            <tr><td>PCR151</td><td>Hash da chave de volume LUKS.</td><td>systemd-cryptsetup</td></tr>
+            <tr><td>PCR161</td><td>Depuração. Pode ser usada e redefinida a qualquer momento. Pode estar ausente em uma versão oficial do firmware.</td><td></td></tr>
+            <tr><td>PCR23</td><td>Suporte a aplicativos. O sistema operacional pode definir e redefinir esse PCR.</td><td></td></tr>
+        </table>
+        <h3>Desbloqueando um disco com o TPM 2.0</h3>
+        <p>Vamos supor que você seguiu o meu tutorial de instalação do Archlinux e para criar um pendrive encriptado em <em>/dev/storageAP4</em>, seja usando um arquivo de chave ou uma senha simples, mas agora quer que o módulo TPM faça todo o trabalho sozinho e desbloqueie isso automaticamente porém <strong>se e somente se</strong> o estado da máquina não foi alterado. A primeira coisa que você precisa fazer é abrir o dispositivo com o LUKS. Vou usar de exemplo o comando abaixo:</p>
+        <code>cryptsetup luksOpen <em>/dev/storageAP4</em> <em>cryptroot</em></code>
+        <p>Agora, verifique a existência de dispositivos TPM 2.0 válidos:</p>
+        <code>systemd-cryptenroll --tpm2-device=list</code>
+        <p>Caso <strong>não seja encontrado</strong> nenhum módulo TPM 2.0 o comando retornará:</p>
+        <code>No suitable TPM2 devices found.</code>
+        <p><strong>*</strong> Lembrando que no Arch é necessário a instalação do pacote <em>tpm2-tss</em>, os <i>HOOKS</i> <em>systemd</em> e <em>sd-encrypt</em> para mkinitcpio e o módulo <em>tpm2-tss</em> para Dracut.</p>
+        <p>Mas ok, vamos supor que o TPM2.0 foi encontrado, o volume encriptado está acessível e agora queremos fazer com que uma chave seja criada e armazenada no TPM2.0, essa mesma chave seja gravada num dos slots de senha do LUKS no disco, e criar um vínculo entre a liberação da chave e ao estado do PCR 7 do TPM, para isso use o comando abaixo:</p>
+        <code>systemd-cryptenroll --tpm2-device=<em>caminho_do_seu_tpm2.0</em> --tpm2-pcrs=7 <em>/dev/storageAP4</em></code>
+        <p>Você pode usar o dispositivo <em>/dev/gpt-auto-root-luks</em> para apontar para a partição raiz criptografada antes do desbloqueio (que eu não recomendo), pode usar <em>tpm2-device=auto</em> para não ter que especificar manualmente o dispotivo, e por fim lembre-se que caso vá usar o endereço, <em>/dev/storageAP4</em> se trata do endereço real do dispotivo e não do endereço em <em>/dev/mapper</em>! Você também pode atrelar a mais estados PCR, vamos supor que você queira atrelar não só ao estado de secure boot (PCR7) como também ao estado do firmware (PCR0), nesse caso você pode usar o argumento <em>tpm2-pcrs=0+7</em>.</p>
+
+
+
+        <code>tpm2_createpolicy --policy-pcr --pcr-list sha256:0,7 --pcr safestate.pcrread --policy trusted_policy.pol</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
