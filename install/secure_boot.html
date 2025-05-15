@@ -535,6 +535,11 @@ done
         <p>Mas ok, vamos supor que o TPM2.0 foi encontrado, o volume encriptado está acessível e agora queremos fazer com que uma chave seja criada e armazenada no TPM2.0, essa mesma chave seja gravada num dos slots de senha do LUKS no disco, e criar um vínculo entre a liberação da chave e ao estado do PCR 7 do TPM, para isso use o comando abaixo:</p>
         <code>systemd-cryptenroll --tpm2-device=<em>caminho_do_seu_tpm2.0</em> --tpm2-pcrs=7 <em>/dev/storageAP4</em></code>
         <p>Você pode usar o dispositivo <em>/dev/gpt-auto-root-luks</em> para apontar para a partição raiz criptografada antes do desbloqueio (que eu não recomendo), pode usar <em>tpm2-device=auto</em> para não ter que especificar manualmente o dispotivo, e por fim lembre-se que caso vá usar o endereço, <em>/dev/storageAP4</em> se trata do endereço real do dispotivo e não do endereço em <em>/dev/mapper</em>! Você também pode atrelar a mais estados PCR, vamos supor que você queira atrelar não só ao estado de secure boot (PCR7) como também ao estado do firmware (PCR0), nesse caso você pode usar o argumento <em>tpm2-pcrs=0+7</em>.</p>
+        <p>Algumas pessoas preferem criptografar o disco com uma senha simples, depois usar o comando:</p>
+        <code>systemd-cryptenroll /dev/<em>/dev/storageAP4</em> --recovery-key</code>
+        <p>Para gerar uma senha de recuperação, salvar em algum local seguro e por último:</p>
+        <code>systemd-cryptenroll /dev/<luks-volume> --wipe-slot=password</code>
+        <p>Para limpar o slot de senha... Eu acho idiota pelo fato de que se você usa algum recurso para guardar a chave de recuperação com segurança, você pode fazer o mesmo com a senha de encriptação mas aí vai de cada um.</p>
         <!--
         <code>tpm2_createpolicy --policy-pcr --pcr-list sha256:0,7 --pcr safestate.pcrread --policy trusted_policy.pol</code>
         -->
