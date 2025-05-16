@@ -578,6 +578,7 @@ Wrap com SRK                      Seal com PPK    Seal com SRK     com chave lig
         ▼
 [Uso condicionado a PCRs]
 </pre></code>
+        <p>Uma outra observação muito importante é que o TPM1.2 <strong>não tem memória gerenciável!</strong> Ele cria blobs que podem ser usados para verificação, porém, ele não tem uma NVRAM gerenciável como o TPM2.0.</p>
         <!--
         <h2>O que é Wrap e Seal?</h2>
         <h3>Wrap (embrulhar)</h3>
@@ -620,7 +621,60 @@ Para usar no futuro:                Para usar no futuro:
 [Descriptografa objeto]         [Se política = ok → libera dado]    
 </pre></code>
         -->
+        <h2>Exemplo de uso do TPM1.2</h2>
+        <p>Comece instalando os pacotes <em>trousers</em> e <em>tpm-tools</em>, inicie o serviço <em>tcsd</em> verifique o funcionamento do módulo com o comando:</p>
+        <code>tpm_version</code>
+        <p>E deve retornar algo como:</p>
+<pre><code>TPM 1.2 Version: 01010000
+Manufacturer Info: ...    
+</code></pre>
+        <p>Vamos definir a <em>ownerAuth</em> e <em>srkAuth</em> como vazias para fins de automação (<i>script friendly</i>):</p>
+        <code>tpm_takeownership -u -z</code>
+        <!--
+        <p>Agora vamos criar uma chave assimétrica para criptografar dados:</p>
+        <code>tpm_createkey -a</code>
+        -->
+        <!--
+        <p>E agora gerar a chave rsa (wrapedd) de armazenamento para o disco:</p>
+        <code>tpm_createkey -z -u -o key.blob</code>
+        <p>Agora vamos selar a chave com PCRs:</p>
+        <code>sudo tpm_sealdata -z -i luks_key.bin -o sealed_key.blob -p 7</code>
+        -->
+        <p>Vamos primeiro criar chave binária para o LUKS, o comando abaixo recebe a sua senha, e a redireciona para o openssl, com a saída em sha1 para um arquivo de nome <em>luks_key.bin</em> que vamos usar de chave.</p>
+        <code>echo -n "<em>sua-senha</em>" | openssl dgst -sha1 -binary > luks_key.bin</code>
+        <p>Então você pode tanto criar um volume LUKS usando essa chave:</p>
+        <code>cryptsetup luksFormat /dev/<em>storageA4</em> --key-file luks_key.bin</code>
+        <p>Quanto pode adicionar essa chave como uma chave válida após abrir um volume:</p>
+        <code>cryptsetup luksAddKey /dev/<em>storageA4</em> --key-file luks_key.bin</code>
+        <p>Agora vamos pegar essa chave binária, e selar ela mediante integridade do PCR7:</p>
+        <code>tpm_sealdata -z -i luks_key.bin -o /etc/tpm/sealed_luks_key.blob -p 7</code>
+        <p>Agora vamos criar um <i>hook</i> no <em>mkinitcpio</em> para deslacrar essa chave, crie o arquivo <mark>/etc/initcpio/hooks/tpm_unseal</mark> com o conteúdo:</p>
+<pre><code>#!/bin/bash
 
+run_hook() {
+    # Desemblola a chave selada, liberando para /tmp/luks_key.bin
+    /usr/bin/tpm_unsealdata -z -i /etc/tpm/sealed_luks_key.blob -o /tmp/luks_key.bin -p 7
+    # Exporta variável para o hook encrypt usar
+    export LUKS_KEYFILE=/tmp/luks_key.bin
+}
+</code></pre>
+        <p>Dê permissão de execução com o comando:</p>
+        <code>sudo chmod +x /etc/initcpio/hooks/tpm_unseal</code>
+        <p>Crie arquivo <em>/etc/initcpio/install/tpm_unseal</em> com conteúdo:</p>
+<pre><code>#!/bin/bash
+
+build() {
+    add_runscript
+}
+</code></pre>
+        <p>Edite o <mark>/etc/mkinitcpio.conf</mark>, e adicione o <i>hook</i> <em>tpm_unseal</em> antes do <i></i> <em>encrypt</em> na linha HOOKS</p>
+        <code>HOOKS=(...tpm_unseal encrypt...)</code>
+        <p>Regenere presets de initramfs com o comando:</p>
+        <code>sudo mkinitcpio -P</code>
+        <!--
+        <p>Configure o <mark>/etc/crypttab</mark> para usar a chave: (não precisa por o LUKS_KEYFILE já está descrito)</p>
+        <code>cryptroot /dev/<mark>storageAP4</mark> /tmp/luks_key.bin luks</code>
+        -->
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
