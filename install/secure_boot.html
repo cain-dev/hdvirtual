@@ -540,9 +540,87 @@ done
         <p>Para gerar uma senha de recuperação, salvar em algum local seguro e por último:</p>
         <code>systemd-cryptenroll /dev/<luks-volume> --wipe-slot=password</code>
         <p>Para limpar o slot de senha... Eu acho idiota pelo fato de que se você usa algum recurso para guardar a chave de recuperação com segurança, você pode fazer o mesmo com a senha de encriptação mas aí vai de cada um.</p>
+        <h3>Funcionamento Interno do TPM 2.0 - Hierarquias</h3>
+        <p>Entenda cada hierarquia como um cofre, cada hierarquia tem um nome, uma <i>seed</i> (semente), uma <i>root key</i> (chave raiz) e um namespace associado a ela. </p>
+        <h4>Endorsement Hierarchy</h4>
+        <p>A Endorsement Hierarchy tem como seed a <em>Endorsement Primary Seed (EPS)</em> e como chave primária a <em>Endorsement Key (EK)</em>. Ambas são normalmente geradas na fábrica, com a EPS sendo permanente e imutável, e a EK derivada dela de forma determinística ou pré-gerada e armazenada com um certificado X.509. Essa hierarquia está sob controle exclusivo do fabricante do TPM. É usada para atestar a legitimidade do módulo TPM (em processos de remote attestation) e para gerar chaves vinculadas exclusivamente a esse TPM físico.</p>
+        <h4>Platform Hierarchy</h4>
+        <p>A Platform Hierarchy tem como seed a <em>Platform Primary Seed (PPS)</em> e como chave primária a <em>Platform Primary Key (PPK)</em>. Ambas são geradas internamente pelo TPM durante o provisionamento inicial ou no primeiro uso, e geralmente estão sob controle exclusivo do firmware ou BIOS, acessível via <mark>platformAuth</mark> . Essa hierarquia é usada para verificar a integridade do boot (via PCRs, Secure Boot, Measured Boot) e selar chaves que só podem ser acessadas em ambientes de inicialização legítima.</p>
+        <h4>Storage Hierarchy</h4>
+        <p>A Storage Hierarchy tem como seed a <em>Storage Primary Seed (SPS)</em> e como chave primária a <em>Storage Root Key (SRK)</em>. São geradas pelo TPM no provisionamento inicial ou no primeiro uso, e estão sob controle do usuário ou sistema operacional, via <mark>ownerAuth</mark>. Essa hierarquia é usada para armazenar, embrulhar (wrap) e selar (seal) dados criptográficos sob políticas definidas (como PCRs, senhas, etc.), e serve como raiz para a criação de todos os objetos protegidos no TPM — incluindo chaves, dados criptografados e assinaturas digitais.</p>
+        <h3>E quanto ao TPM 1.2?</h3>
+        <p>Ele não tem seeds, nem múltiplas hierarquias, nem criação de chaves primárias sob demanda, embora ele também tenha uma <em>Endorsement Key (EK)</em> de fábrica e uma <em>Storage Root Key (SRK)</em> possa ser criada no provisionamento do módulo tudo gira em torno dessas chaves e ele tem a criação de políticas basicamente limitadas aos PCRs. Como no exemplo abaixo:</p>
+<code><pre>
+╔══════════════════╗                    ╔════════════════════════════════╗
+║    TPM 1.2       ║                    ║            TPM 2.0             ║
+╚══════════════════╝                    ╚════════════════════════════════╝
+    [Fábrica]                                       [Fábrica]
+Endorsement Key (EK)                        Endorsement Primary Seed (EPS)
+        │                                               │
+        ▼                                               ▼
+[TakeOwnership Executado]                   Deriva Endorsement Key (EK)
+        │                                               │
+        ▼                                               ▼
+Gera Storage Root Key (SRK)             ┌───────────────┬─────────────────┐
+        │                               ▼               ▼                 ▼
+        │                         Platform Seed   Storage Seed      (Endorsement)
+        │                              (PPS)          (SPS)             (EPS)
+        ▼                               │               │                 │
+Todas as chaves                         ▼               ▼                 ▼
+são criadas sob:                Platform Primary   Storage Root     Endorsement Key
+Storage Root Key (SRK)              Key (PPK)          Key (SRK)         (EK)
+        │                               │               │
+        ▼                               ▼               ▼
+Seal com SRK                      Wrap com PPK    Wrap com SRK     Assinatura / Attestation
+Wrap com SRK                      Seal com PPK    Seal com SRK     com chave ligada ao TPM
+        └─────► Limitado a PCRs   e políticas       e políticas         (EK, AK, etc)
+        │                       (PCRs, PIN, etc)  (PCRs, PIN, etc)
+        ▼
+[Uso condicionado a PCRs]
+</pre></code>
         <!--
-        <code>tpm2_createpolicy --policy-pcr --pcr-list sha256:0,7 --pcr safestate.pcrread --policy trusted_policy.pol</code>
+        <h2>O que é Wrap e Seal?</h2>
+        <h3>Wrap (embrulhar)</h3>
+        <p>É o processo de criptografar um objeto (ex: chave ou blob de dados) com uma chave-pai dentro do TPM. Serve para proteger e vincular hierarquicamente esse objeto a outro.</p>
+        <ul>
+            <li><p>✅ Protege por chave criptográfica</p></li>
+            <li><p>✅ Impede uso fora da hierarquia</p></li>
+            <li><p>❌ Não depende diretamente de PCRs</p></li>
+        </ul>
+        <h3>Seal (selar)</h3>
+        <p>É o processo de associar dados ou chaves a uma condição de uso, como um estado específico de PCRs, PINs, ou comandos.Você pode selar dados para que só sejam acessíveis em determinado boot estado, por exemplo.</p>
+        <ul>
+            <li><p>✅ Protege por condição/política (ex: PCRs)</p></li>
+            <li><p>❌ Não implica necessariamente em vínculo a chave-pai</p></li>
+            <li><p>Pode envolver wrapping como parte interna</p></li>
+        </ul>
+<code><pre>
+╔════════════════════╗           ╔══════════════════════╗
+║      WRAP          ║           ║        SEAL          ║
+╚════════════════════╝           ╚══════════════════════╝    
+        ▼                                   ▼
+[Dado ou chave a proteger]       [Dado sensível (ex: senha)]
+        │                                   │
+        ▼                                   ▼
+[Seleciona chave-pai]            [Define política (PCRs, etc)]
+        │                                   │
+        ▼                                   ▼
+[Criptografa com chave-pai]      [Gera objeto de política]
+        │                                   │
+        ▼                                   ▼
+WRAPPED OBJECT                   SELA DADOS COM POLÍTICA
+        │                                   │
+        ▼                                   ▼
+[Armazena blob no disco]         [Armazena blob no disco]
+        │                                   │
+        ▼                                   ▼
+Para usar no futuro:                Para usar no futuro:
+        ▼                                   ▼
+[Recarrega chave-pai]           [Verifica política (PCRs, PIN...)]
+[Descriptografa objeto]         [Se política = ok → libera dado]    
+</pre></code>
         -->
+
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
