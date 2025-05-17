@@ -199,6 +199,15 @@
         <h2>Passo opcional - Atualizar os mirror's automaticamente</h2>
         <p>Por padrão o Arch vai rodar o serviço <em>reflector</em> na inicialização e escolher os que tem a melhor velocidade em absoluto, no meu caso, eu prefiro limitar os mirrors a servidores nacionais, atualizados pelo menos nas últimas 24 horas, e só então <i>rankealos</i> por velocidade. Você pode atualizar a sua lista de servidores como no exemplo abaixo:</p>
         <code>reflector -c BR -a 24 --sort rate --save /etc/pacman.d/mirrorlist</code>
+        <!-- Passo opcional - Configurar Pacman -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Passo opcional - Otimizar Pacman</h2>
+        <p>Use os comandos abaixo para descomentar as linhas de configuração de cor e download paralelo no Pacman:</p>
+        <code>sed -i "s/^#Color/Color/" /etc/pacman.conf</code>
+        <code>sed -i "s/^#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf</code>
+        <h3>Bônus!</h3>
+        <p>Transforme o Pacman... No Pacman!</p>
+        <code>echo "ILoveCandy" >> /etc/pacman.conf</code>
         <!-- Passo 4 Particionar as unidades de armazenamento -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 4 - Particionar as unidades de armazenamento</h2>
