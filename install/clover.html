@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Aprendendo sobre Secure Boot e TPM e como usar essas tecnologias no Linux.">
+    <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clover</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="Instalação de Sistemas Operacionais - Clover"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="Aprenda usar o Clover bootloader."/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="https://user-images.githubusercontent.com/6248794/164569238-e9372ecc-1534-4dda-a39b-fb86304ea7a5.png">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+    <main id="main-area">
+        <h1>Clover</h1>
+        <!-- INTRODUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Introdução</h2>
+        <p>O Clover é um bootloader originalmente desenvolvido para inicializar Hackintoshes, é um projeto já muito maduro e que disponibiliza binários para diversos tipos de soluções, poŕem um dos grandes diferenciais do Clover é a capacidade de emular o UEFI em sistemas de legado... <em>Isso mesmo que você leu!</em> Emular as capacidades do UEFI em sistemas de legado! Obviamente eu não recomendo isso para novatos por ser uma implementação de baixo nível e não ser tão estável quanto usar em BIOS um sistema instalado em um computador que tem BIOS... Mas é uma alternativa bastante interessante.</p>
+        <h2>Instalação (UEFI simulada em BIOS)</h2>
+        <p>Antes de mais nada precisamos da ISO do Clover, você pode começar baixando a ISO do Clover através desse link <a class="link" href="https://github.com/CloverHackyColor/CloverBootloader/releases">aqui</a> e preparando em um outro pendrive, ou mesmo colocando ela em um drive de CD (real ou virtual), e caso esteja dentro de um sistema live com suporte a <em>git</em> e <em>curl</em> pode usar o comando abaixo para baixar para seu pwd:</p>
+        <code>curl -L -O $(curl -s https://api.github.com/repos/CloverHackyColor/CloverBootloader/releases/latest | grep -o 'https://github.com/CloverHackyColor/CloverBootloader/releases/download/[^"]*/Clover-.*-X64.iso.7z')</code>
+        <p>Se você baixou o pacote ao invés de usar a ISO, extraia a ISO através do pacote <em>7zip</em> com o comando:</p>
+        <code>7z x Clover-*-X64.iso.7z</code>
+        <p>Com a ISO e diretório prontos monte a ISO com o comando:</p>
+        <code>mount --mkdir -o loop Clover-*-X64.iso /mnt/iso</code>
+        <p>E caso tenha essa ISO em outro disco, seja numa máquina real ou virtual pode montar com o comando:</p>
+        <code>mount --mkdir -t iso9660 /dev/sr0 /mnt/iso</code>
+        <p>É bom lembrar que o Clover presume um layout de disco <em>UEFI/GPT</em>, a única diferença é que a a flag <em>"Legacy BIOS bootable"</em> deve ser marcada para a ESP. Então, vamos criar uma ESP válida para o Clover usando o GDISK:</p>
+        <!-- Passo 4 Opção B - armazenamento em sistemas baseados em UEFI -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Preparação para armazenamento em sistemas baseados em <mark>UEFI</mark></h3>
+        <p>Caso queira limpar a tabela de partição desse dispositivo (<strong>Leia-se apagar tudo!</strong>) pode usar o comando abaixo:</p>
+        <code>sgdisk -Z /dev/<mark>storageA</mark></code>
+        <p>Para particionar o disco utilizaremos a ferramenta <em>gdisk</em> na unidade desejada, para isso utilize o comando:</p>
+        <code>gdisk /dev/<mark>storageA</mark></code>
+        <p>Com o <mark>gdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>GPT</mark> com o comando:</p>
+        <code>o</code>
+        <!-- Modo Normal GDISK ESP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
+        <h3>Partição <em>ESP</em> (EFI system partition)</h3>
+        <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, que é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. Para criar a partição <em>ESP</em> use o comando:</p>
+        <code>n</code>
+        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+        <code>partition number: default</code>
+        <p>Apenas tecle <mark>Enter</mark>.</p>
+        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+        <code>first sector: default</code>
+        <p>Apenas tecle <mark>Enter</mark>.</p>
+        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, por questões de compatibilidade recomendo <mark>550M</mark>, sendo assim deveremos utilizar o comando <mark>+550M</mark> e teclar <mark>Enter</mark>, de maneira que o diálogo no terminal fique da seguinte forma:</p>
+        <code>last sector: +550M</code>
+        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>ESP</mark> devemos digitar o tipo <mark>ef00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+        <code>Hex code or GUID (L to show codes, Enter = 8300): ef00</code>
+        <p>Com isso temos uma partição no início do armazenamento, de 550M e do tipo EFI system partition.</p>
+        <!-- Modo Normal GDISK ESP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
+        <h3>Adição de atributos na ESP</h3>
+        <p>Assim que retornar a tela de inserção de comandos (<em>Command (? for help):</em>), vamos acessar as opções avançacas de recovery com o comando <em>r</em>:</p>
+        <code>r recovery and transformation options (experts only)</code>
+        <p>Acessar o menu de funcionalidade extra com o comando <em>x</em>:</p>
+        <code>x extra funcionality (experts only)</code>
+        <p>Agora vamos setar o atributo <em>Legacy BIOS bootable</em> com o comando <em>a</em> (caso pergunte, informe o número da partição ESP):</p>
+        <code>a set attributes</code>
+        <p>E vamos inserir a opção <em>2</em>:</p>
+        <code>2: legacy BIOS bootable</code>
+        <p>Como não há mais nenhum atributo para ser inserido, apenas tecle <em>Enter</em> e depois insira o comando <em>w</em> para gravar as alterações.</p>
+        <p>Caso esteja usando o <em>Parted</em> você pode usar o comando abaixo para deixar a partição com o atributo <em>legacy BIOS bootable</em> ativo:</p>
+        <code>sudo parted /dev/<mark>storageAP1</mark> set 1 legacy_boot on</code>
+        <p>Caso queira verificar a flag com o GDISK, acesse as opções avançacas de recovery com o comando <em>r</em>:</p>
+        <code>r recovery and transformation options (experts only)</code>
+        <p>Em seguida acesse as informações detalhadas da partição com o comando <em>i</em>, e informe o número da partição caso perguntado:</p>
+        <code>i show detailed information on a partition</code>
+        <p>Se o o campo de atributos estiver como no exemplo abaixo está correto:</p>
+        <code>Attribute flags: 0000000000000004</code>
+        <p>Caso esteja dessa outra forma, insira a flag:</p>
+        <code>Attribute flags: 0000000000000000</code>
+        <p>Caso queira usar o Parted para isso pode usar o comando:</p>
+        <code>sudo parted /dev/<mark>storageA</mark> print</code>
+        <p>E na seção flag você poderá ver a flag <em>legacy_boot</em>.</p>
+        <!-- Passo 5 - Formatar as partições ESP e XBOOTLDR-->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Formatando a partição <em>ESP</em></strong> </h3>
+        <p>As partição <mark>ESP</mark> deve ser formatada em <mark>FAT32</mark>. Supondo que por acaso a sua partição <mark>ESP</mark> é a <mark>/dev/storageAP1</mark>, utilize o comando abaixo para formatar a partição substituindo o <mark>/dev/storageAP1</mark> para o devido endereço da partição <mark>ESP</mark> no seu dispositivo:</p>
+        <code>mkfs.fat -F32 /dev/<mark>storageAP1</mark></code>
+        <details class="spoiler" >
+            <summary>Formatação avançada (Clique para ver)</summary>
+            <p>Diferentes sistemas de arquivo (e até mesmo ferramentas) podem ter por padrão o uso de tamanhos distintos de setor. Caso você queira especificar o tamanho do setor utilize o argumento <em>-S</em> como no exemplo abaixo:</p>
+            <code>mkfs.fat -F 32 <em>-S 4096</em> /dev/<mark>storageAP1</mark></code>
+            <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-n</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
+            <code>mkfs.fat -F 32 <em>-n "ESP"</em> /dev/<mark>storageAP1</mark></code>
+        </details>
+        <!-- Preparando o disco para o Clover -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
+        <h3>Preparando o disco para o Clover</h3>
+        <p>Vamos começar com uma cópia do primeiro setor da partição <em>ESP</em> (Partition Boot Record) e armazenar no diretório <mark>/tmp/original_PBR</mark>:</p>
+        <code>dd if=/dev/<mark>storageAP1</mark> of=/tmp/original_PBR bs=512 count=1 conv=notrunc</code>
+        <p>Vai resultar em usa saída como:</p>
+        <code>1+0 records in<br>1+0 records out<br>512 bytes copied</code>
+        <p>Agora vamos copiar o arquivo <mark>/mnt/iso/usr/standalone/i386/boot1f32</mark> para <mark>/tmp/new_PBR</mark>:</p>
+        <code>cp /mnt/iso/usr/standalone/i386/boot1f32 /tmp/new_PBR</code>
+        <p>Agora vamos copiar exatos <em>87 bytes</em> da Partition Boot Record original para a nova Partition Boot Record:</p>
+        <code>dd if=/tmp/original_PBR of=/tmp/new_PBR skip=3 seek=3 bs=1 count=87 conv=notrunc</code>
+        <p>Vai resultar em usa saída como:</p>
+        <code>87+0 records in<br>87+0 records out<br>87 bytes copied</code>
+        <p>Agora vamos regravar a nossa Partition Boot Record do disco com esse novo arquivo recém gerado:</p>
+        <code>dd if=/tmp/new_PBR of=/dev/<mark>storageAP1</mark> bs=512 count=1 conv=notrunc</code>
+        <p>Vai resultar em usa saída como:</p>
+        <code>1+0 records in<br>1+0 records out<br>512 bytes copied</code>
+        <p>E agora vamos gravar a nossa Master Boot Record com o <em>BOOT0</em> do arquivo <em>boot0ss</em>:</p>
+        <code>dd if=/mnt/iso/usr/standalone/i386/boot0ss of=/dev/<mark>storageA</mark> bs=440 count=1 conv=notrunc</code>
+        <p>Vai resultar em usa saída como:</p>
+        <code>1+0 records in<br>1+0 records out<br>440 bytes copied</code>
+        <!--
+        <p>Após isso copie o diretório <em>/mnt/iso/efi</em> para sua <em>ESP</em></p>
+        <p>Copie o legacy boot loader para a EFI System partition</p>
+        <code>cp /mnt/iso/usr/standalone/i386/x64/boot6 /boot/boot</code>
+        -->
+        <!-- Instalando o Clover no disco -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Instalando o Clover no disco</h3>
+        <p>Para desencargo de consciência vamos montar a partição <em>ESP</em> como <em>/mnt/efi</em>:</p>
+        <code>mount --mkdir /dev/<em>storageAP1</em> /mnt/efi</code>
+        <p>Agora vamos copiar os arquivos do Clover para a partição ESP:</p>
+        <code>cp -r /mnt/iso/efi /mnt/efi/</code>
+        <code>cp /mnt/iso/usr/standalone/i386/x64/boot6 /mnt/efi/boot</code>
+        <p>Por fim demonte as partições com o comando:</p>
+        <code>umount /mnt/efi /mnt/iso</code>
+    </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
