@@ -33,7 +33,11 @@
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Introdução</h2>
         <p>O Clover é um bootloader originalmente desenvolvido para inicializar Hackintoshes, é um projeto já muito maduro e que disponibiliza binários para diversos tipos de soluções, poŕem um dos grandes diferenciais do Clover é a capacidade de emular o UEFI em sistemas de legado... <em>Isso mesmo que você leu!</em> Emular as capacidades do UEFI em sistemas de legado! Obviamente eu não recomendo isso para novatos por ser uma implementação de baixo nível e não ser tão estável quanto usar em BIOS um sistema instalado em um computador que tem BIOS... Mas é uma alternativa bastante interessante.</p>
+        <p>É bom avisar de antemão que o sucesso nessa implementação depende largamente da versão do Clover, dos loaders utilizados, e da compatibilidade dessa versão com a sua placa mãe. E certamente não é compatível com todos os casos, e ela quase nunca vai ser compatível com virtualização (o que também seria inútil de ser utilizado em virtualizações mas tudo bem).</p>
+        <!-- PREPARAÇÃO DA INSTALAÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Instalação (UEFI simulada em BIOS)</h2>
+        <p>Eu te recomendo fortemente a fazer esse procedimento através de uma conexão SSH, você pode até mesmo fazer esse procedimento preparando o disco via terminal para um outro computador, então não se limite a fazer isso no computador alvo. </p>
         <p>Antes de mais nada precisamos da ISO do Clover, você pode começar baixando a ISO do Clover através desse link <a class="link" href="https://github.com/CloverHackyColor/CloverBootloader/releases">aqui</a> e preparando em um outro pendrive, ou mesmo colocando ela em um drive de CD (real ou virtual), e caso esteja dentro de um sistema live com suporte a <em>git</em> e <em>curl</em> pode usar o comando abaixo para baixar para seu pwd:</p>
         <code>curl -L -O $(curl -s https://api.github.com/repos/CloverHackyColor/CloverBootloader/releases/latest | grep -o 'https://github.com/CloverHackyColor/CloverBootloader/releases/download/[^"]*/Clover-.*-X64.iso.7z')</code>
         <p>Se você baixou o pacote ao invés de usar a ISO, extraia a ISO através do pacote <em>7zip</em> com o comando:</p>
@@ -96,7 +100,7 @@
         <!-- Passo 5 - Formatar as partições ESP e XBOOTLDR-->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Formatando a partição <em>ESP</em></strong> </h3>
-        <p>As partição <mark>ESP</mark> deve ser formatada em <mark>FAT32</mark>. Supondo que por acaso a sua partição <mark>ESP</mark> é a <mark>/dev/storageAP1</mark>, utilize o comando abaixo para formatar a partição substituindo o <mark>/dev/storageAP1</mark> para o devido endereço da partição <mark>ESP</mark> no seu dispositivo:</p>
+        <p>Por padrão é formatada em <mark>FAT32</mark>... Mas para esse caso específico, considerando que não estamos lidando com uma placa mãe com todas as padronizações garantidas para um UEFI nativo, a partição <mark>ESP</mark> varia conforma o suporte da sua placa mãe, as chances são que ela <em>AINDA</em> deve ser em <mark>FAT32</mark>, mas pode ser por exemplo <mark>exFAT</mark> ou talvez até <mark>HFS</mark> para um Mac real. Se abrir a pasta <mark>BootSectors</mark> do seu Clover vai achar arquivos de suporte para <mark>HFS</mark>, <mark>FAT32</mark> e <mark>exFAT</mark> (e até variações desses arquivos para redirecionamento de boot), fique a vontade pare tentar com eles (e recomendo que você veja a descrição de cada um na documentação). Mas supondo que por acaso a sua partição <mark>ESP</mark> é a <mark>/dev/storageAP1</mark>, utilize o comando abaixo para formatar a partição substituindo o <mark>/dev/storageAP1</mark> para o devido endereço da partição <mark>ESP</mark> no seu dispositivo:</p>
         <code>mkfs.fat -F32 /dev/<mark>storageAP1</mark></code>
         <details class="spoiler" >
             <summary>Formatação avançada (Clique para ver)</summary>
@@ -105,6 +109,20 @@
             <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-n</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
             <code>mkfs.fat -F 32 <em>-n "ESP"</em> /dev/<mark>storageAP1</mark></code>
         </details>
+        <h4>Descrição das <i>Partition Boot Records</i></h4>
+        <ul>
+            <li><p><em>boot1h</em> - Setor PBR para partição formatada em <em>HFS+</em>. Procura pelo arquivo <i>"boot"</i> na raiz da partição. Originado do projeto <em>boot132</em> da Apple. Escrito por Tamás Kosárszky em 14/04/2008. Modificado por Slice para suportar arquivos de boot maiores. <strong>Não mais 440 KB como a versão original</strong>, mas <em>472 KB</em> necessários para inicializar o Clover-64;</p></li>
+            <li><p><em>boot1h2</em> - Setor PBR para partição <em>HFS+</em>, com boot alternativo baseado na tecla pressionada. Arquivo para inicializar = "boot{key}". Codificado por dmazar com base no <em>boot1h</em>;</p></li>
+            <li><p><em>boot1f32</em> - Setor PBR para partição formatada em <em>FAT32</em>. Procura pelo arquivo "boot" na raiz da partição. Útil para partições EFI ou pendrive. Escrito por mackerintel em 26/01/2009;</p></li>
+            <li><p><em>boot1f32alt</em> - Setor PBR para partição <em>FAT32</em>, com boot alternativo baseado na tecla pressionada. Arquivo para inicializar = "boot{key}". Modificado por Slice com base no <em>boot1f32</em> e <em>boot1h2</em>;</p></li>
+            <li><p><em>boot1x</em> - Setor PBR para partição formatada em <em>exFAT</em>. Procura pelo arquivo "boot" na raiz da partição. Útil para partições EFI ou pendrive. Escrito por Zenith432 em 19/11/2014;</p></li>
+        </ul>
+        <h4>Descrição das <i>Master Boot Records</i></h4>
+        <ul>
+            <li><p><em>boot0af (boot0 Active First)</em> - Setor MBR que busca a partição ativa na tabela MBR (e depois na tabela GPT). Originado do projeto boot132 da Apple. Esta versão do boot0af implementa suporte ao esquema híbrido de partições GUID/MBR. Escrito por Tamás Kosárszky em 10/03/2008;</p></li>
+            <li><p><em>boot0ss (boot0 Signature Scanning)</em> - Setor MBR que busca por qualquer partição com uma assinatura PBR válida, independentemente de estar ativa ou não. Útil para o Windows, que exige que sua partição esteja ativa. Compartilha o mesmo código do boot0af, mas a ordem de busca é diferente. Escrito por JrCs em 08/05/2013;</p></li>
+        </ul>
+
         <!-- Preparando o disco para o Clover -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
         <h3>Preparando o disco para o Clover</h3>
