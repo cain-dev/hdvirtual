@@ -108,8 +108,16 @@
             <code>mkfs.fat -F 32 <em>-S 4096</em> /dev/<mark>storageAP1</mark></code>
             <p>Embora não seja estritamente necessário, é recomendado o uso de rótulos para identificar as partições para o caso de você não ter em mente nenhum outro identificador. Caso você queira especificar o rótulo da partição adicione o argumento <em>-n</em> seguido do "<em>ROTULO</em>" como no exemplo abaixo:</p>
             <code>mkfs.fat -F 32 <em>-n "ESP"</em> /dev/<mark>storageAP1</mark></code>
-        </details>
+        </details>        
+        <h4>Descrição das <i>Master Boot Records</i></h4>
+        <p>Segue abaixo as descrições dos loaders de estágio 1:</p>
+        <ul>
+            <li><p><em>boot0af (boot0 Active First)</em> - Setor MBR que busca a partição ativa na tabela MBR (e depois na tabela GPT). Originado do projeto boot132 da Apple. Esta versão do boot0af implementa suporte ao esquema híbrido de partições GUID/MBR. Escrito por Tamás Kosárszky em 10/03/2008;</p></li>
+            <li><p><em>boot0ss (boot0 Signature Scanning)</em> - Setor MBR que busca por qualquer partição com uma assinatura PBR válida, independentemente de estar ativa ou não. Útil para o Windows, que exige que sua partição esteja ativa. Compartilha o mesmo código do boot0af, mas a ordem de busca é diferente. Escrito por JrCs em 08/05/2013;</p></li>
+            <li><p><em>boot0md (boot0 Multiple Drives)</em> - Setor MBR que busca por todos os discos e busca por uma partição inicializável (com boot1h) e a carrega, se não for encontrada, itera sobre os discos novamente e busca por uma partição ativa e a carrega;</p></li>
+        </ul>
         <h4>Descrição das <i>Partition Boot Records</i></h4>
+        <p>Segue abaixo as descrições dos loaders de estágio 2:</p>
         <ul>
             <li><p><em>boot1h</em> - Setor PBR para partição formatada em <em>HFS+</em>. Procura pelo arquivo <i>"boot"</i> na raiz da partição. Originado do projeto <em>boot132</em> da Apple. Escrito por Tamás Kosárszky em 14/04/2008. Modificado por Slice para suportar arquivos de boot maiores. <strong>Não mais 440 KB como a versão original</strong>, mas <em>472 KB</em> necessários para inicializar o Clover-64;</p></li>
             <li><p><em>boot1h2</em> - Setor PBR para partição <em>HFS+</em>, com boot alternativo baseado na tecla pressionada. Arquivo para inicializar = "boot{key}". Codificado por dmazar com base no <em>boot1h</em>;</p></li>
@@ -117,12 +125,12 @@
             <li><p><em>boot1f32alt</em> - Setor PBR para partição <em>FAT32</em>, com boot alternativo baseado na tecla pressionada. Arquivo para inicializar = "boot{key}". Modificado por Slice com base no <em>boot1f32</em> e <em>boot1h2</em>;</p></li>
             <li><p><em>boot1x</em> - Setor PBR para partição formatada em <em>exFAT</em>. Procura pelo arquivo "boot" na raiz da partição. Útil para partições EFI ou pendrive. Escrito por Zenith432 em 19/11/2014;</p></li>
         </ul>
-        <h4>Descrição das <i>Master Boot Records</i></h4>
+        <h4>Descrição das <i>Partition Boot Records</i></h4>
+        <p>Segue abaixo as descrições dos loaders de estágio 3:</p>
         <ul>
-            <li><p><em>boot0af (boot0 Active First)</em> - Setor MBR que busca a partição ativa na tabela MBR (e depois na tabela GPT). Originado do projeto boot132 da Apple. Esta versão do boot0af implementa suporte ao esquema híbrido de partições GUID/MBR. Escrito por Tamás Kosárszky em 10/03/2008;</p></li>
-            <li><p><em>boot0ss (boot0 Signature Scanning)</em> - Setor MBR que busca por qualquer partição com uma assinatura PBR válida, independentemente de estar ativa ou não. Útil para o Windows, que exige que sua partição esteja ativa. Compartilha o mesmo código do boot0af, mas a ordem de busca é diferente. Escrito por JrCs em 08/05/2013;</p></li>
+            <li><p><em>boot6</em> - CloverEFI 64 bits - Com driver ATA/ATAPI próprio;</p></li>
+            <li><p><em>boot7</em> - CloverEFI 64 bits (padrão) - Inclui um driver BiosBlockIO que funciona com qualquer controlador compatível com o BIOS. Útil para implementações bugadas de BIOS ou para uso de RAID;</p></li>
         </ul>
-
         <!-- Preparando o disco para o Clover -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
         <h3>Preparando o disco para o Clover</h3>
