@@ -574,17 +574,17 @@
         <!-- Passo 4 Opção B - armazenamento em sistemas baseados em UEFI -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção B - Preparação para armazenamento em sistemas baseados em <mark>UEFI</mark></h3>
-        <p>Para particionar o disco utilizaremos a ferramenta <em>gdisk</em> na unidade desejada, para isso utilize o comando:</p>
-        <code>gdisk /dev/<mark>storageA</mark></code>
-        <p>Com o <mark>gdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>GPT</mark> com o comando:</p>
-        <code>o</code>
+        <!-- Modo Normal GDISK - LUKS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4><strong>AVISO!</strong> Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
+        <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
         <!-- Modo Easy CGDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
-            <summary>Modo Fácil (Clique para ver)</summary>
-            <p>Uma vez que você criou uma nova tabela em <em>GPT</em> você pode imediatamente usar o comando abaixo para escrever as alterações:</p>
-            <code>w</code>
-            <p>E fazer as partições de uma forma mais gráfica e fácil através do <em>cgdisk</em> com o comando:</p>
+            <summary>Método gráfico com <em>CGDISK</em> (Very Easy) (Clique para ver)</summary>
+            <p>Crie uma nova tabela de partição vazia com o comando:</p>
+            <code>sgdisk -o /dev/<mark>storageA</mark></code>
+            <p>E agora vamos fazer as partições de uma forma mais gráfica e fácil através do <em>cgdisk</em> com o comando:</p>
             <code>cgdisk /dev/<mark>storageA</mark></code>
             <h4>Como usar:</h4>
             <ul>
@@ -710,181 +710,323 @@
             <h4>Terminado!</h4>
             <p>Pule para o <em>Passo 5 - Formatar as partições</em></p>
         </details>
-        <!-- Modo Normal GDISK - LUKS -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
-        <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
-        <!-- Modo Normal GDISK ESP -->
+        <!-- Modo Normal GDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
-        <h4>Partição <em>ESP</em> (EFI system partition)</h4>
-        <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, que é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. Para criar a partição <em>ESP</em> use o comando:</p>
-        <code>n</code>
-        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
-        <code>partition number: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, por questões de compatibilidade recomendo <mark>550M</mark>, sendo assim deveremos utilizar o comando <mark>+550M</mark> e teclar <mark>Enter</mark>, de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>last sector: +550M</code>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>ESP</mark> devemos digitar o tipo <mark>ef00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>Hex code or GUID (L to show codes, Enter = 8300): ef00</code>
-        <p>Com isso temos uma partição no início do armazenamento, de 550M e do tipo EFI system partition.</p>
-        <!-- Modo Nomal GDISK XBOOTLDR -->
+        <details class="spoiler" >
+            <summary>Método interativo com <em>GDISK</em> (Normal) (Clique para ver)</summary>
+            <p>Para particionar o disco utilizaremos a ferramenta <em>gdisk</em> na unidade desejada, para isso utilize o comando:</p>
+            <code>gdisk /dev/<mark>storageA</mark></code>
+            <p>Com o <mark>gdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>GPT</mark> com o comando:</p>
+            <code>o</code>
+            <!-- Modo Normal GDISK ESP -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
+            <h4>Partição <em>ESP</em> (EFI system partition)</h4>
+            <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, que é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. Para criar a partição <em>ESP</em> use o comando:</p>
+            <code>n</code>
+            <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+            <code>partition number: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, por questões de compatibilidade recomendo <mark>550M</mark>, sendo assim deveremos utilizar o comando <mark>+550M</mark> e teclar <mark>Enter</mark>, de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>last sector: +550M</code>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>ESP</mark> devemos digitar o tipo <mark>ef00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>Hex code or GUID (L to show codes, Enter = 8300): ef00</code>
+            <p>Com isso temos uma partição no início do armazenamento, de 550M e do tipo EFI system partition.</p>
+            <!-- Modo Nomal GDISK XBOOTLDR -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
+            <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. Para criar a nova partição use o comando:</p>
+            <code>n</code>
+            <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+            <code>partition number: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, a partição <em>XBOOTLDR</em> deve conter no mínimo o espaço necessário para o seu kernel e initramfs + fallbacks, mas o recomendado é que seja de pelo menos <mark>1G</mark>, sendo assim deveremos utilizar o comando <mark>+1G</mark> e teclar <mark>Enter</mark>, de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>last sector: +1G</code>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>XBOOTLDR</mark> devemos digitar o tipo <mark>ea00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>Hex code or GUID (L to show codes, Enter = 8300): ea00</code>
+            <p>Com isso temos uma partição de 1G e do tipo Extended Boot Loader.</p>
+            <!-- Modo Nomal GDISK SWAP -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
+            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
+            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
+            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
+            <figure>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>RAM</th>
+                            <th>Swap (sem hibernação)</th>
+                            <th>&nbsp;Swap (com hibernação)</th>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;512MB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;1GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;2GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;3GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;5GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;6GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;8GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;11GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;12GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;15GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;16GB</td>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;20GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;24GB</td>
+                            <td>&nbsp;5GB</td>
+                            <td>&nbsp;29GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;32GB</td>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;38GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;64GB</td>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;72GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;128GB</td>
+                            <td>&nbsp;11GB</td>
+                            <td>&nbsp;139GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </figure>
+            <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
+            <code>n</code>
+            <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+            <code>partition number: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação o recomendado conforme a tabela é utilizar 3G, para criar uma partição de 3GB o comando seria:</p>
+            <code>last sector: +<mark>3G</mark></code>
+            <p><strong>Lembre-se de substituir o valor acima para o valor ideal para o seu caso!</strong></p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>SWAP</mark> devemos digitar o tipo <mark>8200</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>Hex code or GUID (L to show codes, Enter = 8300): 8200</code>
+            <p>Com isso temos uma nova partição de 3G e do tipo Linux swap.</p>
+            <!-- Partição raiz do sistema (root ou /) em UEFI -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
+            <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
+            <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
+            <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
+            <p>Para criar a nova partição que será usada como raiz do sistema utilize o comando:</p>
+            <code>n</code>
+            <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+            <code>partition number: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, caso você queira que a partição de sistema ocupe todo o resto do armazenamento apenas tecle <em>Enter</em> (recomendado), caso você queira uma partição de sistema com espaço delimitado insira o comando abaixo trocando o valor de 20G pelo valor desejado (não recomendado): </p>
+            <code>last sector: +<mark>20G</mark></code>
+            <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>root ou /</mark> devemos digitar o tipo <mark>8304</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>Hex code or GUID (L to show codes, Enter = 8300): 8304</code>
+            <p>Com isso temos uma nova partição de 20G e do tipo Linux x86-64 root (/).</p>
+            <!-- Partição /home separada em UEFI -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição para <em>/home</em> separada (opcional)</h4>
+            <p>Para criar a nova partição que será usada como /home utilize o comando:</p>
+            <code>n</code>
+            <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
+            <code>partition number: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, recomendo que apenas tecle <em>Enter</em> para ocupar o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição digitando da mesma maneira que a raiz).</p>
+            <code>last sector: default</code>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>/home</mark> devemos utilizar o comando <mark>8302</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
+            <code>Hex code or GUID (L to show codes, Enter = 8300): 8302</code>
+            <p>Com isso temos uma nova partição que ocupa todo o resto do disco e do tipo Linux /home.</p>
+            <h4>Gravar as alterações</h4>
+            <p>Para gravar as alterações da tabela de partição e sair do programa utilize o comando abaixo:</p>
+            <code>w</code>
+            <h4>Verificando a tabela</h4>
+            <p>Para verificar se a sua tabela de partições está correta você pode usar o comando:</p>
+            <code>gdisk -l /dev/<mark>storageA</mark></code>
+        </details>
+        <!-- MÉTODO ALTERNATIVO SGDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
-        <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. Para criar a nova partição use o comando:</p>
-        <code>n</code>
-        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
-        <code>partition number: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, a partição <em>XBOOTLDR</em> deve conter no mínimo o espaço necessário para o seu kernel e initramfs + fallbacks, mas o recomendado é que seja de pelo menos <mark>1G</mark>, sendo assim deveremos utilizar o comando <mark>+1G</mark> e teclar <mark>Enter</mark>, de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>last sector: +1G</code>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>XBOOTLDR</mark> devemos digitar o tipo <mark>ea00</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>Hex code or GUID (L to show codes, Enter = 8300): ea00</code>
-        <p>Com isso temos uma partição de 1G e do tipo Extended Boot Loader.</p>
-        <!-- Modo Nomal GDISK SWAP -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-        <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-        <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-        <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-        <figure>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>RAM</th>
-                        <th>Swap (sem hibernação)</th>
-                        <th>&nbsp;Swap (com hibernação)</th>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;256MB</td>
-                        <td>&nbsp;256MB</td>
-                        <td>&nbsp;512MB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;512MB</td>
-                        <td>&nbsp;512MB</td>
-                        <td>&nbsp;1GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;2GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;3GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;5GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;4GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;6GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;6GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;8GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;8GB</td>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;11GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;12GB</td>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;15GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;16GB</td>
-                        <td>&nbsp;4GB</td>
-                        <td>&nbsp;20GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;24GB</td>
-                        <td>&nbsp;5GB</td>
-                        <td>&nbsp;29GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;32GB</td>
-                        <td>&nbsp;6GB</td>
-                        <td>&nbsp;38GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;64GB</td>
-                        <td>&nbsp;8GB</td>
-                        <td>&nbsp;72GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;128GB</td>
-                        <td>&nbsp;11GB</td>
-                        <td>&nbsp;139GB</td>
-                    </tr>
-                </tbody>
-            </table>
-        </figure>
-        <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
-        <code>n</code>
-        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
-        <code>partition number: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação o recomendado conforme a tabela é utilizar 3G, para criar uma partição de 3GB o comando seria:</p>
-        <code>last sector: +<mark>3G</mark></code>
-        <p><strong>Lembre-se de substituir o valor acima para o valor ideal para o seu caso!</strong></p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>SWAP</mark> devemos digitar o tipo <mark>8200</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>Hex code or GUID (L to show codes, Enter = 8300): 8200</code>
-        <p>Com isso temos uma nova partição de 3G e do tipo Linux swap.</p>
-        <!-- Partição raiz do sistema (root ou /) em UEFI -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
-        <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
-        <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
-        <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
-        <p>Para criar a nova partição que será usada como raiz do sistema utilize o comando:</p>
-        <code>n</code>
-        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
-        <code>partition number: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, caso você queira que a partição de sistema ocupe todo o resto do armazenamento apenas tecle <em>Enter</em> (recomendado), caso você queira uma partição de sistema com espaço delimitado insira o comando abaixo trocando o valor de 20G pelo valor desejado (não recomendado): </p>
-        <code>last sector: +<mark>20G</mark></code>
-        <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>root ou /</mark> devemos digitar o tipo <mark>8304</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>Hex code or GUID (L to show codes, Enter = 8300): 8304</code>
-        <p>Com isso temos uma nova partição de 20G e do tipo Linux x86-64 root (/).</p>
-        <!-- Partição /home separada em UEFI -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição para <em>/home</em> separada (opcional)</h4>
-        <p>Para criar a nova partição que será usada como /home utilize o comando:</p>
-        <code>n</code>
-        <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
-        <code>partition number: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, recomendo que apenas tecle <em>Enter</em> para ocupar o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição digitando da mesma maneira que a raiz).</p>
-        <code>last sector: default</code>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o tipo da partição, para o tipo <mark>/home</mark> devemos utilizar o comando <mark>8302</mark> e teclar <mark>Enter</mark> de maneira que o diálogo no terminal fique da seguinte forma:</p>
-        <code>Hex code or GUID (L to show codes, Enter = 8300): 8302</code>
-        <p>Com isso temos uma nova partição que ocupa todo o resto do disco e do tipo Linux /home.</p>
-        <h4>Gravar as alterações</h4>
-        <p>Para gravar as alterações da tabela de partição e sair do programa utilize o comando abaixo:</p>
-        <code>w</code>
+        <details class="spoiler" >
+            <summary>Método determinístico com <em>SGDISK</em> (Hard) (Clique para ver)</summary>
+            <p>Antes de mais nada, caso queira limpar (<i>zap-all</i>) a tabela de partições completamente (MBR e GPT para deixar o disco como novo) você pode usar o comando:</p>
+            <code>sgdisk -Z /dev/<em>storageA</em></code>
+            <p>Caso queira criar uma nova tabela de partição vazia pode usar o comando:</p>
+            <code>sgdisk -o /dev/<em>storageA</em></code>
+            <p>Para usar o sgdisk para criar as partições é bem simples na verdade, para criar uma partição com o sgdisk o comando é: </p>
+            <code>sgdisk /dev/<em>dispositivo</em> --new=<em>A</em>:<em>B</em>:<em>C</em> --typecode=<em>X</em>:<em>Y</em></code>
+            <p>Que para o argumento <em>--new</em> (que indica nova partição), onde é <mark>A</mark> é o número da partição, <mark>B</mark> é o início da partição e <mark>C</mark> é o fim da partição. Para o argumento <em>--typecode</em> (que o tipo da partição), onde é <mark>X</mark> é o número da partição e <mark>B</mark> é o código da partição.</p>
+            <p>Entenda o valor <mark>0</mark> como escolha automática pelo sgdisk.</p>
+            <!-- ESP -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>ESP</em> (EFI system partition)</h4>
+            <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, esta é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. É uma partição do tipo <em>ef00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>550M</mark>.</p>
+            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+550M</em>  --typecode=0:<em>ef00</em></code>
+            <!-- XBOOTLDR -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
+            <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. É uma partição do tipo <em>ea00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>1G</mark>.</p>
+            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+1G</em>  --typecode=0:<em>ea00</em></code>
+            <!-- SWAP -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
+            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
+            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
+            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
+            <figure>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>RAM</th>
+                            <th>Swap (sem hibernação)</th>
+                            <th>&nbsp;Swap (com hibernação)</th>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;512MB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;1GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;2GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;3GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;5GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;6GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;8GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;11GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;12GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;15GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;16GB</td>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;20GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;24GB</td>
+                            <td>&nbsp;5GB</td>
+                            <td>&nbsp;29GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;32GB</td>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;38GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;64GB</td>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;72GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;128GB</td>
+                            <td>&nbsp;11GB</td>
+                            <td>&nbsp;139GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </figure>
+            <p>É uma partição do tipo <em>8200</em>, para o comando abaixo estou supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação, nesse caso o recomendado conforme a tabela é utilizar 3G <strong>mas mude o comando abaixo conforme o ideal para o seu caso!</strong>.</p>
+            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
+            <!-- ROOT -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
+            <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
+            <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
+            <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
+            <p>É uma partição do tipo <em>8304</em>. Que por questões de compatibilidade recomendo o tamanho <strong>mínimo</strong> de <mark>20G</mark> e se possível o valor <mark>0</mark> para que ela ocupe o disco até o fim.</p>
+            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+20G</em> --typecode=0:<em>8304</em> </code>
+            <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
+            <!-- HOME -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição para <em>/home</em> separada (opcional)</h4>
+            <p>É uma partição do tipo <em>8302</em>. Se você leu a explicação acima da partição raiz, eu vou presumir que para esse exemplo de raiz delimitada a partição <em>/home</em> ocupe até o fim do disco, mas lembre-se de alterar o valor abaixo de <em>0</em> para o tamanho desejado caso queira delimitar também essa partição.</p>
+            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>0</em> --typecode=0:<em>8302</em></code>
+            <h4>Verificando a tabela</h4>
+            <p>Para verificar se a sua tabela de partições está correta você pode usar o comando:</p>
+            <code>sgdisk /dev/<em>storageA</em> --print</code>
+            <h4>E qual seria a vantagem de usar o sgdisk?</h4>
+            <p>A vantagem é que se você souber o que está fazendo pode finalizar a sua tabela de partição completa num comando só como no exemplo abaixo:</p>
+            <code>sgdisk /dev/storageA -n=1:0:+550M -c=1:esp -t=1:ef00 -n=2:0:+1G -c=2:boot -t=2:ea00 -n=3:0:+3G -c=3:swap -t=3:8200 -n=4:0:0 -c=4:root -t=4:8304</code>
+            <p>Você também pode informar o valor <mark>0</mark> em todos os <em>partnumber</em> para que seja associado automaticamente.</p>
+            <p>Lembre-se sempre de acrescentar o <em>+</em> ao declarar o valor do fim da partição (a menos que esteja usando o valor <mark>0</mark> de fim da partição).</p>
+        </details>
         <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 4.9 - (Opcional) Criptografar as partições</h2>
