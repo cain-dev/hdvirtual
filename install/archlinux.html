@@ -1062,6 +1062,8 @@
             <code>cryptsetup luksFormat --type luks2 /dev/<mark>storageAP3</mark> --key-file cryptroot.key</code>
             <p>Agora vamos abrir essa partição através do LUKS, usando o arquivo de senha criado para gerar uma abstração da partição com o nome de <em>cryptroot</em>:</p>
             <code>cryptsetup luksOpen /dev/<mark>storageAP3</mark> <em>cryptroot</em> --key-file cryptroot.key</code>
+            <p>Se por acaso você é um disléxico que montou a partição com o nome errado (abraços <i>"J"</i> ) pode usar o comando abaixo para desmontar para depois remontar:</p>
+            <code>cryptsetup luksClose <em>nome_errado</em></code>
             <p>Uma vez que o dispotivo foi aberto, ele criará um dispositivo <mark>/dev/mapper/cryptroot</mark>, e quando for seguir o passo abaixo de formatar partições, lembre-se de formatar essa abstração e não o dispositivo em si! Como no exemplo abaixo:</p>
             <p><strong>Embora aqui esteja sendo formatado em btrfs, mude conforme a sua necessidade!</strong></p>
             <code>mkfs.btrfs -f -L <em>"ROOT"</em> <em>/dev/mapper/cryptroot</em></code>
