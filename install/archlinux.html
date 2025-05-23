@@ -199,12 +199,26 @@
         <h2>Passo opcional - Atualizar os mirror's automaticamente</h2>
         <p>Por padrão o Arch vai rodar o serviço <em>reflector</em> na inicialização e escolher os que tem a melhor velocidade em absoluto, no meu caso, eu prefiro limitar os mirrors a servidores nacionais, atualizados pelo menos nas últimas 24 horas, e só então <i>rankealos</i> por velocidade. Você pode atualizar a sua lista de servidores como no exemplo abaixo:</p>
         <code>reflector -c BR -a 24 --sort rate --save /etc/pacman.d/mirrorlist</code>
+        <p>Caso queira filtrar por servidores por um protocolo específico pode usar o argumento <em>--protocol</em> seguido do protocolo como no exemplo abaixo:</p>
+        <code>--protocol https</code>
         <!-- Passo opcional - Configurar Pacman -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo opcional - Otimizar Pacman</h2>
-        <p>Use os comandos abaixo para descomentar as linhas de configuração de cor e download paralelo no Pacman:</p>
-        <code>sed -i "s/^#Color/Color/" /etc/pacman.conf</code>
-        <code>sed -i "s/^#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf</code>
+        <p>Existem algumas configurações que podem ser feitas no arquivo <em>/etc/pacman.conf</em> que podem ser interessantes.</p>
+        <h3>Habilitar cor</h3>
+        <details class="spoiler" >
+            <summary>Usando <em>sed</em> (Clique para ver)</summary>
+            <code>sed -i "s/^#Color/Color/" /etc/pacman.conf</code>
+        </details>
+        <p>Edite o arquivo <em>/etc/pacman.conf</em> e descomente a linha:</p>
+        <code>#Color</code>
+        <h3>Habilitar downloads paralelos</h3>
+        <details class="spoiler" >
+            <summary>Usando <em>sed</em> (Clique para ver)</summary>
+            <code>sed -i "s/^#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf</code>
+        </details>
+        <p>Por padrão a última versão do Arch que eu baixei vinha com essa opção ativa, mas caso queira ter certeza ou mesmo aumentar o número de downloads paralelos você pode habilitar e editar a linha:</p>
+        <code>#ParallelDownloads</code>
         <h3>Bônus!</h3>
         <p>Transforme o Pacman... No Pacman!</p>
         <code>echo "ILoveCandy" >> /etc/pacman.conf</code>
@@ -1291,30 +1305,54 @@
         <p>Então "sete" o fuso-horário com um link simbólico como no comando abaixo:</p>        
         <code>ln -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime</code>        
         <p>Por fim execute o hwclock para gerar o ajuste de relógio com o comando abaixo:</p>
-        <code>hwclock --systohc</code>
+        <code>hwclock --systohc --utc</code>
+        <p>Para conferir se está tudo certo use o comando:</p>
+        <code>date</code>
         <!-- Localização -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Localização</h3>
-        <p>Para "setar" com o <mark>sed</mark> o <mark>locale</mark> para <mark>pt_BR.UTF-8</mark> use o comando:</p>
-        <code>sed -i -e "/^#"pt_BR.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
-        <p>Embora não seja estritamente necessário, alguns aplicativos exigem também o locale <mark>eu_US.UTF-8</mark> (como é o caso da Steam), nesse caso use também o comando:</p>
-        <code>sed -i -e "/^#"en_US.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
-        <p>Por fim gere a localização com o comando:</p></p>
-        <code>locale-gen</code>
-        <!--
-        <p>Edite o <em>/etc/locale.gen</em> com o nano com o comando:</p>
-        <code>nano /etc/locale.gen</code>
-        </p>Descomente a linha "pt_BR.UTF-8 UTF-8" e gere a localização com o comando:</p>
-        <code>locale-gen</code>
+        <h4>Gerando locale</h4>
+        <p>Agora precisamos gerar os locales para o nosso sistema:</p>
+        <!-- Localização - echo -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
             <summary>Maneira preguiçosa de configurar o locale-gen (Clique para ver) </summary>
-            <p>Você pode encontrar em alguns vídeos uma maneira bastante preguiçosa porém bastante objetiva de gerar o locale-gen com um comando só, que é através do comando abaixo:</p>
-            <code>echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen</code>
-            <p>O que esse comando vai fazer é simplesmente adicionar outra linha de locale ao final do arquivo e gerar o locale-gen através dela.</p>
+            <p>Você pode encontrar em alguns vídeos uma maneira bastante preguiçosa porém bastante objetiva de configurar o locale-gen, que é simplesmente adicionando os locales ao fim do arquivo e então gerando o locale-gen.</p>
+            <p>Para habilitar o <em>pt_BR</em> para esse arquivo:</p>
+            <code>echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen</code>
+            <p>Embora não seja estritamente necessário, alguns aplicativos exigem também o locale <mark>eu_US.UTF-8</mark> (como é o caso da Steam), se você usa algum aplicativo com essa exigência use o comando abaixo para habilitar o <em>en_US</em> para esse arquivo:</p>
+            <code>echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen</code>
+            <p>Por fim gere a localização com o comando:</p></p>
+            <code>locale-gen</code>
         </details>
-        -->
-        <p>Para setar a configuração padrão de localização do sistema utilize o comando:</p>
+        <!-- Localização - sed -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <details class="spoiler" >
+            <summary>Configurar o locale-gen por script com o SED (Clique para ver) </summary>
+            <p>Para habilitar o <em>pt_BR.UTF-8</em>:</p>
+            <!--
+            <code>sed -i -e "/^#"pt_BR.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
+            -->
+            <code>sed -i -e "/^#"pt_BR.UTF-8"/s/^#//" /etc/locale.gen</code>
+            <p>Para habilitar o <em>en_US.UTF-8</em>:</p>
+            <p>Embora não seja estritamente necessário, alguns aplicativos exigem também o locale <mark>eu_US.UTF-8</mark> (como é o caso da Steam), para isso use o comando:</p> 
+            <!--
+            <code>sed -i -e "/^#"en_US.UTF-8"/s/^#//" /mnt/etc/locale.gen</code>
+            -->
+            <code>sed -i -e "/^#"en_US.UTF-8"/s/^#//" /etc/locale.gen</code>
+            <p>Por fim gere a localização com o comando:</p></p>
+            <code>locale-gen</code>
+        </details>
+        <!-- Localização - nano -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p>Edite o <em>/etc/locale.gen</em> com o nano com o comando:</p>
+        <code>nano /etc/locale.gen</code>
+        </p>E descomente a linha "<mark>pt_BR.UTF-8 UTF-8</mark>" e gere a localização com o comando:</p>
+        <code>locale-gen</code>
+        <h4>Setar linguagem</h4>
+        <p>Para setar a linguagem do sistema utilize o comando:</p>
         <code>echo "LANG=pt_BR.UTF-8" >> /etc/locale.conf</code>
+        <h4>Setar teclado</h4>
         <p>Para fazer com que a mudança de layout de teclado seja persistente para o virtual console utilize o comando:</p>
         <code>echo "KEYMAP=br-abnt2" >> /etc/vconsole.conf</code>
         <!-- Configuração básica de rede -->
