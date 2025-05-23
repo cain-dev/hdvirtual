@@ -253,17 +253,19 @@
         <!-- Passo 4 Opção A - armazenamento em sistemas baseados em BIOS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção A - Preparação para armazenamento em sistemas baseados em <mark>BIOS</mark></h3>
-        <p>Para particionar o disco utilizaremos a ferramenta <em>fdisk</em> na unidade desejada, para isso utilize o comando:</p>
-        <code>fdisk /dev/<mark>storageA</mark></code>
-        <p>Com o <mark>fdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>MBR</mark> com o comando:</p>
-        <code>o</code>
+        <!-- BIOS - LUKS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <!--
+            <h4><strong>AVISO!</strong> Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
+            <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
+            -->
         <!-- Easy Mode CFDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
-            <summary>Modo Easy (Clique para ver)</summary>
-            <p>Uma vez que você criou uma nova tabela em <em>MBR (DOS)</em> você pode imediatamente usar o comando abaixo para escrever as alterações:</p>
-            <code>w</code>
-            <p>E fazer as partições de uma forma mais gráfica e fácil através do <em>cfdisk</em> com o comando:</p>
+            <summary>Método gráfico com <em>CFDISK</em> (TUI - Very Easy) (Clique para ver)</summary>
+            <p>Crie uma nova tabela de partição vazia com o comando:</p>
+            <code>parted -s /dev/<mark>storageA</mark> mklabel msdos</code>
+            <p>E agora vamos fazer as partições de uma forma mais gráfica e fácil através do <em>cfdisk</em> com o comando:</p>
             <code>cfdisk /dev/<mark>storageA</mark></code>
             <h4>Como usar:</h4>
             <ul>
@@ -383,194 +385,198 @@
             <h4>Terminado!</h4>
             <p>Pule para o <em>Passo 5 - Formatar as partições</em></p>
         </details>
-        <!-- Partição BIOS BOOT -->
+        <!-- FDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
-        <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
-        <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
-        <code>n</code>
-        <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
-        <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
-        <p>Tecle <em>p</em> (para <i>primary</i>) e dê enter para a criar uma nova partição primária.</p>
-        <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
-        <code>Partition number:</code>
-        <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, apenas <em>1MB</em> é o suficiente, para criar uma partição de 1MB o comando seria:</p>
-        <code>last sector: +<mark>1M</mark></code>
-        <p><strong>Observação:</strong> Se essa área já servia alguma outra partição vai aparecer um erro como o exemplo abaixo:</p>
-        <code><strong>Partition #X contains a X signature.</strong><br>Do you want to remove the signature?[Y]es/[N]o:</code>
-        <p>Apenas use o comando <em>Y</em> para confirmar a remoção de assinatura.</p>
-        <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
-        <code>t</code>
-        <p>Para ver os códigos disponíveis use o comando:</p>
-        <code>L</code>
-        <p>O código para o tipo vazio é o <em>00</em>, digite 00 e dê enter para mudar o tipo para "Empty"</p>
-        <p>Agora precisamos deixar essa partição <i>bootável</i>, tecle <em>a</em> para deixar essa partição ativada para boot.</p>
-        <!-- Partição SWAP em BIOS -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-        <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-        <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-        <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-        <figure>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>RAM</th>
-                        <th>Swap (sem hibernação)</th>
-                        <th>&nbsp;Swap (com hibernação)</th>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;256MB</td>
-                        <td>&nbsp;256MB</td>
-                        <td>&nbsp;512MB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;512MB</td>
-                        <td>&nbsp;512MB</td>
-                        <td>&nbsp;1GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;2GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;1GB</td>
-                        <td>&nbsp;3GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;5GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;4GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;6GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;6GB</td>
-                        <td>&nbsp;2GB</td>
-                        <td>&nbsp;8GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;8GB</td>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;11GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;12GB</td>
-                        <td>&nbsp;3GB</td>
-                        <td>&nbsp;15GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;16GB</td>
-                        <td>&nbsp;4GB</td>
-                        <td>&nbsp;20GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;24GB</td>
-                        <td>&nbsp;5GB</td>
-                        <td>&nbsp;29GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;32GB</td>
-                        <td>&nbsp;6GB</td>
-                        <td>&nbsp;38GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;64GB</td>
-                        <td>&nbsp;8GB</td>
-                        <td>&nbsp;72GB</td>
-                    </tr>
-                    <tr>
-                        <td>&nbsp;128GB</td>
-                        <td>&nbsp;11GB</td>
-                        <td>&nbsp;139GB</td>
-                    </tr>
-                </tbody>
-            </table>
-        </figure>
-        <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
-        <code>n</code>
-        <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
-        <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
-        <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
-        <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
-        <code>Partition number:</code>
-        <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação o recomendado conforme a tabela é utilizar 3G, para criar uma partição de 3GB o comando seria:</p>
-        <code>last sector: +<mark>3G</mark></code>
-        <p><strong>Observação:</strong> Se essa área já servia alguma outra partição vai aparecer um erro como o exemplo abaixo:</p>
-        <code><strong>Partition #X contains a X signature.</strong><br>Do you want to remove the signature?[Y]es/[N]o:</code>
-        <p>Apenas use o comando <em>Y</em> para confirmar a remoção de assinatura.</p>
-        <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
-        <code>t</code>
-        <p>Para ver os códigos disponíveis use o comando:</p>
-        <code>L</code>
-        <p>O código para o tipo swap é o <em>82</em>, digite 82 e dê enter para mudar o tipo para "Linux swap"</p>
-        <!-- Partição raiz do sistema em BIOS -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->        
-        <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
-        <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
-        <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
-        <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
-        <p>Para criar a nova partição que será usada como raiz do sistema utilize o comando:</p>
-        <code>n</code>
-        <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
-        <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
-        <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
-        <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
-        <code>Partition number:</code>
-        <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, caso você queira que a partição de sistema ocupe todo o resto do armazenamento apenas tecle <em>Enter</em> (recomendado), caso você queira uma partição de sistema com espaço delimitado insira o comando abaixo trocando o valor de 20G pelo valor desejado (não recomendado): </p>
-        <code>last sector: +<mark>20G</mark></code>
-        <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
-        <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
-        <code>t</code>
-        <p>Supondo que a partição raiz seja a segunda partição criada use tecle <em>2</em> e depois tecle <em>Enter</em>.</p>
-        <p>Para ver os códigos disponíveis use o comando:</p>
-        <code>L</code>
-        <p>O código para o tipo Linux é o <em>83</em>, digite 83 e dê enter para mudar o tipo para "Linux"</p>
-        <!-- Partição /home em BIOS -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Partição para <em>/home</em> separada (opcional)</h4>
-        <p>Para criar a nova partição que será usada como /home utilize o comando:</p>
-        <code>n</code>
-        <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
-        <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
-        <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
-        <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
-        <code>Partition number:</code>
-        <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
-        <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
-        <code>first sector: default</code>
-        <p>Apenas tecle <mark>Enter</mark>.</p>
-        <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, recomendo que apenas tecle <em>Enter</em> para ocupar o resto do armazenamento (embora você também pode delimitar o tanho dessa partição digitando da mesma maneira que a raiz).</p>
-        <code>last sector: default</code>
-        <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
-        <code>t</code>
-        <p>Supondo que a partição /home seja a segunda partição criada use tecle <em>3</em> e depois tecle <em>Enter</em>.</p>
-        <p>Para ver os códigos disponíveis use o comando:</p>
-        <code>L</code>
-        <p>O código para o tipo Linux é o <em>83</em>, digite 83 e dê enter para mudar o tipo para "Linux"</p>
-        <!-- Gravar as alterações -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Gravar as alterações</h4>
-        <p>Para gravar as alterações da tabela de partição e sair do programa utilize o comando abaixo:</p>
-        <code>w</code>
-        <p>Uma vez que as alterações foram gravadas você pode seguir para o <em>Passo 5 - Formatar as partições</em>.</p>
+        <details class="spoiler" >
+            <summary>Método interativo com <em>FDISK</em> (CLI - Normal) (Clique para ver)</summary>
+            <p>Para particionar o disco utilizaremos a ferramenta <em>fdisk</em> na unidade desejada, para isso utilize o comando:</p>
+            <code>fdisk /dev/<mark>storageA</mark></code>
+            <p>Com o <mark>fdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>MBR</mark> com o comando:</p>
+            <code>o</code>
+            <!-- Partição BIOS BOOT -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
+            <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
+            <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
+            <code>n</code>
+            <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
+            <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
+            <p>Tecle <em>p</em> (para <i>primary</i>) e dê enter para a criar uma nova partição primária.</p>
+            <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
+            <code>Partition number:</code>
+            <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, apenas <em>1MB</em> é o suficiente, para criar uma partição de 1MB o comando seria:</p>
+            <code>last sector: +<mark>1M</mark></code>
+            <p><strong>Observação:</strong> Se essa área já servia alguma outra partição vai aparecer um erro como o exemplo abaixo:</p>
+            <code><strong>Partition #X contains a X signature.</strong><br>Do you want to remove the signature?[Y]es/[N]o:</code>
+            <p>Apenas use o comando <em>Y</em> para confirmar a remoção de assinatura.</p>
+            <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
+            <code>t</code>
+            <p>Para ver os códigos disponíveis use o comando:</p>
+            <code>L</code>
+            <p>O código para o tipo vazio é o <em>00</em>, digite 00 e dê enter para mudar o tipo para "Empty"</p>
+            <p>Agora precisamos deixar essa partição <i>bootável</i>, tecle <em>a</em> para deixar essa partição ativada para boot.</p>
+            <!-- Partição SWAP em BIOS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
+            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
+            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
+            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
+            <figure>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>RAM</th>
+                            <th>Swap (sem hibernação)</th>
+                            <th>&nbsp;Swap (com hibernação)</th>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;512MB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;1GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;2GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;3GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;5GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;6GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;8GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;11GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;12GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;15GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;16GB</td>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;20GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;24GB</td>
+                            <td>&nbsp;5GB</td>
+                            <td>&nbsp;29GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;32GB</td>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;38GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;64GB</td>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;72GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;128GB</td>
+                            <td>&nbsp;11GB</td>
+                            <td>&nbsp;139GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </figure>
+            <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
+            <code>n</code>
+            <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
+            <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
+            <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
+            <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
+            <code>Partition number:</code>
+            <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação o recomendado conforme a tabela é utilizar 3G, para criar uma partição de 3GB o comando seria:</p>
+            <code>last sector: +<mark>3G</mark></code>
+            <p><strong>Observação:</strong> Se essa área já servia alguma outra partição vai aparecer um erro como o exemplo abaixo:</p>
+            <code><strong>Partition #X contains a X signature.</strong><br>Do you want to remove the signature?[Y]es/[N]o:</code>
+            <p>Apenas use o comando <em>Y</em> para confirmar a remoção de assinatura.</p>
+            <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
+            <code>t</code>
+            <p>Para ver os códigos disponíveis use o comando:</p>
+            <code>L</code>
+            <p>O código para o tipo swap é o <em>82</em>, digite 82 e dê enter para mudar o tipo para "Linux swap"</p>
+            <!-- Partição raiz do sistema em BIOS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->        
+            <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
+            <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
+            <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
+            <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
+            <p>Para criar a nova partição que será usada como raiz do sistema utilize o comando:</p>
+            <code>n</code>
+            <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
+            <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
+            <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
+            <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
+            <code>Partition number:</code>
+            <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, caso você queira que a partição de sistema ocupe todo o resto do armazenamento apenas tecle <em>Enter</em> (recomendado), caso você queira uma partição de sistema com espaço delimitado insira o comando abaixo trocando o valor de 20G pelo valor desejado (não recomendado): </p>
+            <code>last sector: +<mark>20G</mark></code>
+            <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
+            <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
+            <code>t</code>
+            <p>Supondo que a partição raiz seja a segunda partição criada use tecle <em>2</em> e depois tecle <em>Enter</em>.</p>
+            <p>Para ver os códigos disponíveis use o comando:</p>
+            <code>L</code>
+            <p>O código para o tipo Linux é o <em>83</em>, digite 83 e dê enter para mudar o tipo para "Linux"</p>
+            <!-- Partição /home em BIOS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição para <em>/home</em> separada (opcional)</h4>
+            <p>Para criar a nova partição que será usada como /home utilize o comando:</p>
+            <code>n</code>
+            <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
+            <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
+            <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
+            <p>O programa vai perguntar o número da partição como no exemplo abaixo:</p>
+            <code>Partition number:</code>
+            <p>Você pode selecionar qual vai ser o número da partição ou apenas teclar <em>Enter</em>.</p>
+            <p>Logo em seguida o sistema irá exibir a seguinte linha para que você escolha o ponto de início da partição:</p>
+            <code>first sector: default</code>
+            <p>Apenas tecle <mark>Enter</mark>.</p>
+            <p>Logo em seguida o sistema irá exibir a linha abaixo para que você escolha o ponto de término da partição e delimite o seu tamanho, recomendo que apenas tecle <em>Enter</em> para ocupar o resto do armazenamento (embora você também pode delimitar o tanho dessa partição digitando da mesma maneira que a raiz).</p>
+            <code>last sector: default</code>
+            <p>Agora, precisamos informar o tipo da partição, para mudar o tipo da partição use o comando:</p>
+            <code>t</code>
+            <p>Supondo que a partição /home seja a segunda partição criada use tecle <em>3</em> e depois tecle <em>Enter</em>.</p>
+            <p>Para ver os códigos disponíveis use o comando:</p>
+            <code>L</code>
+            <p>O código para o tipo Linux é o <em>83</em>, digite 83 e dê enter para mudar o tipo para "Linux"</p>
+        </details>
+        <p>Adendo: Existe também a possibilidade de uso da ferramenta <em>parted</em>, que tanto pode ser usada de forma interativa como por script, porém devido a seu design dificultar o uso de tamanhos relativos ao início da partição eu resolvi não colocá-lo aqui por hora.</p>
         <!-- Passo 4 Opção B - armazenamento em sistemas baseados em UEFI -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção B - Preparação para armazenamento em sistemas baseados em <mark>UEFI</mark></h3>
@@ -581,7 +587,7 @@
         <!-- Modo Easy CGDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
-            <summary>Método gráfico com <em>CGDISK</em> (Very Easy) (Clique para ver)</summary>
+            <summary>Método gráfico com <em>CGDISK</em> (TUI - Very Easy) (Clique para ver)</summary>
             <p>Crie uma nova tabela de partição vazia com o comando:</p>
             <code>sgdisk -o /dev/<mark>storageA</mark></code>
             <p>E agora vamos fazer as partições de uma forma mais gráfica e fácil através do <em>cgdisk</em> com o comando:</p>
@@ -713,7 +719,7 @@
         <!-- Modo Normal GDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->  
         <details class="spoiler" >
-            <summary>Método interativo com <em>GDISK</em> (Normal) (Clique para ver)</summary>
+            <summary>Método interativo com <em>GDISK</em> (CLI - Normal) (Clique para ver)</summary>
             <p>Para particionar o disco utilizaremos a ferramenta <em>gdisk</em> na unidade desejada, para isso utilize o comando:</p>
             <code>gdisk /dev/<mark>storageA</mark></code>
             <p>Com o <mark>gdisk</mark> aberto na unidade desejada criaremos uma nova tabela de partição em <mark>GPT</mark> com o comando:</p>
@@ -896,7 +902,7 @@
         <!-- MÉTODO ALTERNATIVO SGDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
-            <summary>Método determinístico com <em>SGDISK</em> (Hard) (Clique para ver)</summary>
+            <summary>Método determinístico com <em>SGDISK</em> (Scripting - Hard) (Clique para ver)</summary>
             <p>Antes de mais nada, caso queira limpar (<i>zap-all</i>) a tabela de partições completamente (MBR e GPT para deixar o disco como novo) você pode usar o comando:</p>
             <code>sgdisk -Z /dev/<em>storageA</em></code>
             <p>Caso queira criar uma nova tabela de partição vazia pode usar o comando:</p>
@@ -1027,6 +1033,7 @@
             <p>Você também pode informar o valor <mark>0</mark> em todos os <em>partnumber</em> para que seja associado automaticamente.</p>
             <p>Lembre-se sempre de acrescentar o <em>+</em> ao declarar o valor do fim da partição (a menos que esteja usando o valor <mark>0</mark> de fim da partição).</p>
         </details>
+        <p>Adendo: Existe também a possibilidade de uso da ferramenta <em>parted</em>, que tanto pode ser usada de forma interativa como por script, porém devido a seu design dificultar o uso de tamanhos relativos ao início da partição eu resolvi não colocá-lo aqui por hora.</p>
         <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 4.9 - (Opcional) Criptografar as partições</h2>
