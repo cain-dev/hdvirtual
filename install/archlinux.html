@@ -278,7 +278,10 @@
         <details class="spoiler" >
             <summary>Método gráfico com <em>CFDISK</em> (TUI - Very Easy) (Clique para ver)</summary>
             <p>Crie uma nova tabela de partição vazia com o comando:</p>
+            <!--
             <code>parted -s /dev/<mark>storageA</mark> mklabel msdos</code>
+            -->
+            <code>echo 'label: dos' | sfdisk --wipe always /dev/<mark>storageA</mark></code>
             <p>E agora vamos fazer as partições de uma forma mais gráfica e fácil através do <em>cfdisk</em> com o comando:</p>
             <code>cfdisk /dev/<mark>storageA</mark></code>
             <h4>Como usar:</h4>
@@ -589,6 +592,148 @@
             <p>Para ver os códigos disponíveis use o comando:</p>
             <code>L</code>
             <p>O código para o tipo Linux é o <em>83</em>, digite 83 e dê enter para mudar o tipo para "Linux"</p>
+        </details>
+        <!-- SFDISK -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <details class="spoiler">
+            <summary>Método determinístico com <em>SFDISK</em> (Scripting - Hard) (Clique para ver)</summary>
+            <p>Crie uma nova tabela de partição vazia com o comando:</p>
+            <code>echo 'label: dos' | sfdisk --wipe always /dev/<mark>storageA</mark></code>
+            <!-- Partição BIOS BOOT -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
+            <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
+            <p>A partição BIOS BOOT deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
+            <code>echo '2048,+1M,00,*' | sfdisk /dev/<em>storageA</em></code>
+            <!-- Partição EXTENDED -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>EXTENDED</em> (necessário dependendo da sua tabela de partições)</h4>
+            <p>Devido as próprias limitações da tabela MBR, o máximo que você pode ter de partições dentro de um disco é de <mark>4 partições</mark> primárias, ou seja, 4 partições capazes de iniciar o sistema. E isso seria um problema gigantesco... Se você estivesse usando outro sistema.</p>
+            <p>Quando se trata de Linux e BSDs, contanto que o bootloader faça seu trabalho de redirecionar para o lugar certo o sistema vai iniciar. Então, para não ficarmos limitados a 4 partições, vamos criar 1 partição primária para o GRUB, 1 partição extendida que ocupe o resto do disco e inserir as demais partições lógicas dentro desse espaço.</p>
+            <p>Para criar a nova extendida que será usada para encapsular as pelas demais partições utilize o comando:</p>
+            <code>echo ',,05' | sfdisk --append /dev/<em>storageA</em></code>
+            <!-- Partição BIOS SWAP -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
+            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
+            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
+            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
+            <figure>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>RAM</th>
+                            <th>Swap (sem hibernação)</th>
+                            <th>&nbsp;Swap (com hibernação)</th>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;256MB</td>
+                            <td>&nbsp;512MB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;512MB</td>
+                            <td>&nbsp;1GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;2GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;1GB</td>
+                            <td>&nbsp;3GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;5GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;6GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;2GB</td>
+                            <td>&nbsp;8GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;11GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;12GB</td>
+                            <td>&nbsp;3GB</td>
+                            <td>&nbsp;15GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;16GB</td>
+                            <td>&nbsp;4GB</td>
+                            <td>&nbsp;20GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;24GB</td>
+                            <td>&nbsp;5GB</td>
+                            <td>&nbsp;29GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;32GB</td>
+                            <td>&nbsp;6GB</td>
+                            <td>&nbsp;38GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;64GB</td>
+                            <td>&nbsp;8GB</td>
+                            <td>&nbsp;72GB</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;128GB</td>
+                            <td>&nbsp;11GB</td>
+                            <td>&nbsp;139GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </figure>
+            <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
+            <p>Supondo a adição de uma partição swap de <em>3G</em>, vamos usar o comando abaixo:</p>
+            <code>echo ',+<em>3G</em>,82' | sfdisk --append /dev/<em>storageA</em></code>
+            <!-- Partição BIOS ROOT -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
+            <p>A partição mais importante do sistema, é a partição em que todos os arquivos de sistema ficam e que tudo é montado. Via de regra, essa é a partição que ocupada todo o resto do armazenamento. No entanto, algumas pessoas preferem delimitar o espaço dessa partição para o tamanho necessário apenas para o funcionamento do sistema e ocupar o resto do armazenamento com uma partição dedicada para a pasta de usuários (/home). Dessa forma, se algum problema ocorrer com a partição do sistema não haverá perdas para os dados de usuário.</p>
+            <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
+            <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
+            <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
+            <p>A partição / deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
+            <p>Supondo a adição de uma partição root de <em>20G</em>, vamos usar o comando abaixo: </p>
+            <code>echo ',+<em>20G</em>,83' | sfdisk --append /dev/sdX</code>
+            <!-- Partição BIOS HOME -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição para <em>/home</em> separada (opcional e não recomendado)</h4>
+            <p>Se decidiu fazer uma partição separada para a /home recomendo que ocupe todo o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição da mesma maneira que a raiz).</p></p>
+            <p>A partição /home deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
+            <p>Supondo a adição de uma partição /home que ocupe todo o resto do disco, vamos usar o comando abaixo: </p>
+            <code>echo ',,83' | sfdisk --append /dev/sdX</code>
+            <h4>E qual seria a vantagem de usar o sfdisk?</h4>
+            <p>A vantagem é que se você souber o que está fazendo pode finalizar a sua tabela de partição completa em poucos comandos ou mesmo por script como no exemplo abaixo:</p>
+<pre><code>
+sudo sfdisk /dev/<em>storageA</em> &lt;&lt;EOF
+label: dos
+2048,+1M,00,*  # BIOS BOOT partition
+EOF
+        
+sudo sfdisk --append /dev/<em>storageA</em> &lt;&lt;EOF
+,,05           # Extended partition for logical partitions
+,+3G,82        # SWAP partition inside extended
+,+20G,83       # Root partition inside extended
+EOF
+</code></pre>
         </details>
         <p>Adendo: Existe também a possibilidade de uso da ferramenta <em>parted</em>, que tanto pode ser usada de forma interativa como por script, porém devido a seu design dificultar o uso de tamanhos relativos ao início da partição eu resolvi não colocá-lo aqui por hora.</p>
         <!-- Passo 4 Opção B - armazenamento em sistemas baseados em UEFI -->
