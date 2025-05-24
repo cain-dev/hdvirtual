@@ -181,6 +181,8 @@
         <code>timedatectl set-timezone America/Sao_Paulo</code>
         <p>Por fim, habilite o ntp com o comando:</p>
         <code>timedatectl set-ntp true</code>
+        <p>Para conferir se está tudo certo use o comando:</p>
+        <code>date</code>
         <!-- Passo opcional - SSH -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo opcional - SSH</h2>
@@ -213,12 +215,15 @@
         <p>Edite o arquivo <em>/etc/pacman.conf</em> e descomente a linha:</p>
         <code>#Color</code>
         <h3>Habilitar downloads paralelos</h3>
+        <p>(por padrão a última versão do Arch que eu baixei vinha com essa opção ativa)</p>
         <details class="spoiler" >
             <summary>Usando <em>sed</em> (Clique para ver)</summary>
-            <code>sed -i "s/^#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf</code>
+            <!--
+            <code>sed -i "s/^#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf</code>-->
+            <code>sed -i "s/^ParallelDownloads = 5/ParallelDownloads = 8/" /etc/pacman.conf</code>
         </details>
-        <p>Por padrão a última versão do Arch que eu baixei vinha com essa opção ativa, mas caso queira ter certeza ou mesmo aumentar o número de downloads paralelos você pode habilitar e editar a linha:</p>
-        <code>#ParallelDownloads</code>
+        <p>Caso queira ter certeza de que a opção esteja habilitada ou mesmo aumentar o número de downloads paralelos você pode editar a linha:</p>
+        <code>#ParallelDownloads = 5</code>
         <h3>Bônus!</h3>
         <p>Transforme o Pacman... No Pacman!</p>
         <code>echo "ILoveCandy" >> /etc/pacman.conf</code>
@@ -1280,15 +1285,13 @@ EOF
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2 id="passo-6" >Passo 6 - Montar as partições</h2>
         <p>Até aqui temos o armazenamento particionado e formatado, pronto para a instalação do sistema, agora só é necessário montar as partições para que elas fiquem acessíveis para a instalação.</p>
-        <p>Porém, a maneira de montar o sistema muda consideravelmente a depender se você está utilizando <mark>EXT4</mark> ou <mark>BTRFS</mark>, portanto, siga com <strong>uma das </strong> alternativas adiante:</p>
-        <!-- Passo 6 - Montar as partições EXT4 -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Passo 6A - para EXT4:</h3>
-        <!-- Passo 6 - Montar a raiz EXT4 -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Montagem da partição <em>/</em> (raiz) do sistema</h4>
         <p>Montaremos a partição raiz do sistema em <em>/mnt</em>, basta substituir <mark>storageAP3</mark> pelo endereço da partição <em>raiz</em> (<mark>/</mark>) de acordo com o <em>seu</em> sistema:</p>
         <code>mount /dev/<mark>storageAP3</mark> /mnt</code>
+        <p>Porém, a maneira de montar o resto do sistema muda consideravelmente a depender se você está utilizando <mark>EXT4</mark> ou <mark>BTRFS</mark>, portanto, siga com <strong>uma das </strong> alternativas adiante:</p>
+        <!-- Passo 6 - Montar as partições EXT4 -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Passo 6A - para EXT4:</h3>
         <!-- Passo 6 - Montar a home EXT4 -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Montagem da partição <em>/home</em></h4>
@@ -1297,11 +1300,6 @@ EOF
         <!-- Passo 6 - Montar as partições BTRFS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Passo 6B - para BTRFS:</h3>
-        <!-- Passo 6 - Montar a raiz BTRFS -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h4>Montagem da partição <em>/</em> (raiz) do sistema</h4>
-        <p>Montaremos a partição raiz do sistema em <em>/mnt</em>, basta substituir <mark>storageAP3</mark> pelo endereço da partição <em>raiz</em> (<mark>/</mark>) de acordo com o <em>seu</em> sistema:</p>
-        <code>mount /dev/<mark>storageAP3</mark> /mnt</code>
         <!-- SWAPFILE BTRFS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>BTRFS swapfile</h4>
@@ -1638,39 +1636,85 @@ EOF
             <summary>Inicializando o dispositivo criptografado como raiz</summary>
             <!-- Preparando /etc/crypttab e /etc/cryptsetup-keys.d -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <!-- PREPARANDO AS CHAVES -->
+            <h4>Preparando as chaves</h4>
             <p>(Se não houver) crie o diretório para as chaves:</p>
             <code>mkdir /etc/cryptsetup-keys.d</code>
             <p>Copie as chaves para esse diretório como nos exemplos abaixo:</p>
             <code>cp cryptroot.key /etc/cryptsetup-keys.d/cryptroot.key</code>
             <code>cp cryptswap.key /etc/cryptsetup-keys.d/cryptswap.key</code>
-            <p>Agora edite o arquivo <mark>/etc/crypttab</mark> (sim, é a tabela dos dispositivos encriptados) para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
+            <!-- PREPARANDO MKINITCPIO (UDEV OU SYSTEMD) -->
+            <h4>Preparando o mkinitcpio</h4>
+            <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o arquivo <mark>/etc/mkinitcpio.conf</mark>:</p>
+            <code>nano /etc/mkinitcpio.conf</code>
+            <p>E então você pode escolher uma das opções abaixo:</p>
+            <!-- UDEV -->
+            <h4>Opção A - Hooks para para udev e encrypt (initramfs tradicional, mais controle via shell sem depender de systemd, mais lento)</h4>
+            <p>Para usar o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
+            <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
+            <!-- SYSTEMD -->
+            <h4>Opção B - Hooks para systemd e sd-encrypt (integração total com systemd, uso de crypttab.initramfs, keyring, e GPT auto-discovery, mais rápido)</h4>
+            <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
+            <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
+            <!-- SYSTEMD - EARLY BOOT -->
+            <p>O arquivo <mark>/etc/crypttab.initramfs</mark> é suportado quando se usa o <i>hook</i> <em>sd-encrypt</em> no <mark>mkinitcpio</mark>, isso permite especificar volumes que devem ser desencriptados durante o <i>early boot</i>. Para desbloquear a <em>cryptroot</em> insira uma linha como no exemplo abaixo:</p>
+            <code>cryptroot /dev/storageAP4 /etc/cryptsetup-keys.d/cryptroot.key luks</code>
+            <p>Dessa forma está declarado o nome da abstração (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>), e qual sistema será utilizado (nesse caso o <mark>luks</mark>).</p>
+            
+            
+            
+            
+            
+            
+            <h4>Inserindo o key file no initramfs</h4>
+            <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar tanto para o arquivo (ou arquivos) de chave quanto para a tabela:</p>
+            <!--
+            <code>FILES="/etc/cryptsetup-keys.d/cryptroot.key /etc/crypttab"</code>
+            -->
+
+
+            <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key /etc/cryptsetup-keys.d/cryptswap.key)</code>
+
+            <p>Para verificar se o arquivo foi devidamente inserido na sua initramfs use o comando:</p>
+            <code>lsinitcpio /boot/initramfs-linux.img | grep cryptsetup-keys.d/cryptroot.key</code>
+
+            
+            
+            
+            <!-- crypttab late -->
+            <p>Eite o arquivo <mark>/etc/crypttab</mark> para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
             <code>nano /etc/crypttab</code>
             <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptswap é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptswap.key</mark>):</p>
             <code>cryptswap /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptswap.key luks</code>
             <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da raiz! Este diretório é para volumes secundários como a swap! O arquivo de chave da raiz deve ser parte do initramfs!</p>
-            <!-- Configurando mkinitcpio -->
-            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o <mark>/etc/mkinitcpio.conf</mark>:</p>
-            <code>nano /etc/mkinitcpio.conf</code>
-            <h4>Hooks para para udev e encrypt</h4>
-            <p>E os HOOKs dependem de quais módulos são utilizados, para o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
-            <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
-            <h4>Hooks para systemd e sd-encrypt</h4>
-            <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
-            <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
-            <h4>Inserindo o key file no initramfs</h4>
-            <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar tanto para o arquivo (ou arquivos) de chave quanto para a tabela:</p>
-            <code>FILES="/etc/cryptsetup-keys.d/cryptroot.key /etc/crypttab"</code>
+            
+            
+            
+            
             <p>Agora precisamos gerar os arquivos initramfs, para gerar todos os presets basta usar o comando:</p>
             <code>mkinitcpio -P</code>
             <!-- Configurando os parâmetros de kernel -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            
+            <!-- UDEV -->
             <h4>Argumentos de boot para udev e encrypt</h4>
             <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
             <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
+            
+            
+            <!-- SYSTEMD -->
             <h4>Argumentos de boot para systemd e sd-encrypt</h4>
             <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
-            <code>rd.luks.uuid=<mark>UUID_DO_DISCO</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
+            
+            <p>Para informar qual dispositivo sera desencriptado e qual mapeamento ele irá receber:</p>
+            <code>rd.luks.name==<em>cryptroot</em></code>
+            <p>Para informar o caminho em que está a chave:</p>
+            <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
+            
+            <!-- ROOT -->
+            <p>Lembre-se que de agora em diante, para referenciar a sua raiz não é mais options root=/dev/<em>storageA</em>, e sim <em>options root=/dev/mapper/cryptroot</em>.</p>
+
+
         </details>
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
