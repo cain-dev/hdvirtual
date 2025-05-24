@@ -1707,7 +1707,7 @@ EOF
             <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
             
             <p>Para informar qual dispositivo sera desencriptado e qual mapeamento ele irá receber:</p>
-            <code>rd.luks.name==<em>cryptroot</em></code>
+            <code>rd.luks.name=<em>UUID DO DISPOSITIVO</em>=<em>cryptroot</em></code>
             <p>Para informar o caminho em que está a chave:</p>
             <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
             
