@@ -1608,7 +1608,7 @@ EOF
         <p>Habilite a elevação de privilégio para o grupo <mark>wheel</mark> descomentando a linha deletando o <mark>#</mark> antes dele em:</p>
         <code>%wheel ALL=(ALL:ALL) ALL</code>
         <p>Você também pode fazer isso com um comando único pelo <mark>sed</mark> (embora não é nada recomendado!):</p>
-        <code>sed -i -e '/^# %wheel ALL=(ALL:ALL) ALL/s/^# //' /mnt/etc/sudoers</code>
+        <code>sed -i -e '/^# %wheel ALL=(ALL:ALL) ALL/s/^# //' /etc/sudoers</code>
         <!-- Passo 13 Instalação de inicializador -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 13 - Instalação de inicializador</h2>
@@ -1638,20 +1638,24 @@ EOF
             <summary>Inicializando o dispositivo criptografado como raiz</summary>
             <!-- Preparando /etc/crypttab e /etc/cryptsetup-keys.d -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <p>Vamos editar o arquivo <mark>/etc/crypttab</mark> (sim, é a tabela dos dispositivos encriptados):</p>
-            <code>nano /etc/crypttab</code>
-            <p>Agora crie o diretório para as chaves:</p>
+            <p>(Se não houver) crie o diretório para as chaves:</p>
             <code>mkdir /etc/cryptsetup-keys.d</code>
-            <p>Copie as chaves para esse diretório:</p>
+            <p>Copie as chaves para esse diretório como nos exemplos abaixo:</p>
             <code>cp cryptroot.key /etc/cryptsetup-keys.d/cryptroot.key</code>
-            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>):</p>
-            <code>cryptroot /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptroot.key luks</code>
+            <code>cp cryptswap.key /etc/cryptsetup-keys.d/cryptswap.key</code>
+            <p>Agora edite o arquivo <mark>/etc/crypttab</mark> (sim, é a tabela dos dispositivos encriptados) para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
+            <code>nano /etc/crypttab</code>
+            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptswap é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptswap.key</mark>):</p>
+            <code>cryptswap /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptswap.key luks</code>
+            <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da raiz! Este diretório é para volumes secundários como a swap! O arquivo de chave da raiz deve ser parte do initramfs!</p>
             <!-- Configurando mkinitcpio -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o <mark>/etc/mkinitcpio.conf</mark>:</p>
             <code>nano /etc/mkinitcpio.conf</code>
+            <h4>Hooks para para udev e encrypt</h4>
             <p>E os HOOKs dependem de quais módulos são utilizados, para o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
+            <h4>Hooks para systemd e sd-encrypt</h4>
             <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
             <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar tanto para o arquivo (ou arquivos) de chave quanto para a tabela:</p>
@@ -1660,8 +1664,10 @@ EOF
             <code>mkinitcpio -P</code>
             <!-- Configurando os parâmetros de kernel -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Argumentos de boot para udev e encrypt</h4>
             <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
             <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
+            <h4>Argumentos de boot para systemd e sd-encrypt</h4>
             <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
             <code>rd.luks.uuid=<mark>UUID_DO_DISCO</mark> root=/dev/mapper/<mark>cryptroot</mark></code>
         </details>
