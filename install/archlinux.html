@@ -1658,6 +1658,7 @@ EOF
             <h4>Hooks para systemd e sd-encrypt</h4>
             <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
+            <h4>Inserindo o key file no initramfs</h4>
             <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar tanto para o arquivo (ou arquivos) de chave quanto para a tabela:</p>
             <code>FILES="/etc/cryptsetup-keys.d/cryptroot.key /etc/crypttab"</code>
             <p>Agora precisamos gerar os arquivos initramfs, para gerar todos os presets basta usar o comando:</p>
