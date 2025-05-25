@@ -1666,9 +1666,13 @@ EOF
             <h4>Opção A - Hooks para para udev e encrypt (initramfs tradicional, mais controle via shell sem depender de systemd, mais lento)</h4>
             <p>Para usar o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
-            
-            
-            
+            <!-- ENCRYPT - LATE BOOT -->
+            <p>Edite o arquivo <mark>/etc/crypttab</mark> para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
+            <code>nano /etc/crypttab</code>
+            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptswap é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptswap.key</mark>):</p>
+            <code>cryptswap /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptswap.key luks</code>
+            <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da raiz! Este diretório é para volumes secundários como a swap! O arquivo de chave da raiz deve ser parte do initramfs!</p>
+            <p>Você pode utilizar esse arquivo para desencriptação geral, porém, diferente do <mark>/etc/crypttab.initramfs</mark>, só colocar a linha aqui não serve.</p>
             <!-- SYSTEMD -->
             <h4>Opção B - Hooks para systemd e sd-encrypt (integração total com systemd, uso de crypttab.initramfs, keyring, e GPT auto-discovery, mais rápido)</h4>
             <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
@@ -1678,7 +1682,7 @@ EOF
             <code>cryptroot /dev/storageAP4 /etc/cryptsetup-keys.d/cryptroot.key luks</code>
             <p>Dessa forma está declarado o nome da abstração (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>), e qual sistema será utilizado (nesse caso o <mark>luks</mark>).</p>
             <p>Se você descreveu os pontos de montagem corretamente aqui, não será necessário usá-los novamente como parâmetros de kernel (embora eu recomendo fortemente que você tenha os comandos preparados porém comentados caso algo dê errado), lembrando que você pode omitir o 3º campo dessa linha, ou mesmo substituir por valores como <mark>none</mark> ou <em>-</em> caso haja uma chave de mesmo nome no diretório padrão (embora não seja recomendado fazer isso!).</p>
-            <!-- SYSTEMD - EARLY BOOT -->
+            <!-- INITRAMFS -->
             <h4>Inserindo os arquivos no initramfs</h4>
             <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar para os arquivos necessários para nosso boot. Caso você tenha usado o <em>sd-encrypt</em> basta inserir os caminhos dos arquivos chave:</p>
             <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key /etc/cryptsetup-keys.d/cryptswap.key)</code>
@@ -1688,48 +1692,24 @@ EOF
             <code>mkinitcpio -P</code>
             <p>E para verificar se o arquivo foi devidamente inserido na sua initramfs use o comando:</p>
             <code>lsinitcpio /boot/initramfs-linux.img | grep cryptsetup-keys.d/cryptroot.key</code>
-
-            
-            
-            
-            
-            
-            <!-- crypttab late -->
-            
-            
-            <p>Eite o arquivo <mark>/etc/crypttab</mark> para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
-            <code>nano /etc/crypttab</code>
-            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptswap é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptswap.key</mark>):</p>
-            <code>cryptswap /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptswap.key luks</code>
-            <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da raiz! Este diretório é para volumes secundários como a swap! O arquivo de chave da raiz deve ser parte do initramfs!</p>
-            
-
-
-            
-            
             <!-- Configurando os parâmetros de kernel -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            
             <!-- UDEV -->
             <h4>Argumentos de boot para udev e encrypt</h4>
             <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
             <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark></code>
-            <code>cryptkey=device:fstype:path</code>            
-            
+            <p>Para indicar o caminho da chave você pode usar</p>
+            <code>cryptkey=<em>dispositivo</em>:<em>tipo de sistema de arquivo</em>:<em>caminho</em></code>            
             <!-- SYSTEMD -->
             <h4>Argumentos de boot para systemd e sd-encrypt</h4>
             <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
-            
             <p>Para informar qual dispositivo sera desencriptado e qual mapeamento ele irá receber:</p>
             <code>rd.luks.name=<em>UUID DO DISPOSITIVO</em>=<em>cryptroot</em></code>
             <p>Para informar o caminho em que está a chave:</p>
             <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
-            
             <!-- ROOT -->
             <h3>Caminho para <em>root (/)</em> </h3>
             <p>Lembre-se que de agora em diante, para referenciar a sua raiz não é mais options root=/dev/<em>storageA</em>, e sim <em>options root=/dev/mapper/cryptroot</em>.</p>
-
-
         </details>
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
