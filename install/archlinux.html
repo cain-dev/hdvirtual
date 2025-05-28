@@ -1526,14 +1526,25 @@ EOF
         <!-- Finalizando a configuração de rede -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Finalizando a configuração de rede</h3>
-        <p>Aqui você deve escolher entre uma instalação padrão para desktop e uma instalação minimalista (para laptops sem muitos recursos que só utilizam conexão sem fio no mesmo local), então basta escolher <strong>1 dos casos abaixo</strong>:</p>
+        <p>Uma vez que você tem as configurações básicas da máquina, é necessário ao menos 1 <i>manager</i> para ter acesso a rede, então basta escolher <strong>1 dos casos abaixo</strong>:</p>
         <!-- NetworkManager e systemd-resolved -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <!-- SUBSTITUÍDO POR DNSMASQ
-        <h4>NetworkManager e systemd-resolved</h4>
+        <h4>NetworkManager e systemd-resolved</h4> < não usar, resolved bugado pra caralho
         <p>Apenas habilite os serviços <mark>NetworkManager</mark> e <mark>systemd-resolved</mark> com o comando:</p>
         <code>systemctl enable NetworkManager systemd-resolved</code>
         -->
+        <!-- DHCPCD -->
+        <h4>DHCPCD (configuração minimalista para cabo de rede)</h4>
+        <p>Considerando que uma grande parte dos usuários só precisa de ip dinâmico válido, em muitas situações o funcionamento do DHCPCD é mais do que suficiente, não só se trata de um cliente muito rico em funções mas também é altamente confiável.</p>
+        <p>Para usá-lo como seu <i>manager</i> primeiro instale o pacote:</p>
+        <code>pacman -S dhcpcd</code>
+        <p>O arquivo de configuração está em <mark>/etc/dhcpcd.conf</mark>, podemos deixar as coisas um pouco mais rápidas (e mais estáveis) desabilitando o <em>ARP probing</em> inserindo a linha:</p>
+        <code>noarp</code>
+        <p><strong>Não recomendado!</strong> Se e somente se você quer desabilitar o ipv6 aqui (embora faz muito mais sentido algo como <em>ipv6.disable=1</em> de parâmetro de kernel...):</p>
+        <code>noipv6rs<br>noipv6</code>
+        <p>Por fim habilite o serviço:</p>
+        <code>systemctl enable dhcpcd</code>
         <!-- NetworkManager e dnsmasq -->
         <h4>NetworkManager e dnsmasq (configuração padrão para Desktop)</h4>
         <p>Antes de mais nada precisamos instalar os pacotes do <em>NetworkManager</em> e <em>dnsmasq</em> com o comando:</p>
@@ -1903,7 +1914,7 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <p>Com tudo pronto podemos sair do ambiente chroot com o comando:</p>
         <code>exit</code>
         <p><strong>Se e somente se</strong> você ativou a swap desligue-a com o comando:</p>
-        <code>swapoff</code>
+        <code>swapoff --all</code>
         <p>Agora desmontaremos as partições restantes com o comando:</p>
         <!--
         <code>umount -a</code>
