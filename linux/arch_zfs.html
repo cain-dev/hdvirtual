@@ -236,8 +236,8 @@ WantedBy=zfs-import.target</pre></code>
         zfs snapshot rpool/ROOT/arch@<em>install</em>
         </code>
         <p>No futuro, você provavelmente desejará criar snapshots antes de cada atualização e destruir snapshots antigos (incluindo este, <strong>embora eu não recomendo de forma alguma remover essa snapshot específica!</strong>) em algum momento para economizar espaço. Para isso basta usar o exemplo abaixo:</p>
-        <code>sudo zfs destroy bpool/BOOT/debian@<em>nome_da_snapshot</em><br>
-        sudo zfs destroy rpool/ROOT/debian@<em>nome_da_snapshot</em></code>
+        <code>sudo zfs destroy bpool/BOOT/arch@<em>nome_da_snapshot</em><br>
+        sudo zfs destroy rpool/ROOT/arch@<em>nome_da_snapshot</em></code>
         <p>Uma vez que tudo está pronto, saia do ambiente chroot de volta para o ambiente LiveCD:</p>
         <code>exit</code>
         <p>Execute estes comandos no ambiente LiveCD para desmontar todos os sistemas de arquivos:</p>
