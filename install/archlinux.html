@@ -1948,10 +1948,21 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <br>
         <h2>Retoques pós-instalação</h2>
         <p>Ok, você instalou o Arch, meus parabéns! Mas tudo que você vai ver ao fim dessa instalação é uma tela de login e nenhuma otimização. Mas tem muito que podemos fazer para deixar o Arch mais convidativo para um usuário final.</p>
-        <p>A minha primeira recomendação é que você instale uma das interfaces abaixo.</p>
+        <!-- SNAPSHOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Adendo - Snapshot do sistema</h3>
+        <p>A minha primeira recomendação é que se você instalou o Arch com <em>BTRFS</em> ou <em>ZFS</em>, você deve antes de mais nada fazer um snapshot do sistema recém instalado.</p>
+        <h4>BTRFS</h4>
+        <p>No caso do BTRFS siga veja o exemplo abaixo:</p>
+        <code>btrfs subvolume snapshot -r <em>/dev/mapper/cryptroot/@</em> <em>/dev/mapper/@snapshots/nome_do_snapshot</em></code>
+        <p>O comando acima considera a raiz <mark>/dev/mapper/cryptroot</mark>, no subvolume <mark>@</mark>, com o diretório de snapshots em <mark>/dev/mapper/cryptroot</mark>, no subvolume <mark>@snapshots</mark>.</p>
+        <h4>ZFS</h4>
+        <p>No caso do ZFS siga veja o exemplo abaixo:</p>
+        <code>zfs snapshot <em>pool/dataset@nome_da_snapshot</em></code>
+        <p>E após isso instale uma das interfaces abaixo:</p>
         <!-- Instalando backend de som -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h2>Instalando backend de som</h2>
+        <h2>Adendo - Instalando backend de som</h2>
         <p>Antes de qualquer ambiente gráfico é interessante instalar os pacotes responsáveis pelo som, para isso instale:</p>
         <code>pipewire pipewire-alsa pipewire-pulse pipewire-jack pipewire-audio<em>*</em></code>
         <p><em>Observação:</em> Este último se e somente se vai usar dispositivos de som via bluetooth.</p>
@@ -2364,6 +2375,7 @@ vm.page-cluster = 0</pre></code>
         <code>auto-cpufreq --install</code>
         <p>Por padrão o daemon já vai fazer o controle usando o perfil balanceado, caso você queira um controle mais agressivo para economia de energia pode mudar o perfil para <em>powersave</em> como no comando abaixo:</p>
         <code>auto-cpufreq --profile powersave</code>
+        <p>Caso queira editar o arquivo para configuração <i>systemwide</i> ele fica em <mark>/etc/auto-cpufreq.conf</mark>, para usuário em <mark>$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf</mark>.</p>
         <h4>thermald</h4>
         <p>O Linux Thermal Daemon (thermald) monitora e controla a temperatura em laptops e tablets com CPU's Intel Sandy Bridge ou mais novas. Você pode instalá-lo e iniciá-lo com os comandos abaixo:</p>
         <code>pacman -S thermald</code>
