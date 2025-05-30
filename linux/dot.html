@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS-over-TLS (DoT)</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="DNS over TLS (DoT)"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="A requisição de DNS feita pra tudo que você conecta na internet não tem nada de privacidade..."/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="../assets/images/cainlogo.ico">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+	<main id="main-area">
+        <h1>DNS over TLS (DoT)</h1>
+        <h2>Introdução</h2>
+        <p><i>O que diabos é TLS e onde raios eu preciso disso na minha conexão?</i> Simples, a requisição feita pra tudo que você conecta na internet é visível, não da pra saber o conteúdo do pacote enviado para consulta de DNS e nem qual página específica você está acessando, mas pra saber que você se conectou no servidor do <i>cornhub</i> da, e isso não só viabiliza a invasão da sua privacidade como também certos ataques... Convencido agora?</p>
+        <p>É algo tão oculto quanto sei lá, navegar na rede TOR? Não, mas é basicamente fazer dos seus requisitos de DNS como algo invisível para um intermediário com basicamente custo 0.</p>
+        <p>Para isso você vai precisar dos pacotes <em>stubby</em>, <em>unbound</em> (e <em>expat</em> dependendo da distribuição).</p>
+        <h2>Configurando Unbound</h2>
+        <p>Considerando que o unbound está instalado vamos fazer a configuração inicial com:</p>
+        <code>sudo unbound-control-setup</code>
+        <p>Isso preparar os arquivos para a comunicação segura.</p>
+        <p>Após isso, faça um backup do arquivo <mark>/etc/unbound/unbound.conf</mark>, e depois deixe ele com o conteúdo abaixo:</p>
+<pre><code>server:
+  use-syslog: yes
+  username: "unbound"
+  directory: "/etc/unbound"
+  trust-anchor-file: trusted-key.key
+  root-hints: "/etc/unbound/root.hints"
+  do-not-query-localhost:  no
+forward-zone:
+  name: "."
+    forward-addr: 127.0.0.1@8053
+    forward-addr: ::1@8053
+</code></pre>
+        <p>Ok, agora vamos baixar o arquivo de de lista de servidores raiz do DNS com o comando:</p>
+        <code>curl --output /etc/unbound/root.hints https://www.internic.net/domain/named.cache</code>
+        <p>Esse arquivo precisa ser atualizado com uma certa frequência, para não ter que fazer isso manualmente vamos criar um arquivo de serviço em <mark>/etc/systemd/system/roothints.service</mark> com o conteúdo:</p>
+<pre><code>[Unit]
+Description=Update root hints for unbound
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/curl -o /etc/unbound/root.hints https://www.internic.net/domain/named.cache
+</code></pre>
+        <p>E então criar o arquivo <mark>/etc/systemd/system/roothints.timer</mark> com o conteúdo:</p>
+<pre><code>[Unit]
+Description=Run root.hints monthly
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+</code></pre>
+        <p>E por fim vamos iniciar esse serviço com o comando:</p>
+        <code>systemctl enable roothints.timer</code>
+        <h3>Configurando Stubby</h3>
+        <p>Considerando que você tem o pacote stubby instalado, basta fazer um backup e depois configurar o <mark>/etc/stubby/stubby.yml</mark> como no exemplo abaixo:</p>
+<pre><code>resolution_type: GETDNS_RESOLUTION_STUB
+dns_transport_list:
+  - GETDNS_TRANSPORT_TLS
+tls_authentication: GETDNS_AUTHENTICATION_REQUIRED
+tls_query_padding_blocksize: 256
+edns_client_subnet_private: 1
+round_robin_upstreams: 1
+#idle_timeout: 10000
+idle_timeout: 9000
+listen_addresses:
+  - 127.0.0.1@8053
+  - 0::1@8053
+upstream_recursive_servers:
+  ## Cloudflare IPv4
+  ## (NOTE: recommend reducing idle_timeout to 9000 if using Cloudflare)
+  - address_data: 1.1.1.1
+    tls_auth_name: "cloudflare-dns.com"
+  - address_data: 1.0.0.1
+    tls_auth_name: "cloudflare-dns.com"
+  ## Cloudflare IPv6
+  ## (NOTE: recommend reducing idle_timeout to 9000 if using Cloudflare)
+  - address_data: 2606:4700:4700::1111
+    tls_auth_name: "cloudflare-dns.com"
+  - address_data: 2606:4700:4700::1001
+    tls_auth_name: "cloudflare-dns.com"
+</code></pre>
+        <p><strong>Atenção!</strong> Tome bastante cuidado com a sintaxe desse arquivo! A identação aqui possui semântica, e não se utiliza tabulação e sim espaços.</p>
+        <p>Uma vez configurado inicie os serviços:</p>
+        <code>sudo systemctl enable stubby unbound</code>
+        <h3>Configurando nameserver</h3>
+        <p>Considerando que você está fazendo uso direto do <mark>/etc/resolv.conf</mark> (você taambém pode usar o <em>openresolv</em> para gerenciar aqui, embora seja desnecessário), basta deixar de conteúdo as linhas abaixo:</p>
+<pre><code>nameserver ::1
+nameserver 127.0.0.1
+options edns0 trust-ad
+</code></pre>
+        <p>Isso vai fazer com que seus requests de DNS sejam resolvidos localmente, depois disso recomendo deixar o arquivo <mark>/etc/resolv.conf</mark> imutável com o comando:</p>
+        <code>sudo chattr +i /etc/resolv.conf</code>
+        <p>E se tudo deu certo você pode testar acessando <a class="link" href="https://one.one.one.one/help/">essa página</a> e verificar se a linha <em>Using DNS over TLS (DoT)</em> retorna <em>Yes</em>.</p>
+        <h3>Finalizando</h3>
+        <p>Agora eu recomendo que você ache uma solução também para o <em>Network Time Security</em>...</p>
+        </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
