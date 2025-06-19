@@ -100,10 +100,10 @@
         canmount=off -O \<br>
         mountpoint=/boot -R /mnt bpool \<br>
         /dev/disk/by-id/<em>ID_DO_DISCO</em>-part<em>NR_DA_PARTIÇÃO_BOOT</em></code>
-        <p>Sinta-se a vontade para utilizar <em>-O atime=off</em> para remover o <i>access time</i> ou <em>-O compression=lz4</em> caso não queira compressão nessa partição.</p>
+        <p>Sinta-se a vontade para utilizar <em>-O atime=off</em> para remover o <i>access time</i>, <em>-O compression=off</em> caso não queira compressão nessa partição e <em>-o autotrim=on</em> para habilitar o trim automático (útil para memórias flash).</p>
         <h3>rpool</h3>
         <p>Para criar a piscina de dados para a <em>rpool</em> use o comando:</p>
-        <p>Mais uma vez: Sinta-se a vontade para utilizar <em>-O atime=off</em> para remover o <i>access time</i> ou <em>-O compression=lz4</em> caso não queira compressão nessa partição.</p>
+        <p>Mais uma vez: Sinta-se a vontade para utilizar <em>-O atime=off</em> para remover o <i>access time</i>, <em>-O compression=off</em> caso não queira compressão nessa partição e <em>-o autotrim=on</em> para habilitar o trim automático (útil para memórias flash).</p>
         <code>zpool create \<br>
         -o ashift=12  \<br>
         -O dnodesize=auto  \<br>
