@@ -29,19 +29,29 @@
     </header>
 	<main id="main-area">
     <h1><i>"Mas Linux roda jogos?"</i></h1>
+    <!-- INTRODUÇÃO -->
     <h2>Introdução</h2>
     <p>Foi se o tempo em que rodar jogos de PC no Linux era algo raro, hoje em dia não só temos clientes para a maioria das plataformas como até mesmo temos consoles baseados em Linux (como o SteamDeck da Valve). Para a maioria esmagadora dos títulos (certamente os que você mais gosta, os de longa data) basta utilizar uma camada de compatibilidade com Wine, Proton e DXVK e tá tudo certo.</p>
+    <!-- ENTENDENDO O BÁSICO -->
     <h2>Entendendo o básico</h2>
+    <!-- O QUE É WINE -->
     <h3>Mas o que é Wine?</h3>
-    <p>Wine não é um emulador, mas sim uma camada de compatibilidade que permite que você execute aplicações do Windows no Linux e demais sistemas Unixlike. Você pode verificar o estado da compatibilidade com a sua biblioteca de software através desse link <a class="link" href="https://appdb.winehq.org/">WineHQ</a>.</p>
-    <p>De todas as ferramentas para gerenciar versões e ambientes do Wine eu creio que de longe a mais simples seja o Bottles, você provavelmente vai achar na lojinha da sua distribuição ou pode instalar o flatpak através do comando:</p>
-    <code>flatpak install flathub com.usebottles.bottles</code>
+    <p>Wine não é um emulador, mas sim uma camada de compatibilidade que permite que você execute aplicações do Windows no Linux e demais sistemas Unixlike dentro de prefixos, prefixos são como um diretório que trabalha como um ambiente Windows a parte do seu sistema operacional, que contém os arquivos necessários e área de instalação própria, de modo que se você precisa de versões e configurações específicas de Windows para cada jogo, cada jogo terá o seu ambiente independente. Você pode verificar o estado da compatibilidade do Wine com a sua biblioteca de software através desse link <a class="link" href="https://appdb.winehq.org/">WineHQ</a>.</p>
+    <!-- O QUE É PROTON -->
     <h3>O que é Proton?</h3>
     <p>Proton é uma camada de compatibilidade desenvolvida pela Valve especifica para jogos do Windows rodarem em sistemas operacionais baseados em Linux. Embora não seja perfeita é muito competente, você pode verificar o estado da compatibilidade com a sua biblioteca de  jogos através desse link <a class="link" href="https://www.protondb.com/">ProtonDB</a>.</p>
+    <!-- O QUE É DXVK -->
     <h3>DXVK?</h3>
     <p>É uma ferramenta que interpreta as chamadas de API DirectX e as converte para Vulkan, em alguns casos aumentando de forma notável o desempenho.</p>
+    <!-- O QUE É VKD3D -->
     <h3>E VKD3D?</h3>
     <p>Basicamente a mesma coisa porém específico para DirectX12.</p>
+    <!-- BOTTLES -->
+    <h2>Bottles</h2>
+    <p>De todas as ferramentas para gerenciar versões e ambientes do Wine eu creio que de longe a mais simples seja o Bottles, você provavelmente vai achar na lojinha da sua distribuição (como Discover ou Gnome Software) ou pode instalar o flatpak através do comando:</p>
+    <code>flatpak install flathub com.usebottles.bottles</code>
+    <p>Pra quem é das antigas, o Bottles vai funcionar mais ou menos como a boa e velha interface do PlayOnLinux, em que você pode escolher versão, pode configurar, usar de executáveis naquele prefixo.</p>
+    <!-- CONFIGURANDO O BOTTLES -->
     <h3>Configurando o Bottles</h3>
     <p>O Bottles vai te ajudar a genrenciar os ambientes Wine que você deseja criar, ele cria "garrafas" (bela sacada inclusive), antes de mais nada então clique no <em>+</em> para criar uma garrafa.</p>
     <img class="responsiva" src="../assets/images/linux/linuxgaming/bottles01.png" alt="">
@@ -61,6 +71,7 @@
     <img class="responsiva" src="../assets/images/linux/linuxgaming/bottles08.png" alt="">
     <p>E sim isso quer dizer que você pode atualizar tanto o <em>Proton-GE</em> quando o <em>DXVK</em> e <em>VKD3D</em> através do próprio Bottles.</p>
     <img class="responsiva" src="../assets/images/linux/linuxgaming/bottles09.png" alt="">
+    <!-- ATALHO BOTTLES -->
     <h2>Iniciando aplicativos de uma garrafa através de atalhos feitos a mão.</h2>
     <p>O Bottles tem a capacidade de criar atalhos na sua área de trabalho (se ele tiver as devidas permissões para isso), mas vamos supor que você tenha criado uma garrafa com o nome <em>ubisoft_connect</em> e nela você tenha adicionado o atalho para o <em>XDefiant</em> e queira iniciá-lo diretamente, e caso clique com o botão direito em cima desse ícone você vai direto para a janela de configuração do Bottles, para isso crie um arquivo com o nome de <em>XDefiant.desktop</em> em <em>~/.local/share/applications/</em> com o conteúdo conforme o exemplo abaixo:</p>
 <code><pre>
@@ -78,18 +89,37 @@ Name=Configurar no Bottles
 Icon=com.usebottles.bottles
 Exec=flatpak run --command=bottles-cli com.usebottles.bottles -b 'ubisoft_connect'
 </pre></code>
+    <!-- INSTALANDO STEAM (FLATPAK) -->
     <h3>Como instalar a Steam?</h3>
     <p>Pelo fato da Valve ter adotado o Linux, na grande maioria das distribuições você vai encontrar um pacote nativo para a Steam na lojinha de aplicativos da sua distro, caso a sua distribuição não tenha um pacote nativo você pode instalar através do <em>Flatpak</em> com o comando:</p>
     <code>flatpak install flathub com.valvesoftware.Steam</code>
     <p>Pronto! Uma vez que a Steam está instalada, basta clicar com o botão direito no jogo que você quer, selecionar <em>Propriedades...</em>, depois <em>Compatibilidade</em> e marcar a caixa <em>Usar ferramenta de compatibilidade</em> e selecionar a versão desejada do Proton.</p>
-    <h3>Quem caralhos é GloriousEggroll? Como instalar Proton-GE na Steam?</h3>
+    <!-- GloriousEggroll - Proton-GE -->
+    <h3>Quem diabos é GloriousEggroll? Como instalar Proton-GE na Steam?</h3>
     <p>GloriousEggroll é o responsável pela distribuição Linux Nobara, uma distro feita para jogos que recebe inúmeras modificações e atualizações especificas para isso. Em diversos casos a sua versão específica do Proton (o ProtonGE) roda melhor que a da própria Steam! Para instalar a sua versão do Proton acesso o Github do GloriousEggroll através desse link <a class="link" href="https://github.com/GloriousEggroll/proton-ge-custom/releases">aqui</a>. Baixe a última versão do Proton-GE (arquivo <em>GE-ProtonX-XX.tar.gz</em>), extraia esse arquivo para pasta e coloque em <mark>/home/SEU_USER/.steam/root/compatibilitytools.d</mark>. Feche e abra novamente a Steam, a versão do ProtonGE vai ser visível no menu de seleção <em>"Ferramenta de compatibilidade"</em>.</p>
+    <!-- EDITANDO WINE -->
     <h3>Mas eu ainda preciso editar algo do Wine...</h3>
-    <p>Bom, se você tiver o pacote <em>wine</em> instalado, você pode usar a ferramenta <em>winecfg</em>. Basta declarar a pasta do prefixo Wine como no exemplo abaixo:</p>
+    <p>No caso dos jogos da Steam o diretório dos prefixos geralmente é <em>$HOME/.steam/steam/steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx</em> caso os jogos sejam instalados no disco principal ou <em>.../SteamLibrary/steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx</em> caso sejam instalados em um outro disco. Para os jogos do Heroic Launcher vai ser <em>PASTA_DE_PREFIXOS/NOME_DO_JOGO/pfx/drive_c/</em>.</p>
+    <p>Se você tiver o pacote <em>wine</em> instalado, você pode usar a ferramenta <em>winecfg</em> (embora não recomendado) no prefixo para fazer alguma alteração. Basta declarar a pasta do prefixo Wine como no exemplo abaixo:</p>
     <code>WINEPREFIX=".../steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx" winecfg</code>
-    <p>No caso dos jogos da Steam o diretório geralmente é <em>$HOME/.steam/steam/steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx</em> caso os jogos sejam instalados no disco principal ou <em>.../SteamLibrary/steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx</em> caso sejam instalados em um outro disco.</p>
+    Ou...
+    <!-- PROTONTRICKS -->
+    <h3>Protontricks</h3>
+    <p>...Use o Protontricks para isso, o Protontricks é um <i>wrapper</i> para os jogos da Steam. Instale-o com o comando:</p>
+    <code>flatpak install flathub com.github.Matoking.protontricks</code>
+    <p>Recomendo adicionar os aliases abaixo na sua configuração de terminal:</p>
+    <code>alias protontricks="flatpak run com.github.Matoking.protontricks"</code>
+    <code>alias protontricks-launch="flatpak run --command=protontricks-launch com.github.Matoking.protontricks"</code>
+    <p>E daí caso queira executar o menu do Protontricks para listar os prefixos disponíveis basta usar o comando:</p>
+    <code>protontricks</code>
+    <p>Caso queira executar a interface do Winetricks use o comando:</p>
+    <code>protontricks <em>ID_DO_JOGO</em> --gui</code>
+    <p>Caso queira executar a interface do Winecfg use o comando:</p>
+    <code>protontricks <em>ID_DO_JOGO</em> winecfg</code>
+    <!-- DIRETÓRIO DO JOGO -->
     <h3>Mas eu ainda preciso editar no diretório do jogo...</h3>
-    <p>Também é tranquilo, você pode acessar a pasta diretamente através do endereço <em>/pasta da biblioteca Steam/steamapps/compatdata/<em>ID_DO_JOGO</em>/pfx/dosdevices/c:/users/steamuser</em>, daí você pode acessar pastas como <em>Saved games</em> ou <em>My Documents/NOME_DO_JOGO</em>.</p>
+    <p>Também é tranquilo, você pode acessar a pasta diretamente através do endereço <em>.../pfx/drive_c/users/steamuser</em>, daí você pode acessar pastas como <em>Saved games</em> ou algo como <em>My Documents/NOME_DO_JOGO</em> (obviamente isso varia de jogo pra jogo).</p>
+    <!-- HEROIC LAUNCHER -->
     <h3>E para jogos da Amazon, Epic e GOG?</h3>
     <p>Para esses casos você pode usar o <em>Heroic Games Launcher</em>, na grande maioria das distribuições você vai encontrar um pacote nativo na lojinha de aplicativos da sua distro, caso a sua distribuição não tenha um pacote nativo você pode instalar através do <em>Flatpak</em> com o comando:</p>
     <code>flatpak install flathub com.heroicgameslauncher.hgl</code>
@@ -97,8 +127,10 @@ Exec=flatpak run --command=bottles-cli com.usebottles.bottles -b 'ubisoft_connec
     <p>Uma vez que o Heroic está instalado basta ir em <em>Gerenciar Contas</em> e logar na loja que você deseja usar.</p>
     <img class="responsiva" src="../assets/images/linux/linuxgaming/heroic02.png" alt="">
     <p>Uma vez conectado toda a sua biblioteca será visível.</p>
+    <!-- ANTICHEAT -->
     <h3>Mas o jogo (x que usa anticheat) não funciona!</h3>
     <p>Bom, hoje em dia o Linux já tem tudo o que é necessário para rodar jogos, sem contar que mesmo para o desenvolvedor de jogos para Windows pode fazer com que seu jogo rode no Linux hoje sem muita dor de cabeça, porém algumas ferramentas de anticheat mais intrusivas simplesmente não dão suporte ao Linux, para verificar o suporte de anticheat para a sua biblioteca você pode acessar <a class="link" href="https://areweanticheatyet.com/">Are we anticheat yet?</a>.</p>
+    <!-- PERMISSÕES FLATPAK -->
     <h3>Permissões do Flatpak</h3>
     <p>O Flakpak é baseado no conceito de <em>sandboxing</em> então nem todo aplicativo pode acessar todo diretório ou todo recurso (como internet, por exemplo), se você quiser uma configuração mais visual você pode instalar o Flatseal com o comando abaixo:</p>
     <p><em>*</em> Lembrando que caso você esteja usando o KDE você pode apenas instalar o pacote <em>flatpak-kcm</em> e ter a mesma funcionalidade, não sendo necessário a instalação do Flatseal.</p>
@@ -113,6 +145,7 @@ filesystems=/mnt/HD/games:rw;
     <p>Para verificar os overrides existentes para o usuário basta usar o comando abaixo:</p>
     <code>flatpak override <em>--user</em> --show <em>com.usebottles.bottles</em></code>
     <p><em>*</em> remova o <em>--user</em> caso queira ver os overrides de sistema.</p>
+    <!-- OBS -->
     <h2>E para gravar as as gameplays?</h2>
     <p>Obviamente vai ser com o <em>OBS Studio</em>, mas se você tentou gravar direto ao menos uma vez deve ter quebrado a cara com a performance e qualidade do vídeo, que por padrão são péssimas no Linux! Mas a verdade é que ter uma gravação de baixa latência e qualidade de ponta é bem mais fácil do que parece.</p>
     <p>Bom, a primeira coisa que precisamos é o <em>OBS</em>, que pode ser facilmente instalado via flatpak com o comando:</p>
@@ -127,6 +160,7 @@ filesystems=/mnt/HD/games:rw;
     <p>Se tiver usando Arch Linux com yay você pode usar o comando:</p>
     <code>yay -S obs-vkcapture-git lib32-obs-vkcapture-git</code>
     <p>OU usar um pacote pré-compilado ou mesmo compilar na sua máquina visitando o <a class="link" href="https://github.com/nowrep/obs-vkcapture">OBS-VKCAPTURE no Github</a>.</p>
+    <!-- CONFIGURANDO OBS -->
     <h3>Configurando o OBS</h3>
     <p>Para utilizar a interface OBS-VKCAPTURE nova abra o OBS e adicione a fonte <em>Captura de Jogo</em>, você não precisa selecionar nenhuma janela específica, basta deixar marcado <em>Capturar qualquer janela</em>, você pode desmarcar a gravação do cursor se assim desejar.</p>
     <img class="responsiva" src="../assets/images/linux/linuxgaming/obs1.png" alt="">
@@ -139,6 +173,7 @@ filesystems=/mnt/HD/games:rw;
     <p>Você pode iniciar o jogo utilizando apenas a captura via Vulkan habilitada com o argumento:</p>
     <code>env OBS_VKCAPTURE=1 %command%</code>
     <p>Se você fez tudo certinho as chances são que você vai ter uma excelente qualidade de imagem com baixo uso de recursos e latência.</p>
+    <!-- MANGOHUD -->
     <h2>Mas eu quero ver meus FPS!</h2>
     <img class="responsiva" src="https://lh4.googleusercontent.com/rQvu-YpmOGOS92DAOgeXNQwWVh_2vGXv4wWrlvf5nUTUKTpWrgBtliAI-Bw8Jxf1RtP3gB1cEzM_HYuho_lC8B6Mj62OUWqxrJmpZE166sLGVXmXlTm8Vuygu4e326JCv0PsVvoA" alt="">
     <p>A ferramenta padrão para isso no Linux é o MangoHud, você pode instalar usando o comando:</p>
@@ -147,6 +182,7 @@ filesystems=/mnt/HD/games:rw;
     <code>flatpak override --user --env=MANGOHUD=1 com.valvesoftware.Steam</code>
     <p>Caso queira iniciar o MangoHud na execução do jogo basta adicionar <em>mangohud %command%</em> na linha de argumentos do jogos. Os jogos OpenGL também podem precisar de conexão <em>dlsym</em>. Adicione <em>--dlsym</em> ao seu comando como <em>mangohud --dlsym %command%</em> para Steam.</p>
     <p>Para ver as opções de configuração da sua HUD você pode ver as variáveis através <a class="link" href="https://github.com/flightlessmango/MangoHud?tab=readme-ov-file#environment-variables">deste link</a>.</p>
+    <!-- GAMESCOPE -->
     <h2>Gamescope</h2>
     <p>Se tem uma ferramenta que pode te livrar de muita dor de cabeça ao lidar com jogos no Linux (especialmente te livrar de problemas crônicos que você seria obrigado a sofrer no Windows) é o Gamescope, segundo a página do Gamescope na Arch Wiki:" <i>Gamescope é um microcompositor da Valve usado no Steam Deck. Seu objetivo é fornecer um compositor isolado adaptado para jogos e que ofereça suporte a muitos recursos centrados em jogos, como: Falsear resoluções; Upscaling usando Super Resolução AMD FidelityFX™ ou NVIDIA Image Scaling; Limitar taxas de quadros."</i>.</p>
     <p>Para iniciar a janela do gamescope basta adicionar os argumentos como no exemplo abaixo:</p>
@@ -173,9 +209,32 @@ filesystems=/mnt/HD/games:rw;
         </ul>
         <li><em>-e, --steam</em>: habilita integração com Steam</li>
         <li><em>--mangoapp</em>: Inicia com a sobreposição de desempenho mangoapp (mangohud) habilitada. Você deve usar isso em vez de usar mangohud no jogo ou gamescope.</li>
+        <li><em>--adaptive-sync</em>: habilita <i>variable refresh rate</i> (VRR)</li>
+        <!--
+        <li><em>--allow-tearing</em>: habilita <i>tearing</i> quando o VRR está ativo</li>
+        -->
+        <li><em>--hdr-enabled</em>: habilita suporte para HDR10</li>
+        <li><em>--expose-wayland</em>: habilita suporte a clientes Wayland já que o Gamescope não oferece suporte a clientes Wayland por padrão</li>
     </ul>
-    <p>Vams supor que eu queira jogar Need for Speed Rivals, que sabidamente tem problemas com mudança de resolução interna, e eu queira deixar a resolução interna do jogo em 4K, a resolução da janela em 1080p e que tenha saída numa janela de tela cheia, o comando seria mais ou menos assim:</p>
+    <p>Vamos supor que eu queira jogar Need for Speed Rivals, que sabidamente tem problemas com mudança de resolução interna, e eu queira deixar a resolução interna do jogo em 4K, a resolução da janela em 1080p e que tenha saída numa janela de tela cheia, o comando seria mais ou menos assim:</p>
     <code>gamescope -W 1920 -H 1080 -w 3840 -h 2160 -f -- %command%</code>
+    <p>Se ao usar o Gamescope o movimento do mouse ficar errático você pode usar o argumento abaixo para tentar corrigir:</p>
+    <code>--force-grab-cursor</code>
+    <!-- COMANDOS PROTON-GE -->
+    <h3>Outros comandos</h3>
+    <p>Caso esteja numa versão compatível do Proton-GE pode habilitar o Wayland usando o comando:</p>
+    <code>PROTON_ENABLE_WAYLAND=1</code>
+    <p>Caso esteja numa versão compatível do Proton-GE (e tenha o Wine-Wayland ativado) pode habilitar o HDR usando o comando:</p>
+    <code>PROTON_ENABLE_HDR=1</code>
+    <p>Caso esteja numa versão compatível do Proton-GE e queira usar o driver NTSYNC adicione o comando:</p>
+    <code>PROTON_USE_NTSYNC=1</code>
+    <p>Alguns jogos podem apresentar problemas com o ESYNC (Eventfd Synchronization), caso queira desativar adicione o comando:</p>
+    <code>PROTON_NO_ESYNC=1</code>
+    <p>Alguns jogos podem apresentar problemas com o FSYNC (Futex Synchronization), caso queira desativar adicione o comando:</p>
+    <code>PROTON_NO_FSYNC=1</code>
+    <p>Caso queira usar alguma DLL do diretório do jogo (muito útil para patches com injeção por DLL como FusionFix):</p>
+    <code>WINEDLLOVERRIDES="dinput8=n,b" %command%</code>
+    <!-- SESSÃO BIG PICTURE -->
     <h3>Consolização</h3>
     <p>Eu já vi uma pá de gente reclamar de que "é muito complexo jogar no pc", "a experiência do console é mais simples", "eu prefiro jogar com um controle na mão sentado no sofá olhando pra tv", ok, da pra resolver isso muito fácil, crie o arquivo de dessão <em>/usr/share/wayland-sessions/steam-big-picture.desktop</em> com o conteúdo:</p>
 <code><pre>
