@@ -39,7 +39,7 @@
     <p>Wine não é um emulador, mas sim uma camada de compatibilidade que permite que você execute aplicações do Windows no Linux e demais sistemas Unixlike dentro de prefixos, prefixos são como um diretório que trabalha como um ambiente Windows a parte do seu sistema operacional, que contém os arquivos necessários e área de instalação própria, de modo que se você precisa de versões e configurações específicas de Windows para cada jogo, cada jogo terá o seu ambiente independente. Você pode verificar o estado da compatibilidade do Wine com a sua biblioteca de software através desse link <a class="link" href="https://appdb.winehq.org/">WineHQ</a>.</p>
     <!-- O QUE É PROTON -->
     <h3>O que é Proton?</h3>
-    <p>Proton é uma camada de compatibilidade desenvolvida pela Valve especifica para jogos do Windows rodarem em sistemas operacionais baseados em Linux. Embora não seja perfeita é muito competente, você pode verificar o estado da compatibilidade com a sua biblioteca de  jogos através desse link <a class="link" href="https://www.protondb.com/">ProtonDB</a>.</p>
+    <p>Proton é uma camada de compatibilidade desenvolvida pela Valve especifica para jogos do Windows rodarem em sistemas operacionais baseados em Linux. Embora não seja perfeita é muito competente, você pode verificar o estado da compatibilidade com a sua biblioteca de  jogos através desse link <a class="link" href="https://www.protondb.com/">ProtonDB</a>.</p> 
     <!-- O QUE É DXVK -->
     <h3>DXVK?</h3>
     <p>É uma ferramenta que interpreta as chamadas de API DirectX e as converte para Vulkan, em alguns casos aumentando de forma notável o desempenho.</p>
@@ -214,14 +214,34 @@ filesystems=/mnt/HD/games:rw;
         <li><em>--allow-tearing</em>: habilita <i>tearing</i> quando o VRR está ativo</li>
         -->
         <li><em>--hdr-enabled</em>: habilita suporte para HDR10</li>
+        <!--
         <li><em>--expose-wayland</em>: habilita suporte a clientes Wayland já que o Gamescope não oferece suporte a clientes Wayland por padrão</li>
+        -->
     </ul>
     <p>Vamos supor que eu queira jogar Need for Speed Rivals, que sabidamente tem problemas com mudança de resolução interna, e eu queira deixar a resolução interna do jogo em 4K, a resolução da janela em 1080p e que tenha saída numa janela de tela cheia, o comando seria mais ou menos assim:</p>
     <code>gamescope -W 1920 -H 1080 -w 3840 -h 2160 -f -- %command%</code>
     <p>Se ao usar o Gamescope o movimento do mouse ficar errático você pode usar o argumento abaixo para tentar corrigir:</p>
     <code>--force-grab-cursor</code>
+    <!-- CAPTURA DIRETA -->
+    <h3>Captura Direta</h3>
+    <p>O Gamescope expõe um fluxo de vídeo no PipeWire para gravação que você pode gravar usando o <em>gstreamer</em>. Instale o pacote <em>gst-plugin-va</em> para suporte VA-API ou <em>gst-plugins-bad</em> e <em>nvidia-utils</em> para suporte ao NVDECODE/NVENCODE. Por fim instale o <em>gst-plugins-good</em> para usar o plugin <em>pulsesrc</em> e <em>gst-plugin-pipewire</em> para suporte ao PipeWire.</p>
+    <p>Para verificar o suporte para VA-API use o comando:</p>
+    <code>gst-inspect-1.0 va</code>
+    <p>Para verificar o suporte para NVDECODE/NVENCODE use o comando:</p>
+    <code>gst-inspect-1.0 nvcodec</code>
+    <p>Caso os plugins não sejam encontrados você pode reconstruir o registro com o comando:</p>
+    <code>$ rm ~/.cache/gstreamer-1.0/registry.*.bin</code>
+    <p>Aqui estão algumas opções de comandos para gravação (lembre-se de substituir o encoder e parser conforme o seu retorno do <em>gst-inspect-1.0</em>):</p>
+    <h4>Usando o encoder H264</h4>
+    <code>gst-launch-1.0 --eos-on-shutdown pipewiresrc do-timestamp=true target-object=gamescope ! <em>vah264enc</em> ! <em>h264parse</em> ! mux. pulsesrc do-timestamp=true device="Recording_$(pactl get-default-sink).monitor" ! opusenc ! mux. matroskamux name=mux ! filesink location=gravação.mkv</code>
+    <h4>Usando o encoder H265</h4>
+    <code>gst-launch-1.0 --eos-on-shutdown pipewiresrc do-timestamp=true target-object=gamescope ! <em>vah265enc</em> ! <em>h265parse</em> ! mux. pulsesrc do-timestamp=true device="Recording_$(pactl get-default-sink).monitor" ! opusenc ! mux. matroskamux name=mux ! filesink location=gravação.mkv</code>
+    <h4>Usando o encoder AV1</h4>
+    <code>gst-launch-1.0 --eos-on-shutdown pipewiresrc do-timestamp=true target-object=gamescope ! <em>vaav1enc</em> ! <em>av1parse</em> ! mux. pulsesrc do-timestamp=true device="Recording_$(pactl get-default-sink).monitor" ! opusenc ! mux. matroskamux name=mux ! filesink location=gravação.mkv</code>
+    <p>Obviamente esses comandos podem (e devem) ser modificados para a sua específica. Considerando uma gravação para youtube em 1080p60, pode adicionar os argumentos abaixo:</p>
+    <code>... ! <em>SEU_ENCODER</em> rate-control=vbr bitrate=12000000 key-int-max=60 target-usage=2 ! <em>SEU_PARSER</em> ...</code>
     <!-- COMANDOS PROTON-GE -->
-    <h3>Outros comandos</h3>
+    <h4>Alguns comandos úteis para o Proton-GE:</h4>
     <p>Caso esteja numa versão compatível do Proton-GE pode habilitar o Wayland usando o comando:</p>
     <code>PROTON_ENABLE_WAYLAND=1</code>
     <p>Caso esteja numa versão compatível do Proton-GE (e tenha o Wine-Wayland ativado) pode habilitar o HDR usando o comando:</p>
@@ -234,6 +254,11 @@ filesystems=/mnt/HD/games:rw;
     <code>PROTON_NO_FSYNC=1</code>
     <p>Caso queira usar alguma DLL do diretório do jogo (muito útil para patches com injeção por DLL como FusionFix):</p>
     <code>WINEDLLOVERRIDES="dinput8=n,b" %command%</code>
+    <!-- BONUS -->
+    <h3>Bônus - Editar estilo do prefixo</h3>
+    <p>Alguns jogos possuem menus pré-inicialização que são horríveis de se usar com o tema padrão do Wine (e eu nem vou citar a estética...), se você usar o WineCFG no prefixo do jogo, pode alterar o tema do prefixo como na imagem abaixo:</p>
+    <img class="responsiva" src="../assets/images/linux/linuxgaming/style.png" alt="">
+    <p>Basta selecionar a opção <em>Integração Área de Trabalho</em> > <em>Instalar tema...</em> > Selecione o arquivo <em>.msstyles</em> do tema desejado e selecione-o em <em>Tema:</em>. Aqui tem uma <a class="link" href="https://archive.org/download/windows-xp-ms-signed-themes">lista de temas</a> <em>.msstyles</em>.</p>
     <!-- SESSÃO BIG PICTURE -->
     <h3>Consolização</h3>
     <p>Eu já vi uma pá de gente reclamar de que "é muito complexo jogar no pc", "a experiência do console é mais simples", "eu prefiro jogar com um controle na mão sentado no sofá olhando pra tv", ok, da pra resolver isso muito fácil, crie o arquivo de dessão <em>/usr/share/wayland-sessions/steam-big-picture.desktop</em> com o conteúdo:</p>
