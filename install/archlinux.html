@@ -1222,13 +1222,15 @@ EOF
             <p>Esse comando faz com que o OpenSSL gere uma <i>string</i> randômica, do tipo base64 ou hex com 32 bytes e exporta para um arquivo com o nome de <em>cryptroot.key</em> (você também pode mudar o nome para cryptswap.key ou qualquer outro que achar melhor).</p>
             <p>Agora vamos criptografar a partição desejada usando o LUKS:</p>
             <code>cryptsetup luksFormat --type luks2 /dev/<mark>storageAP3</mark> --key-file cryptroot.key</code>
+            <p>Para drives formatados em 4Kn:</p>
+            <code>cryptsetup luksFormat <em>--sector-size=4096</em> --type luks2 /dev/<mark>storageAP3</mark> --key-file cryptroot.key</code>
             <p>Agora vamos abrir essa partição através do LUKS, usando o arquivo de senha criado para gerar uma abstração da partição com o nome de <em>cryptroot</em>:</p>
             <code>cryptsetup luksOpen /dev/<mark>storageAP3</mark> <em>cryptroot</em> --key-file cryptroot.key</code>
             <p>Se por acaso você é um disléxico que montou a partição com o nome errado (abraços <i>"J"</i> ) pode usar o comando abaixo para desmontar para depois remontar:</p>
             <code>cryptsetup luksClose <em>nome_errado</em></code>
             <p>Uma vez que o dispotivo foi aberto, ele criará um dispositivo <mark>/dev/mapper/cryptroot</mark>, e quando for seguir o passo abaixo de formatar partições, lembre-se de formatar essa abstração e não o dispositivo em si! Como no exemplo abaixo:</p>
             <p><strong>Embora aqui esteja sendo formatado em btrfs, mude conforme a sua necessidade!</strong></p>
-            <code>mkfs.btrfs -f -L <em>"ROOT"</em> <em>/dev/mapper/cryptroot</em></code>
+            <code>mkfs... <em>/dev/mapper/cryptroot</em></code>
         </details>
         <!-- Passo 5 - Formatar as partições -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1326,7 +1328,9 @@ EOF
         <p>Agora criaremos os subvolumes para o BTRFS, primeiro acesse a partição raiz:</p>
         <code>cd /mnt</code>
         <p>E crie os subvolumes um por um com os comandos abaixo (fique a vontade para omitir, renomear ou incluir mais subvolumes conforme a sua necessidade):</p>
-        <code>btrfs subvolume create @<br>btrfs subvolume create @home<br>btrfs subvolume create @snapshots<br>btrfs subvolume create @log<br>btrfs subvolume create @cache<!--<br>btrfs subvolume create @tmp--><br>btrfs subvolume create @images</code>
+        <code>btrfs subvolume create @<br>btrfs subvolume create @home<br>btrfs subvolume create @snapshots<br>btrfs subvolume create @log<br>btrfs subvolume create @cache<!--<br>btrfs subvolume create @tmp--><br>btrfs subvolume create @images (somente para libvirt)</code>
+        <p>Caso queira deletar um subvolume que não tenha sido criado corretamente pode usar o comando:</p>
+        <code>btrfs subvolume delete @<em>nome_do_subvolume</em></code>
         <p>Uma vez que os subvolumes estão criados retorne para a pasta inicial com o comando cd:</p>
         <code>cd</code>
         <p>Então vamos desmontar a raiz padrão...</p>
@@ -1341,11 +1345,15 @@ EOF
 ./var/log
 ./var/cache<!--./tmp-->
 ./var/lib
-./var/lib/libvirt
+</code></pre>
+        <p>E caso vá usar libvirt:</p>
+<pre><code>./var/lib/libvirt
 ./var/lib/libvirt/images
 </code></pre>
         <p>...Com este comando:</p>
-        <code>mkdir -p /mnt/{boot,home,.snapshots,var/{log,cache,lib/libvirt/images}<!--,tmp-->}</code>
+        <code>mkdir -p /mnt/{boot,home,.snapshots,var/{log,cache,lib}<!--,tmp-->}</code>
+        <p>E caso vá usar libvirt:</p>
+        <code>mkdir -p /mnt/var/lib/libvirt/images</code>
         <p>Relembrando: Além de <mark>compress=zstd,noatime</mark> considere o uso da adição da flag <mark>ssd</mark> caso seja um dispositivo SSD e da flag <mark>discard=async</mark> caso o dispositivo suporte TRIM.</p>
         <p>E agora vamos montar partição por partição:</p>
         <code>mount -o compress=zstd,noatime,subvol=@home /dev/<mark>storageAP3</mark> /mnt/home</code>
@@ -1355,6 +1363,7 @@ EOF
         <!--
         <code>mount -o compress=zstd,noatime,subvol=@tmp /dev/<mark>storageAP3</mark> /mnt/tmp</code>
         -->
+        <p>E se e somente se for o caso de usar libvirt:</p>
         <code>mount -o compress=zstd,noatime,subvol=@images /dev/<mark>storageAP3</mark> /mnt/var/lib/libvirt/images</code>
         <h2>Continuação da montagem</h2>
         <p>Independente se você utilizou <mark>EXT4</mark> ou <mark>BTRFS</mark> esses passos são iguais:</p>
@@ -1871,10 +1880,10 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <h4>Fazendo o arquivo baseado nos rótulos das partições (<em>fslabel</em>)...</h4> 
 <pre><code>/Arch Linux
     protocol: linux
-    kernel_path: <em>fslabel(BOOT):/</em>vmlinuz-linux
+    kernel_path: <em>fslabel(XBOOTLDR):/</em>vmlinuz-linux
     cmdline: root=/dev/<mark>storageAP3</mark> rw
-    module_path: <em>fslabel(BOOT):/</em><em>amd</em>-ucode.img
-    module_path: <em>fslabel(BOOT):/</em>initramfs-linux.img</code></pre>
+    module_path: <em>fslabel(XBOOTLDR):/</em><em>amd</em>-ucode.img
+    module_path: <em>fslabel(XBOOTLDR):/</em>initramfs-linux.img</code></pre>
         <p>* onde <em>fslabel():/</em> se refere ao rótulo (label) da partição.</p>
         <h4>Fazendo o arquivo baseado na posição da partição no disco de boot - <em>boot():/</em>...</h4>
 <pre><code>/Arch Linux
