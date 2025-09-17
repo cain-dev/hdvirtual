@@ -1998,7 +1998,7 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>KDE</h3>
         <p>Utilize o comando:</p>
-        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark kdegraphics-thumbnailers ffmpegthumbs powerdevil kscreen kdeplasma-addons kde-gtk-config</code>
+        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark kdegraphics-thumbnailers ffmpegthumbs powerdevil kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam</code>
         <p><strong>Observação!</strong> Inclua esses pacotes caso também deseje essas funções:</p>
         <ul>
             <li><em>kcalc</em> (Se e somente se você utilizará uma calculadora)</li>
@@ -2026,6 +2026,10 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <p><em>Dica:</em> Para evitar entradas duplicadas no widget de Media Player ou no ícone da bandeja, defina <em>media.hardwaremediakeys.enabled</em> como <em>false</em>. Isso desativa a entrada de mídia do Firefox e usa apenas a do complemento de integração do Plasma.</p>
         <h4>Corrigindo emojis no KDE (Dolphin, notificações, etc.)</h4>
         <p>Considerando que você vai instalar as alternativas de fonte abaixo, é provável que o sistema não capte automaticamente as fontes instaladas. Para resolver isso copie os arquivos <a class="link" href="https://github.com/cain-dev/dotfiles/tree/main/fontconfig/conf.d">desse link</a> para <mark>/etc/fonts/conf.d/</mark>.</p>
+        <h4>KDE Wallet</h4>
+        <p>O KDE Wallet é um subsistema de controle de senhas do Plasma, permite guardar as senhas de eventos ou aplicações (como por exemplo senhas de Wi-Fi). Se você utiliza SDDM o módulo <em>kwallet-pam</em> faz com que a carteira de <em>kdewallet</em> seja aberta automaticamente durante o login se essa tiver a mesma senha da conta de usuário (recomendado). Também é recomendável desmarcar a opção <em>Fechar a carteira () Quando o último aplicativo terminar de usá-la</em> em <em>Configurações do sistema > Carteira do KDE</em>.</p>
+        <p>Navegadores <i>Chromium based</i> possuem integração nativa com a carteira, para ativar isso basta acrescentar a linha abaixo em <em>~/.config/chromium-flags.conf</em>:</p>
+        <code>--password-store=kwallet6</code>
         <!-- CINNAMON -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Cinnamon</h3>
@@ -2090,6 +2094,17 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <h3>Noto</h3>
         <p>Noto é uma família de fontes que compreende mais de 100 fontes individuais, que juntas são projetadas para cobrir todas as escritas codificados no padrão Unicode (Sim, é definição da Wikipédia, me julgue). Também há um pacote adicional para cobrir o padrão pictográfico (emoji).</p>
         <code>sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-extra noto-fonts-emoji</code>
+        <!-- Tap to Click -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Ativar Tap to Click pré-usuário</h4>
+        <p>Alguns usuários de notebook podem apanhar ao tentar clicar usando o tap no touchpad na janela de login e nada acontecer, mas para resolver isso basta ativar a tap to click criando o arquivo <em>/etc/X11/xorg.conf.d/40-libinput.conf</em> com o conteúdo:</p>
+<pre><code>Section "InputClass"
+    Identifier "libinput touchpad catchall"
+    MatchIsTouchpad "on"
+    Driver "libinput"
+    Option "Tapping" "on"
+EndSection
+</code></pre>
         <!-- Habilitar Multilib -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Habilitar repositório <i>multilib</i></h2>
@@ -2367,6 +2382,67 @@ vm.page-cluster = 0</pre></code>
         <code>grep -r . /sys/kernel/debug/zswap</code>
         <p>Para ver os parâmetros utilizados:</p>
         <code>grep -r . /sys/module/zswap/parameters/</code>
+        <!-- StevenBlack Hosts -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Script para Atualização automática do StevenBlack hosts</h3>
+        <p>Se você quiser que o seu <em>/etc/hosts</em> seja atualizado automaticamente com o conteúdo do StevenBlack hosts file, crie o arquivo <mark>/usr/local/bin/update-hosts.sh</mark> contendo:</p>
+        <code>#!/bin/bash<br>curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts -o /etc/hosts</code>
+        <p>Torne ele executável com o comando:</p>
+        <code>sudo chmod +x /usr/local/bin/update-hosts.sh</code>
+        <p>Crie um arquivo de serviços do Systemd em <mark>/etc/systemd/system/update-hosts.service</mark> com o conteúdo:</p>
+<pre><code>[Unit]
+Description=Atualiza o /etc/hosts com a lista do StevenBlack
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-hosts.sh</code></pre>
+        <p>Agora crie um arquivo de timer do Systemd em <mark>/etc/systemd/system/update-hosts.timer</mark> com o conteúdo:</p>
+
+<pre><code>[Unit]
+Description=Timer para atualizar /etc/hosts
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+</code></pre>
+        <p>Por fim ative o serviço com:</p>
+        <code>systemctl enable --now update-hosts.timer</code>
+        <!-- Pasta compartilhada comum -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Pasta compartilhada comum</h3>
+        <p>Caso você compartilhe o seu computador com outros usuários já deve ter se frustrado com a situação de compartilhar arquivos entre usuários, existem diversas maneiras de permitir isso, mas aqui vou descrever duas dessas, a primeira para ambientes que presumem condições seguras e a segunda mais ortodoxa.</p>
+        
+        <details class="spoiler" >
+            <summary>Pasta acessível para todos (Clique para ver)</summary>
+            <p>Crie a pasta compartilhada com o comando abaixo:</p>
+            <code>mkdir /home/Público</code>
+            <p>Dê permissão total a todos os usuários:</p>
+            <code>chmod 0777 /home/Público</code>
+            <p>Isso permite leitura, escrita e exclusão por qualquer usuário.</p>
+            <!--
+            <p>Opcional: Proteger arquivos da exclusão por outros usuários:</p>
+            <code>chmod +t /home/Público</code>
+            <code>Agora, só o dono de um arquivo pode apagá-lo, mesmo que outros tenham permissão de escrita na pasta.</code>
+            -->
+        </details>
+        <details class="spoiler" >
+            <summary>Pasta acessível para um grupo de usuários (Clique para ver)</summary>
+            <p>Crie a pasta compartilhada com o comando abaixo:</p>
+            <code>mkdir /home/Público</code>
+            <p>Crie um grupo para ser dono da pasta:</p>
+            <code>sudo addgroup compartilhado</code>
+            <p>Faça do grupo o dono da pasta:</p>
+            <code>sudo chown :compartilhado /home/Público</code>
+            <p>Adicione o usuário desejado para dentro desse grupo:</p>
+            <code>sudo usermod -aG compartilhado <em>usuário</em></code>
+            <p>Por fim faça com que todos os usuários desse grupo possam adicionar e excluir arquivos da pasta, além de ler e escrever nos arquivos uns dos outros:</p>
+            <code>sudo chmod 2770 /home/Público</code>
+            <p>Por fim se você deseja que usuários de fora do grupo possam visualizar os arquivos use o comando:</p>
+            <code>sudo chmod 0775 /home/Público</code>
+        </details>
         <!-- Controle de energia -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Otimização de energia</h3>
@@ -2382,9 +2458,11 @@ vm.page-cluster = 0</pre></code>
         <code>cd auto-cpufreq && sudo ./auto-cpufreq-installer</code>
         <p>Uma vez que o aplicativo está instalado é interessante habilitar o daemon permanentemente com o comando:</p>
         <code>auto-cpufreq --install</code>
+        <!--
         <p>Por padrão o daemon já vai fazer o controle usando o perfil balanceado, caso você queira um controle mais agressivo para economia de energia pode mudar o perfil para <em>powersave</em> como no comando abaixo:</p>
         <code>auto-cpufreq --profile powersave</code>
-        <p>Caso queira editar o arquivo para configuração <i>systemwide</i> ele fica em <mark>/etc/auto-cpufreq.conf</mark>, para usuário em <mark>$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf</mark>.</p>
+        -->
+        <p>Caso queira editar o arquivo para configuração <i>systemwide</i> ele fica em <mark>/etc/auto-cpufreq.conf</mark>, para usuário em <mark>$XDG_CONFIG_HOME/auto-cpufreq/auto-cpufreq.conf</mark>, você pode acessar o arquivo de exemplo <a class="link" href="https://github.com/AdnanHodzic/auto-cpufreq/#example-config-file-contents">aqui</a>.</p>
         <h4>thermald</h4>
         <p>O Linux Thermal Daemon (thermald) monitora e controla a temperatura em laptops e tablets com CPU's Intel Sandy Bridge ou mais novas. Você pode instalá-lo e iniciá-lo com os comandos abaixo:</p>
         <code>pacman -S thermald</code>
