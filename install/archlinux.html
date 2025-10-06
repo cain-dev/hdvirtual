@@ -256,7 +256,7 @@
             <p>Para apagar todas as assinaturas de partições em um disco você pode usar o comando:</p>
             <code>wipefs -a /dev/<em>storageA</em></code>
             <p>Para descartar os setores em SSD's ou <i>thin-provisioned</i> você pode usar o comando:</p>
-            <code>blkdiscard /dev/<em>storageA</em></code>
+            <code>blkdiscard -f /dev/<em>storageA</em></code>
         </details>
         <!-- Passo extra para quem utiliza NVME -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1084,19 +1084,19 @@ EOF
             <p>Caso queira criar uma nova tabela de partição vazia pode usar o comando:</p>
             <code>sgdisk -o /dev/<em>storageA</em></code>
             <p>Para usar o sgdisk para criar as partições é bem simples na verdade, para criar uma partição com o sgdisk o comando é: </p>
-            <code>sgdisk /dev/<em>dispositivo</em> --new=<em>A</em>:<em>B</em>:<em>C</em> --typecode=<em>X</em>:<em>Y</em></code>
-            <p>Que para o argumento <em>--new</em> (que indica nova partição), onde é <mark>A</mark> é o número da partição, <mark>B</mark> é o início da partição e <mark>C</mark> é o fim da partição. Para o argumento <em>--typecode</em> (que o tipo da partição), onde é <mark>X</mark> é o número da partição e <mark>B</mark> é o código da partição.</p>
+            <code>sgdisk -I /dev/<em>dispositivo</em> --new=<em>A</em>:<em>B</em>:<em>C</em> --typecode=<em>X</em>:<em>Y</em></code>
+            <p>Que para o argumento <em>-I</em> indica habilitar o uso de alinhamento ao final da partição, <em>--new</em> (que indica nova partição), onde é <mark>A</mark> é o número da partição, <mark>B</mark> é o início da partição e <mark>C</mark> é o fim da partição. Para o argumento <em>--typecode</em> (que o tipo da partição), onde é <mark>X</mark> é o número da partição e <mark>B</mark> é o código da partição.</p>
             <p>Entenda o valor <mark>0</mark> como escolha automática pelo sgdisk.</p>
             <!-- ESP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>ESP</em> (EFI system partition)</h4>
             <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, esta é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. É uma partição do tipo <em>ef00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>550M</mark>.</p>
-            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+550M</em>  --typecode=0:<em>ef00</em></code>
+            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+550M</em>  --typecode=0:<em>ef00</em></code>
             <!-- XBOOTLDR -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
             <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. É uma partição do tipo <em>ea00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>1G</mark>.</p>
-            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+1G</em>  --typecode=0:<em>ea00</em></code>
+            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+1G</em>  --typecode=0:<em>ea00</em></code>
             <!-- SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
@@ -1185,7 +1185,7 @@ EOF
                 </table>
             </figure>
             <p>É uma partição do tipo <em>8200</em>, para o comando abaixo estou supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação, nesse caso o recomendado conforme a tabela é utilizar 3G <strong>mas mude o comando abaixo conforme o ideal para o seu caso!</strong>.</p>
-            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
+            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
             <!-- ROOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
@@ -1193,19 +1193,19 @@ EOF
             <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
             <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
             <p>É uma partição do tipo <em>8304</em>. Que por questões de compatibilidade recomendo o tamanho <strong>mínimo</strong> de <mark>20G</mark> e se possível o valor <mark>0</mark> para que ela ocupe o disco até o fim.</p>
-            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>+20G</em> --typecode=0:<em>8304</em> </code>
+            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+20G</em> --typecode=0:<em>8304</em> </code>
             <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
             <!-- HOME -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição para <em>/home</em> separada (opcional)</h4>
             <p>É uma partição do tipo <em>8302</em>. Se você leu a explicação acima da partição raiz, eu vou presumir que para esse exemplo de raiz delimitada a partição <em>/home</em> ocupe até o fim do disco, mas lembre-se de alterar o valor abaixo de <em>0</em> para o tamanho desejado caso queira delimitar também essa partição.</p>
-            <code>sgdisk /dev/<em>storageA</em> --new=0:0:<em>0</em> --typecode=0:<em>8302</em></code>
+            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>0</em> --typecode=0:<em>8302</em></code>
             <h4>Verificando a tabela</h4>
             <p>Para verificar se a sua tabela de partições está correta você pode usar o comando:</p>
             <code>sgdisk /dev/<em>storageA</em> --print</code>
             <h4>E qual seria a vantagem de usar o sgdisk?</h4>
             <p>A vantagem é que se você souber o que está fazendo pode finalizar a sua tabela de partição completa num comando só como no exemplo abaixo:</p>
-            <code>sgdisk /dev/storageA -n=1:0:+550M -c=1:esp -t=1:ef00 -n=2:0:+1G -c=2:boot -t=2:ea00 -n=3:0:+3G -c=3:swap -t=3:8200 -n=4:0:0 -c=4:root -t=4:8304</code>
+            <code>sgdisk -I /dev/storageA -n=1:0:+550M -c=1:esp -t=1:ef00 -n=2:0:+1G -c=2:boot -t=2:ea00 -n=3:0:+3G -c=3:swap -t=3:8200 -n=4:0:0 -c=4:root -t=4:8304</code>
             <p>Você também pode informar o valor <mark>0</mark> em todos os <em>partnumber</em> para que seja associado automaticamente.</p>
             <p>Lembre-se sempre de acrescentar o <em>+</em> ao declarar o valor do fim da partição (a menos que esteja usando o valor <mark>0</mark> de fim da partição).</p>
         </details>
@@ -2478,6 +2478,12 @@ WantedBy=timers.target
         <code>cat /sys/module/snd_hda_intel/parameters/power_save</code>
         <p>Se o valor for qualquer coisa além de 0, você pode desabilitar com o comando:</p>
         <code>sudo tee /etc/modprobe.d/snd-hda-intel.conf <<< "options snd_hda_intel power_save=0"</code>
+        <!-- SUSPENSION / HIBERNATION -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Suspenção e Hibernação</h4>
+        <p>Ta aí um assunto com muito pano pra manga e muita especificidade de compatibilidade, então eu recomendo que veja a documentação do Arch para fazer a configuração exata para o seu caso mas aqui vai um resumo.</p>
+        <p>A primeira coisa é que, quando o sistema hiberna a imagem de memória é <i>dumpada</i> para o espaço de swap, assim mantendo o estado de discos montados. Em UEFI o sistema vai automaticamente marcar um lugar e guardar numa variável (HibernateLocation), depois durante o próprio processo de retorno ele acessa isso e "pumba", sistema foi resumido. Porém, se você está em BIOS ou deseja especificar uma outra área (ou mesmo só designar manualmente) basta usar o parâmetro de kernel:<br><code>resume=UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</code><br><em>Lembrando que em SWAP criptografados, RAID ou LVM deve se apontar para o dispositivo mapeado e não para o ID real da partição!</em><br>Se você usa o HOOK <em>systemd</em> em <mark>/etc/mkinitcpio.conf</mark> um mecanismo padrão de resumo já é fornecido, do contrário você precisa adicionar o HOOK <em>resume</em> após o <em>udev</em> (de preferência antes de <em>fsck</em>) como no exemplo abaixo:</p>
+        <code>HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems <em>resume</em> fsck)</code>
         <!-- Manutenção de pacotes -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Manutenção de pacotes</h3>
