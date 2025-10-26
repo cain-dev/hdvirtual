@@ -28,14 +28,24 @@
         </ul>
     </header>
 	<main id="main-area">
-        <h1>Pendrive Universal</h1>
+        <h1>Pen Drive / Cartão SD Universal</h1>
         <h2>Introdução</h2>
-        <p>Então você tem um pendrive e precisa atualizar a BIOS do seu computador com ele? Ou talvez preparar um pendrive para ouvir músicas no carro? Ou talvez vá usar esse pendrive para armazenar jogos para seu PS2? Qualquer uma dessas situações vai exigir um perfil muito específico de formatação de pendrive, este tutorial é para ensinar como fazer isso.</p>
+        <p>Então você tem um pen drive e precisa atualizar a BIOS do seu computador com ele? Ou talvez preparar um pendrive ou cartão para ouvir músicas no carro? Ou talvez vá usar esse pendrive para armazenar jogos para seu PS2? Qualquer uma dessas situações vai exigir um perfil muito específico de formatação de pendrive, este tutorial é para ensinar como fazer isso.</p>
         <h2>EXFAT ou FAT32?</h2>
-        <p>O formato padrão e universal continua sendo o <em>FAT32</em>, se você quiser um pendrive que funcione em qualquer porcaria este é o formato de arquivo que você deve escolher, entretanto é um formato muito limitado e a maioria dos dispositivos hoje em dia suporta <em>EXFAT</em>. Então, se você está na dúvida vá de FAT32 mas verifique se o uso (por exemplo no caso do OpenPS2Loader) não é possível em EXFAT para fugir do limite de 4GB do FAT32.</p>
+        <p>O formato padrão e universal continua sendo o <em>FAT32</em>, se você quiser um pendrive que funcione em qualquer porcaria este é o formato de arquivo que você deve escolher, entretanto é um formato muito limitado e a maioria dos dispositivos hoje em dia suporta <em>EXFAT</em>. Então, se você está na dúvida vá de FAT32 mas verifique se o uso (por exemplo no caso do OpenPS2Loader) é possível em EXFAT para fugir do limite de 4GB por arquivos do FAT32.</p>
         <h2>Criando a tabela de partição</h2>
-        <p>Antes de começar qualquer alteração é importante ter certeza de qual unidade vamos alterar, para listar as unidades de armazenamento utilize o comando:</p>
+        <p>Antes de começar qualquer alteração é importante ter certeza de qual unidade vamos alterar, eu recomendo o uso do Gnome Disks para isso:</p>
+        <img class="responsiva" src="https://apps.gnome.org/assets/screenshots/org.gnome.DiskUtility/disks-main.png" alt="gnome-disk-utility">
+        <p>Mas caso queira listar as unidades de armazenamento pelo terminal utilize o comando:</p>
         <code>fdisk -l</code>
+        <details class="spoiler" >
+            <summary>(Opcional) Zerar o dispositivo (Clique para ver)</summary>
+            <p>Sempre que for mudar o uso de um dispositivo é interessante zerá-lo para evitar todo tipo de dor de cabeça futura. Este passo varia conforme o dispositivo.</p>
+            <p>Caso queira apagar todas as assinaturas de partições em um disco você pode usar o comando:</p>
+            <code>wipefs -a /dev/<em>storageA</em></code>
+            <p>Se o seu dispositivo suporta <em>TRIM</em> basta usar o comando:</p>
+            <code>blkdiscard -f /dev/<em>storageA</em></code>
+        </details>
         <p>Para particionar o disco utilizaremos a ferramenta <em>fdisk</em> na unidade desejada, para isso utilize o comando:</p>
         <code>fdisk /dev/sd<mark>X</mark></code>
         <p><strong>Atenção:</strong> Supondo que o dispositivo é o <em>/dev/sdX</em>, caso o seu seja /dev/sda ou /dev/sdc mude conforme o seu caso!</p>
@@ -171,6 +181,11 @@
             </tbody>
             </table>
             <p>&nbsp;</p>
+        <h3>Exemplo:</h3>
+        <p>Formatar um dispositivo de forma verbosa de 32GB, com 512 bytes de tamanho de setor, com o rótulo <em>OPLPS2LD</em>, zerando o dispositivo:</p>
+        <code>mkfs.exfat -L '<em>OPLPS2LD</em>' -c <em>32K</em> -b <em>4M</em> -s <em>512</em> -f -v /dev/<em>sdXY</em></code>
+        <p>Formatar um dispositivo de forma silenciosa de 128GB, com 4096 bytes de tamanho de setor, com o rótulo <em>DATA</em>, sem zerar o dispositivo:</p>
+        <code>mkfs.exfat -L '<em>DATA</em>' -c <em>128K</em> -b <em>4M</em> -s <em>4096</em> -q /dev/<em>sdXY</em></code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
