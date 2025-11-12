@@ -33,22 +33,38 @@
         <p>Dor de cabeça faz parte da utilização do Windows: Seja de falha de updates até erros que aparecem do nada... Mas existe uma velha lenda de que 3 comandinhos são mais do que suficientes para resolver todos os problemas do seu sistema...</p>
         <p>Isso é bem superestimado? Com toda certeza! Eu pessoalmente jamais confiaria no Windows pra fazer qualquer tentativa de reparo com relação a erros de disco, mas para o usuário final médio isso é melhor do que ser roubado por um técnico aleatório.</p>
         <h2>E como fazer isso?</h2>
-        <p>Abra o <mark>Prompt de Comando</mark> (<i>cmd</i>) como <strong>Administrador</strong> e use os comandos abaixo para reparar seu sistema:</p>
-        <h3>SFC (System File Check)</h3>
-        <p>Verifica e repara arquivos de sistema corrompidos ou ausentes:</p>
+        <p><strong>A primeira coisa a se fazer</strong> é abrir a ferramenta de restauração e criar um <em>Ponto de Restauração</em>, de preferência com data e hora, acredite, isso pode te salvar de muitas horas de dor de cabeça.</p>
+        <p>Para fazer os reparos apenas abra o <mark>Prompt de Comando</mark> (<i>cmd</i>) como <strong>Administrador</strong> e use os comandos abaixo para reparar seu sistema.</p>
+        <h2>Explicação básica sobre o reparo</h2>
+        <p>Diferente dos sistemas Unixlike, o Windows trabalha com uma espécie de "imagem de sistema", e ele utiliza essa imagem para garantir que o sistema está em perfeito funcionamento, então tudo que estiver faltando ou corrompido em termos de arquivos do sistema vai ser marcado para reparação... Mas aí que mora o problema: Pela própria arquitetura <em>sfc</em>, ele depende de usar um cache local da imagem de arquivos do sistema, se essa imagem está corrompida ou desatualizada (o que é bem comum se tratando de Windows) o reparo não poderá ser feito. Mas vamos começar pelo mais direto, considerando que você tenha uma imagem válida:</p>
+        <h3>Reparo com SFC (System File Check)</h3>
+        <p>Verifica e repara arquivos de sistema corrompidos ou ausentes com base na imagem de sistema:</p>
         <code>sfc /scannow</code>
+        <p>Caso você tenha uma imagem válida vai conseguir recuperar com esse programa sem muitos problemas... Mas é bem comum ver o erro de que "O sistema não pode ser reparado", nesse caso precisamos refazer a imagem usando o...</p>
         <h3>DISM (Deployment Image Servicing and Management)</h3>
+        <p>Groso modo o <em>DISM</em> vai resolver essa imagem antes que o <em>sfc</em> possa fazer o seu trabalho, então caso o <em>sfc</em> não tenha funcionado podemos usar os comandos abaixo:</p>
         <p>Verifica rapidamente se há corrupção na imagem do sistema:</p>
         <code>DISM /Online /Cleanup-Image /CheckHealth</code>
-        <p>Faz uma varredura aprofundada para detectar problemas:</p>
+        <p>Faz uma varredura aprofundada nos caches de imagem do sistema e o compara com a versão online, se há corrupção ele marca para reparo:</p>
         <code>DISM /Online /Cleanup-Image /ScanHealth</code>
-        <p>Repara arquivos do sistema corrompidos:</p>
+        <p>Esse não só escaneia, mas repara na imagem do sistema os arquivos corrompidos ou não encontrados, basicamente reconstroi o seu cache de imagem do sistema com os arquivos mais novos:</p>
         <code>DISM /Online /Cleanup-Image /RestoreHealth</code>
+        <p>E quando mesmo isso falha? Afinal de contas é o Windows né?</p>
+        <h3>Resolver os arquivos localmente</h3>
+        <p>E quando nem o <em>DISM</em> consegue achar a imagem mais atualizada ou simplesmente não consegue reparar a imagem local? Bom, existe um truque para usar uma imagem offline de outra instalação! Para isso é simples: Vá no site da Microsoft, baixe a <em>ISO</em> do Windows, e na pasta <em>sources</em> você vai encontrar o arquivo <em>install.win</em> ou <em>install.esd</em>, deixe isso em um pendrive e monte ele no sistema que quer reparar.</p>
+        <p>Por fim (considerando que o pen drive é o dispositivo <mark>D:\</mark>) , use o comando <em>DISM</em> apontando para o arquivo local com o comando:</p>
+        <code>DISM /Online /Cleanup-Image /RestoreHealth /Source:<em>D:\</em>sources/install.win</code>
+        <p>ou</p>
+        <code>DISM /Online /Cleanup-Image /RestoreHealth /Source:<em>D:\</em>sources/install.esd</code>
+        <p>Se não quer que o DISM use nada do Windows Update (para forçar com que use apenas o arquivo como fonte) basta adicionar ao final do comando:</p>
+        <code>/LimitAccess</code>
+        <p>Depois disso você pode tentar mais uma vez usar o comando do sfc como descrito acima para reparar o sistema... Mas e se não resolver?</p>
         <h3>Check Disk</h3>
+        <p>Algumas vezes não é só uma questão da imagem do sistema, e sim algo entre o estado físico do disco ou mesmo uma questão (do quão lixo o funcionamento) do NTFS, nesse caso antes de mais nada precisa reparar o disco em si.</p>
         <p>Para fazer uma verificação do estado do disco use o comando:</p>
         <code>chkdsk /r</code>
         <h2>Conclusão</h2>
-        <p>Se isso não resolver, formate o computador... E de preferência não coloque Windows da próxima vez.</p>
+        <p>Se você tentou usar o sfc, depois reparar a imagem com o DISM e depois sfc, depois reparar o disco, usar o DISM e depois sfc e mesmo assim não resolveu, verifique o estado do seu disco e se ele estiver com boa saúde reinstale o sistema no computador... E de preferência não coloque Windows da próxima vez.</p>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
