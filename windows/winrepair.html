@@ -42,7 +42,7 @@
         <code>sfc /scannow</code>
         <p>Caso você tenha uma imagem válida vai conseguir recuperar com esse programa sem muitos problemas... Mas é bem comum ver o erro de que "O sistema não pode ser reparado", nesse caso precisamos refazer a imagem usando o...</p>
         <h3>DISM (Deployment Image Servicing and Management)</h3>
-        <p>Groso modo o <em>DISM</em> vai resolver essa imagem antes que o <em>sfc</em> possa fazer o seu trabalho, então caso o <em>sfc</em> não tenha funcionado podemos usar os comandos abaixo:</p>
+        <p>Grosso modo o <em>DISM</em> vai resolver essa imagem antes que o <em>sfc</em> possa fazer o seu trabalho, então caso o <em>sfc</em> não tenha funcionado podemos usar os comandos abaixo:</p>
         <p>Verifica rapidamente se há corrupção na imagem do sistema:</p>
         <code>DISM /Online /Cleanup-Image /CheckHealth</code>
         <p>Faz uma varredura aprofundada nos caches de imagem do sistema e o compara com a versão online, se há corrupção ele marca para reparo:</p>
