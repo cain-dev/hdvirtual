@@ -281,6 +281,95 @@
             <p>Fora essas partições, todo o resto dos pontos de montagem podem ser feitos em subvolumes de BTRFS, com seus limites e configurações específicas, se atente para isso <strong>antes</strong> de começar o particionamento.</p>
             <p>Ah! E esteja avisado de antemão: Subvolumes BTRFS <em>só podem ser criados uma vez que a raiz do sistema está formatada em BTRFS e montada!</em> Então você vai ter que pelo menos ler a documentação abaixo e criar a partição <mark>BIOS BOOT</mark> ou <mark>ESP</mark>, a partição de raiz do sistema, formatá-la e montá-la e só então criar os subvolumes.</p>
         </details>
+        <!-- ÁREA SWAP EXPLICADA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Explicação sobre SWAP e memória virtual</h3>
+        <p>A <em>memória virtual</em> é um espaço (que geralmente fica no HDD/SSD) utilizado especialmente quando o sistema operacional fica sem memória física (RAM), <em>funciona essencialmente como uma memória extra além da RAM</em>, com isso evita-se travamentos, finalização de processos e em alguns casos até mesmo o desligamento forçado. A quantidade de memória virtual necessária varia conforme o seu uso e a até mesmo a quantidade de memória ram que seu sistema possui, podendo ser necessário um tamanho fixo, como por exemplo <em>2GB</em>, ou mesmo um valor relativo alto como <em>o dobro da sua memória física (RAM)</em>.<br>No Linux e nos BSD's a implementação prática desse conceito se da na <em>área de SWAP</em>, é interessante dizer que a <em>função SWAP</em> e a <em>área de SWAP</em> <strong>não são a mesma coisa!</strong> Apesar de que toda área de SWAP vai ser usada como memória virtual, mas, a área de SWAP <strong>não se resume a memória virtual!</strong> A área de swap pode ser usada de diversas formas que vão desde otimização de cache até mesmo como a área que guarda os dados para suspenção/hibernação da máquina.</p>
+        <p>Embora você tem a opção de usar um arquivo para área de swap, eu recomendo fortemente que você opte por uma partição específica para área de swap (especialmente pela capacidade de controle, já que ela pode residir fora da área de sistemas do sistema de arquivo principal e pelo ganho de performance), independente da sua escolha o tamanho varia bastante se você vai ou não utilizar hibernação, <!-- também pode variar conforme o tipo de dispositivo de armazenamento --> e também recomenda-se o não uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e na maioria dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar algum tipo de otimização de swap ao fim desse guia.</p> 
+        <p>Independente da sua preferência utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), acredite: Vai te evitar muita dor de cabeça.</p>
+        <h4 id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo.</h4>
+        <p>⚠️ Dica: Se possível some junto ao valor indicado na tabela o total de memória da VRAM da sua placa de vídeo dedicada.</p>
+        <figure>
+            <table>
+                <tbody>
+                    <tr>
+                        <th>RAM</th>
+                        <th>Swap (sem hibernação)</th>
+                        <th>&nbsp;Swap (com hibernação)</th>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;256MB</td>
+                        <td>&nbsp;256MB</td>
+                        <td>&nbsp;512MB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;512MB</td>
+                        <td>&nbsp;512MB</td>
+                        <td>&nbsp;1GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;1GB</td>
+                        <td>&nbsp;1GB</td>
+                        <td>&nbsp;2GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;2GB</td>
+                        <td>&nbsp;1GB</td>
+                        <td>&nbsp;3GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;3GB</td>
+                        <td>&nbsp;2GB</td>
+                        <td>&nbsp;5GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;4GB</td>
+                        <td>&nbsp;2GB</td>
+                        <td>&nbsp;6GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;6GB</td>
+                        <td>&nbsp;2GB</td>
+                        <td>&nbsp;8GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;8GB</td>
+                        <td>&nbsp;3GB</td>
+                        <td>&nbsp;11GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;12GB</td>
+                        <td>&nbsp;3GB</td>
+                        <td>&nbsp;15GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;16GB</td>
+                        <td>&nbsp;4GB</td>
+                        <td>&nbsp;20GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;24GB</td>
+                        <td>&nbsp;5GB</td>
+                        <td>&nbsp;29GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;32GB</td>
+                        <td>&nbsp;6GB</td>
+                        <td>&nbsp;38GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;64GB</td>
+                        <td>&nbsp;8GB</td>
+                        <td>&nbsp;72GB</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;128GB</td>
+                        <td>&nbsp;11GB</td>
+                        <td>&nbsp;139GB</td>
+                    </tr>
+                </tbody>
+            </table>
+        </figure>
         <!-- Passo 4 Opção A - armazenamento em sistemas baseados em BIOS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção A - Preparação para armazenamento em sistemas baseados em <mark>BIOS</mark></h3>
@@ -318,90 +407,6 @@
             <!-- Easy Mode CFDISK swap -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
             <!-- Easy Mode CFDISK / -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -456,90 +461,6 @@
             <!-- Partição SWAP em BIOS -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
             <code>n</code>
             <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
@@ -633,90 +554,6 @@
             <!-- Partição BIOS SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
             <p>Supondo a adição de uma partição swap de <em>3G</em>, vamos usar o comando abaixo:</p>
             <code>echo ',+<em>3G</em>,82' | sfdisk --append /dev/<em>storageA</em></code>
@@ -791,90 +628,6 @@ EOF
             <!-- Modo Easy CGDISK - SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>A partição swap deve ser to tipo <mark>8200</mark>.</p>
             <!-- Modo Easy CGDISK - / -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -934,90 +687,6 @@ EOF
             <!-- Modo Nomal GDISK SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>Para criar a nova partição que será usada como swap utilize o comando:</p>
             <code>n</code>
             <p>O sistema irá exibir a seguinte linha para que você escolha o número da partição:</p>
@@ -1100,90 +769,6 @@ EOF
             <!-- SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A memória Swap é um espaço que é utilizado quando o sistema operacional fica sobrecarregado, evita a queda de desempenho, travamentos e desligamentos automáticos. A quantidade de memória swap necessária varia conforme a quantidade de memória ram que seu sistema possui e se você vai ou não utilizar hibernação, também pode variar conforme o tipo de dispositivo de armazenamento e não sendo recomendado o uso na sua configuração padrão em SSD's e NVME's. Fique tranquilo, você pode (e em grande parte dos casos deve) ter algum espaço voltado para swap ainda que seja no seu SSD ou NVME, apenas lembre de verificar a otimização de swap ao fim desse guia.</p>
-            <p>Em vez de uma partição swap você também pode utilizar um arquivo de memória swap, assim você não precisa dedicar uma partição no disco especificamente para a swap, essa opção tende a ser preferida pelos usuários de SSD e NVME apesar da partição swap poder resultar numa melhor performance. Independente do caso utilize a partição swap <strong>ou</strong> o arquivo de swap, <strong>não use ambos e também não fique sem nenhum dos dois</strong> (ainda que seja em um outro dispositivo), vai te evitar muita dor de cabeça.</p>
-            <p id="tabela-swap">Para saber quanto de swap pode ser necessário para o seu caso verifique na tabela abaixo:</p>
-            <figure>
-                <table>
-                    <tbody>
-                        <tr>
-                            <th>RAM</th>
-                            <th>Swap (sem hibernação)</th>
-                            <th>&nbsp;Swap (com hibernação)</th>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;256MB</td>
-                            <td>&nbsp;512MB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;512MB</td>
-                            <td>&nbsp;1GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;2GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;1GB</td>
-                            <td>&nbsp;3GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;5GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;6GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;2GB</td>
-                            <td>&nbsp;8GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;11GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;12GB</td>
-                            <td>&nbsp;3GB</td>
-                            <td>&nbsp;15GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;16GB</td>
-                            <td>&nbsp;4GB</td>
-                            <td>&nbsp;20GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;24GB</td>
-                            <td>&nbsp;5GB</td>
-                            <td>&nbsp;29GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;32GB</td>
-                            <td>&nbsp;6GB</td>
-                            <td>&nbsp;38GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;64GB</td>
-                            <td>&nbsp;8GB</td>
-                            <td>&nbsp;72GB</td>
-                        </tr>
-                        <tr>
-                            <td>&nbsp;128GB</td>
-                            <td>&nbsp;11GB</td>
-                            <td>&nbsp;139GB</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </figure>
             <p>É uma partição do tipo <em>8200</em>, para o comando abaixo estou supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação, nesse caso o recomendado conforme a tabela é utilizar 3G <strong>mas mude o comando abaixo conforme o ideal para o seu caso!</strong>.</p>
             <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
             <!-- ROOT -->
@@ -1251,6 +836,11 @@ EOF
             <code>mkfs.fat -F 32 <em>-n "ESP"</em> /dev/<mark>storageAP1</mark></code>
             <p>Ou</p>
             <code>mkfs.fat -F 32 <em>-n "XBOOTLDR"</em> /dev/<mark>storageAP1</mark></code>
+            <p>Embora não seja recomendado, dependendo da sua UEFI e do tamanho da sua partição ESP você pode até mesmo usar outros tipos de sistemas de arquivo FAT como:</p>
+            <code>mkfs.fat <em>-F 16</em> ...</code>
+            <p>...Para o sistema de arquivos FAT16 ou mesmo:</p>
+            <code>mkfs.fat <em>-F 12</em> ...</code>
+            <p>Para o sistema de arquivos FAT12.</p>
         </details>
         <!-- Passo 5 - Formatar SWAP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1328,43 +918,70 @@ EOF
         <p>Agora criaremos os subvolumes para o BTRFS, primeiro acesse a partição raiz:</p>
         <code>cd /mnt</code>
         <p>E crie os subvolumes um por um com os comandos abaixo (fique a vontade para omitir, renomear ou incluir mais subvolumes conforme a sua necessidade):</p>
-        <code>btrfs subvolume create @<br>btrfs subvolume create @home<br>btrfs subvolume create @snapshots<br>btrfs subvolume create @log<br>btrfs subvolume create @cache<!--<br>btrfs subvolume create @tmp--><br>btrfs subvolume create @images (somente para libvirt)</code>
+        <code>btrfs subvolume create @ @home @snapshots @log @cache<!-- @tmp--> <em>@images</em></code>
+        <p><em>*</em> <em>@images</em> se e somente se você vai usar libvirt.</p>
         <p>Caso queira deletar um subvolume que não tenha sido criado corretamente pode usar o comando:</p>
         <code>btrfs subvolume delete @<em>nome_do_subvolume</em></code>
         <p>Uma vez que os subvolumes estão criados retorne para a pasta inicial com o comando cd:</p>
         <code>cd</code>
         <p>Então vamos desmontar a raiz padrão...</p>
         <code>umount /mnt</code>
-        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>, além de <mark>compress=zstd,noatime</mark> considere o uso da adição da flag <mark>ssd</mark> caso seja um dispositivo SSD e da flag <mark>discard=async</mark> caso o dispositivo suporte TRIM.</p>
-        <code>mount -o compress=zstd,noatime,subvol=<em>@</em> /dev/<mark>storageAP4</mark> /mnt</code>
-        <p>Agora criaremos a seguinte estrutura de diretórios (fique a vontade para mudar conforme a sua necessidade)...</p>
-<pre><code>./boot
-./home
+        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>, usando compressão <em>zstd:3</em> com a opção <mark>compress=zstd</mark>, desativando o atime com a opção <mark>noatime</mark>, considere o a remoção da opção <mark>ssd</mark> caso seja o dispositivo não seja um SSD e a remoção da opção <mark>discard=async</mark> caso o dispositivo não suporte TRIM ou você prefira usar o TRIM periódico.</p>
+        <code>mount -o noatime,<em>compress=zstd</em>,<mark>ssd</mark>,<mark>discard=async</mark>,subvol=<em>@</em> /dev/<mark>storageAP4</mark> /mnt</code>
+        <h5><strong>⚠️ Aviso! ⚠️</strong></h5>
+        <p>No exemplo acima está sendo usado a flag de compressão <em>compress=zstd</em>, que vai marcar para comprimir o volume montado com o padrão <em>zstd</em> com o nível <em>3</em> de compressão (que é o padrão ao se utilizar zstd). Este costuma ser o padrão em termos de custo x benefício para um computador médio, porém, podendo ser problemático para máquinas com uma CPU menos capaz.</p>
+        <p>Nada te impede, aliás eu até <em>recomendo a não utilização dessa flag caso você tenha uma CPU fraca (netbook antigo) ou mesmo a mudança de algoritmo ou nível de compressão mais poderoso caso tenha CPU mais moderna e/ou com mais performance</em>.</p>
+        <p>Você pode até mesmo (e eu recomendo isso) <em>montar volumes diferentes com algoritmos/níveis de compressão distintos!</em> </p>
+        <p>os algoritmos possíveis são <em>zlib, lzo e zstd</em>. zlib (por padrão) sendo o mais lento porém com alto nível de compressão, lzo sendo o mais rápido porém com o menor nível de compressão, zstd com compressão comparável ao zlib com velocidades maiores de compressão/descompressão.</p>
+        <ul>
+            <li><p><em>lzo</em> não tem escolha de níveis de compressão;</p></li>
+            <li><p><em>zlib</em> vai do nível <mark>1</mark> (sendo o mais rápido) até o nível <mark>9</mark> (sendo o mais poderoso), tem por padrão o nível <mark>3</mark> (melhor relação custo x benefício);</p></li>
+            <li><p><em>zstd</em> vai do nível <mark>-15</mark> (sendo o mais rápido) até o nível <mark>15</mark> (sendo o mais poderoso), tem por padrão o nível <mark>3</mark> (melhor relação custo x benefício), considere de -15~-1 como <em>realtime</em>, considere 1~3 como <em>quase realtime</em> porém com boa compressão, considere 4~8 como <em>compressão melhorada e lenta</em>, considere 9~15 <em>compressão pesada</em> (<strong>e podendo já não ter ganhos expressivos de economia de espaço</strong>).</p></li>
+        </ul>
+        <p>Para definir o algoritmo e o nível basta usar a flag <em>compression=<mark>algoritmo</mark>:<mark>nível</mark></em> como no exemplo abaixo:</p>
+        <code>compress=zstd:15</code>
+        <br>
+        <p>Agora criaremos a seguinte estrutura de diretórios dos subvolumes (fique a vontade para mudar conforme a sua necessidade)...</p>
+<pre><code>./home
 ./.snapshots
 ./var
 ./var/log
 ./var/cache<!--./tmp-->
-./var/lib
 </code></pre>
         <p>E caso vá usar libvirt:</p>
 <pre><code>./var/lib/libvirt
 ./var/lib/libvirt/images
 </code></pre>
         <p>...Com este comando:</p>
-        <code>mkdir -p /mnt/{boot,home,.snapshots,var/{log,cache,lib}<!--,tmp-->}</code>
+        <code>mkdir -p /mnt/{home,.snapshots,var/{log,cache}<!--,tmp-->}</code>
         <p>E caso vá usar libvirt:</p>
         <code>mkdir -p /mnt/var/lib/libvirt/images</code>
-        <p>Relembrando: Além de <mark>compress=zstd,noatime</mark> considere o uso da adição da flag <mark>ssd</mark> caso seja um dispositivo SSD e da flag <mark>discard=async</mark> caso o dispositivo suporte TRIM.</p>
+        <p><em>*</em> Relembrando: considere o a remoção da opção <mark>ssd</mark> caso seja o dispositivo não seja um SSD e a remoção da opção <mark>discard=async</mark> caso o dispositivo não suporte TRIM ou você prefira usar o TRIM periódico</p>
         <p>E agora vamos montar partição por partição:</p>
-        <code>mount -o compress=zstd,noatime,subvol=@home /dev/<mark>storageAP3</mark> /mnt/home</code>
-        <code>mount -o compress=zstd,noatime,subvol=@snapshots /dev/<mark>storageAP3</mark> /mnt/.snapshots</code>
-        <code>mount -o compress=zstd,noatime,subvol=@log /dev/<mark>storageAP3</mark> /mnt/var/log</code>
-        <code>mount -o compress=zstd,noatime,subvol=@cache /dev/<mark>storageAP3</mark> /mnt/var/cache</code>
+        <!-- @HOME -->
+        <h3>@home</h3>
+        <code>mount -o noatime,compress=zstd,ssd,discard=async,subvol=@home /dev/<mark>storageAP3</mark> /mnt/home</code>
+        <p><em>*</em> Prefira usar um algoritmo mais leve na pasta <em>/home</em> ou mesmo nenhuma compressão, não só pelo fato de que todo arquivo hoje em dia já possui uma compressão interna mas qualquer mudança de acesso nessa pasta será bastante sensível para o usuário.</p>
+        <!-- @SNAPSHOTS -->
+        <h3>@snapshots</h3>
+        <code>mount -o noatime,compress=zstd,ssd,discard=async,subvol=@snapshots /dev/<mark>storageAP3</mark> /mnt/.snapshots</code>
+        <p><em>*</em> Como o <em>/.snapshots</em> é um diretório específico para snapshots, fique a vontade para usar compressão pesada, esse diretório não vai ser lido com frequência.</p>
+        <!-- @LOG -->
+        <h3>@log</h3>
+        <code>mount -o noatime,compress=zstd,ssd,discard=async,subvol=@log /dev/<mark>storageAP3</mark> /mnt/var/log</code>
+        <p><em>*</em> Arquivos do diretório <em>/var/log</em> tendem a ser altamente compressíveis, fique a vontade para usar compressão pesada por mais que esse diretório possa ser lido com frequência isso dificilmente vai alterar a usabilidade.</p>
+        <!-- @CACHE -->
+        <h3>@cache</h3>
+        <code>mount -o noatime,compress=zstd,ssd,discard=async,subvol=@cache /dev/<mark>storageAP3</mark> /mnt/var/cache</code>
+        <p><em>*</em> Prefira usar um algoritmo bem leve na pasta <em>/var/cache</em> ou preferencialmente nenhuma compressão, o cache já é por natureza um local destinado a arquivos temporários.</p>
         <!--
         <code>mount -o compress=zstd,noatime,subvol=@tmp /dev/<mark>storageAP3</mark> /mnt/tmp</code>
         -->
+        <!-- @IMAGES -->
+        <h3>@images</h3>
         <p>E se e somente se for o caso de usar libvirt:</p>
-        <code>mount -o compress=zstd,noatime,subvol=@images /dev/<mark>storageAP3</mark> /mnt/var/lib/libvirt/images</code>
+        <code>mount -o noatime,compress=zstd,ssd,discard=async,subvol=@images /dev/<mark>storageAP3</mark> /mnt/var/lib/libvirt/images</code>
+        <p><em>*</em> Aqui na <em>/var/lib/libvirt/images</em> é um diretório que não recomendo nenhuma compressão, não só pelo baixo potencial de ganho (especialmente pelo fato das imagens tenderem a ter compressão internamente) mas especialmente pela potencial perda de performance e corrupção de dados.</p>
         <h2>Continuação da montagem</h2>
         <p>Independente se você utilizou <mark>EXT4</mark> ou <mark>BTRFS</mark> esses passos são iguais:</p>
         <!-- Passo 6 - Montar a swap -->
@@ -1425,13 +1042,16 @@ EOF
         <code>genfstab -U /mnt >> /mnt/etc/fstab</code>
         <p>Caso queira verificar o arquivo da tabela do sistema de arquivos pra ver se está tudo certo utilize o comando abaixo:</p>
         <code>cat /mnt/etc/fstab</code>
+        <p><strong>* Alerta ⚠️:</strong> Por algum motivo o genfstab não considera as flags de compressão ao gerar o fstab, caso seja necessário coloque as flags no arquivo manualmente.</p>
         <!-- (OPCIONAL) CRIPTOGRAFAR PARTIÇÕES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 8.9 - (Opcional) Criptografar as partições</h2>
         <details class="spoiler" >
             <summary>Copiando os arquivos chave (Clique para ver)</summary>
-            </p>Se você encriptou a partição (ou partições) através de arquivo chave, agora você <strong>DEVE</strong> copiar o arquivo (ou os arquivos) chave contendo a senha para <mark>/mnt</mark> <strong>antes de fazer o chroot!</strong></p>
-            <code>cp cryptroot.key /mnt/cryptroot.key</code>
+            </p>Se você encriptou a partição (ou partições) através de arquivo chave, agora você <strong>DEVE</strong> copiar o arquivo (ou os arquivos) chave contendo a senha para <mark>/mnt/etc/cryptsetup-keys.d/</mark> <strong>antes de fazer o chroot!</strong></p>
+            <code>cp cryptroot.key /mnt/etc/cryptsetup-keys.d/cryptroot.key</code>
+            <code>cp cryptswap.key /mnt/etc/cryptsetup-keys.d/cryptswap.key</code>
+            <p>Se possível copie os arquivos também para o diretório <em>/mnt/boot</em> já que essa será uma partição visível, sendo assim ela pode ser utilizada para abrir os volumes caso o a raiz se torne inacessível pela compressão.</p>
         </details>
         <!-- Passo 9 "CHROOT" para a instalação -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1661,57 +1281,99 @@ EOF
             <p>E depois gerar o initramfs com:</p>
             <code>mkinitcpio -P</code>
         </details>
+        
+        
+
+
+
         <!-- (OPCIONAL) DESENCRIPTAÇÃO -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3><strong>Passo obrigatório para quem criptografou partições</strong></h3>
         <details class="spoiler" >
-            <summary>Inicializando o dispositivo criptografado como raiz (Clique para ver)</summary>
-            <!-- Preparando /etc/crypttab e /etc/cryptsetup-keys.d -->
+            <summary>Indicando os dispositivo para serem desencriptados (Clique para ver)</summary>
+            <!-- Preparando /etc/crypttab* e /etc/cryptsetup-keys.d -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!-- PREPARANDO AS CHAVES -->
             <h4>Preparando as chaves</h4>
-            <p>É esperado que o diretório <mark>/etc/cryptsetup-keys.d</mark> exista, mas caso não existir, use o comando abaixo para criar o diretório para as chaves:</p>
-            <code>mkdir /etc/cryptsetup-keys.d</code>
-            <p>Uma vez que o diretório está criado, copie as chaves para esse diretório como nos exemplos abaixo:</p>
-            <code>cp cryptroot.key /etc/cryptsetup-keys.d/cryptroot.key</code>
-            <code>cp cryptswap.key /etc/cryptsetup-keys.d/cryptswap.key</code>
+            <p>Antes de mais nada é esperado que as chaves já estejam no diretório <em>/etc/cryptsetup-keys.d</em>. Se você ainda copiou para lá, faça isso agora.</p>            
             <h3>Qual a razão de colocar nesse diretório?</h3>
-            <p>Este é o diretório para leitura padrão no crypsetup, se o nome da chave condizer com um volume a ser montado então ela vai ser usada automaticamente.</p>
+            <p>Este é o diretório para leitura padrão no cryptsetup, além das permissões do diretório e de boas práticas, caso use os hooks <em>systemd + sd-encrypt</em> se <em>o nome da chave condizer com um volume que foi <strong>indicado</strong> para ser montado</em> então a chave será encontrada automaticamente.</p>
+            
+            
+            <!-- PREPARANDO O /etc/crypttab -->
+            <h4>Preparando o /etc/crypttab</h4>
+            <code>nano /etc/crypttab</code>
+            <p>Este é o arquivo padrão que descreve quais <em>dispositivos físicos</em> serão descriptografados e como serão <em>mapeados</em> pelo sistema no <i><em>late boot</em></i>,  nessa tabela vamos declarar primeiro os nomes das abstrações (no caso <em>cryptswap</em> é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), depois o endereço dos dispositivos encriptados (que nesse exemplo é o <em>/dev/storageAP4</em>) e o caminho para a chave de desencriptação (<em>/etc/cryptsetup-keys.d/cryptswap.key</em>), por fim o formato de criptografia, como no exemplo abaixo:</p>            
+            <code>cryptswap /dev/storageAP4 /etc/cryptsetup-keys.d/cryptswap.key luks<em>,timeout=30</em></code>
+            <p>Você também pode (na verdade é o mais recomendável) utilizar UUID para isso:</p>
+            <code>cryptswap UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX /etc/cryptsetup-keys.d/cryptswap.key luks<em>,timeout=30</em></code>
+            <p><strong>Pelo amor de tudo que é mais sagrado, não se esqueça de colocar o argumento de timeout ou você não vai mais iniciar o computador caso a montagem da swap não seja encontrada!</strong> </p>
             <!-- PREPARANDO MKINITCPIO (UDEV OU SYSTEMD) -->
             <h4>Preparando o mkinitcpio</h4>
             <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o arquivo <mark>/etc/mkinitcpio.conf</mark>:</p>
             <code>nano /etc/mkinitcpio.conf</code>
+            <!-- ARQUIVO CHAVE NA INITRAMFS -->
+            <h4>Inserindo a chave da raiz no initramfs</h4>
+            <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar para o arquivo de chave necessário para nosso boot, para que ele seja integrado a <em>initramfs</em>:</p>
+            <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key)</code>
+            
             <p>E então você pode escolher uma das opções abaixo:</p>
-            <!-- UDEV -->
+            <!-- Opção A UDEV -->
             <h4>Opção A - Hooks para para udev e encrypt (initramfs tradicional, mais controle via shell sem depender de systemd, mais lento)</h4>
             <p>Para usar o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
-            <!-- ENCRYPT - LATE BOOT -->
-            <p>Edite o arquivo <mark>/etc/crypttab</mark> para adicionar os dispositivos para serem desencriptados no <i>late boot</i> (como a swap):</p>
-            <code>nano /etc/crypttab</code>
-            <p>E nessa tabela vamos declarar os nomes das abstrações (no caso cryptswap é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptswap.key</mark>):</p>
-            <code>cryptswap /dev/<mark>storageAP4</mark> /etc/cryptsetup-keys.d/cryptswap.key luks</code>
-            <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da raiz! Este diretório é para volumes secundários como a swap! O arquivo de chave da raiz deve ser parte do initramfs!</p>
-            <p>Você pode utilizar esse arquivo para desencriptação geral, porém, diferente do <mark>/etc/crypttab.initramfs</mark>, só colocar a linha aqui não serve.</p>
-            <!-- SYSTEMD -->
+            
+            <!-- Opção B SYSTEMD -->
             <h4>Opção B - Hooks para systemd e sd-encrypt (integração total com systemd, uso de crypttab.initramfs, keyring, e GPT auto-discovery, mais rápido)</h4>
             <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
-            <!-- SYSTEMD - EARLY BOOT -->
+            <!-- Opção B SYSTEMD - INITRAMFS -->
             <p>O arquivo <mark>/etc/crypttab.initramfs</mark> é suportado quando se usa o <i>hook</i> <em>sd-encrypt</em> no <mark>mkinitcpio</mark>, isso permite especificar volumes que devem ser desencriptados durante o <i>early boot</i>. Para desbloquear a <em>cryptroot</em> no <i>early-boot</i> insira uma linha como no exemplo abaixo:</p>
-            <code>cryptroot /dev/storageAP4 /etc/cryptsetup-keys.d/cryptroot.key luks</code>
+            <code>cryptroot /dev/storageAP4 /etc/cryptsetup-keys.d/cryptroot.key luks<em>,discard</em></code>
             <p>Dessa forma está declarado o nome da abstração (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>), e qual sistema será utilizado (nesse caso o <mark>luks</mark>).</p>
-            <p>Se você descreveu os pontos de montagem corretamente aqui, não será necessário usá-los novamente como parâmetros de kernel (embora eu recomendo fortemente que você tenha os comandos preparados porém comentados caso algo dê errado), lembrando que você pode omitir o 3º campo dessa linha, ou mesmo substituir por valores como <mark>none</mark> ou <em>-</em> caso haja uma chave de mesmo nome no diretório padrão (embora não seja recomendado fazer isso!).</p>
-            <!-- INITRAMFS -->
-            <h4>Inserindo os arquivos no initramfs</h4>
-            <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar para os arquivos necessários para nosso boot. Caso você tenha usado o <em>sd-encrypt</em> basta inserir os caminhos dos arquivos chave:</p>
-            <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key /etc/cryptsetup-keys.d/cryptswap.key)</code>
-            <p>Caso você tenha usado o <em>encrypt</em>, terá que inserir os caminhos dos arquivos chave e da crypttab, como no exemplo abaixo:</p>
-            <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key /etc/cryptsetup-keys.d/cryptswap.key /etc/crypttab)</code>
+            <p>Lembrando que você pode omitir o 3º campo dessa linha, ou mesmo substituir por valores como <mark>none</mark> ou <em>-</em> como no exemplo abaixo caso haja uma chave de mesmo nome no diretório de chaves padrão (embora eu não recomende você a fazer isso).</p>
+            
+            <p>adicione discard caso queira passar o trim contínuo para o sistema de arquivo</p>
+            
+            <code>cryptroot /dev/<mark>storageAP4</mark> none luks</code>
+            <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da swap! Este diretório é para volumes em <i>early boot</i> como a raiz! O que descreve a desencriptação da swap continua sendo o <em>/etc/crypttab</em> como no exemplo acima.</p>
+
+
+            <p>Se você descreveu os pontos de montagem corretamente aqui, não será necessário usá-los novamente como parâmetros de kernel (embora eu recomendo fortemente que você tenha os comandos preparados porém comentados caso algo dê errado).</p>
+
+
+            
+
+
+
+
+            <!-- AVISO -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4><strong>⚠️ Aviso! ⚠️</strong></h4>
+            <p>Para <em>udev + encrypt</em>:</p>
+            <p><strong>Você deve</strong> explicitar o diretório da chave da raiz na linha <em>FILES=</em> em <mark>/etc/mkinitcpio.conf</mark>, <strong>do contrário o seu sistema vai <i>borkar</i>!</strong></p>
+            <p>Para <em>systemd + sd-encrypt</em>:</p>
+            <p>Apesar da automatização para as chaves, <strong>você deve</strong> explicitar a desencriptação da raiz no <i>early boot</i> no arquivo <mark>/etc/crypttab.initramfs</mark>, <strong>do contrário o seu sistema vai <i>borkar</i>!</strong></p>
+            <!-- GERAR INITRAMFS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Gerando initramfs</h4>
             <p>Agora precisamos gerar os arquivos initramfs, para gerar todos os presets basta usar o comando:</p>
             <code>mkinitcpio -P</code>
             <p>E para verificar se o arquivo foi devidamente inserido na sua initramfs use o comando:</p>
             <code>lsinitcpio /boot/initramfs-linux.img | grep cryptsetup-keys.d/cryptroot.key</code>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             <!-- Configurando os parâmetros de kernel -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!-- UDEV -->
@@ -1719,7 +1381,7 @@ EOF
             <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
             <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark></code>
             <p>Para indicar o caminho da chave você pode usar</p>
-            <code>cryptkey=<em>dispositivo</em>:<em>tipo de sistema de arquivo</em>:<em>caminho</em></code>            
+            <code>cryptkey=<em>dispositivo</em>:<em>tipo de sistema de arquivo</em>:<em>caminho</em></code>    
             <!-- SYSTEMD -->
             <h4>Argumentos de boot para systemd e sd-encrypt</h4>
             <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
@@ -1727,10 +1389,22 @@ EOF
             <code>rd.luks.name=<em>UUID DO DISPOSITIVO</em>=<em>cryptroot</em></code>
             <p>Para informar o caminho em que está a chave:</p>
             <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
+            
+            
+            
+            
+            
             <!-- ROOT -->
+             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h3>Caminho para <em>root (/)</em> </h3>
             <p>Lembre-se que de agora em diante, para referenciar a sua raiz não é mais options root=/dev/<em>storageA</em>, e sim <em>options root=/dev/mapper/cryptroot</em>.</p>
         </details>
+
+
+
+
+
+
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1960,15 +1634,14 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <!-- SNAPSHOT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Adendo - Snapshot do sistema</h3>
-        <p>A minha primeira recomendação é que se você instalou o Arch com <em>BTRFS</em> ou <em>ZFS</em>, você deve antes de mais nada fazer um snapshot do sistema recém instalado.</p>
+        <p>A minha primeira recomendação é que se você instalou o Arch com <em>BTRFS</em> ou <em>ZFS</em>, você deve antes de mais nada fazer um snapshot do sistema recém instalado.</p>        
         <h4>BTRFS</h4>
-        <p>No caso do BTRFS siga veja o exemplo abaixo:</p>
-        <code>btrfs subvolume snapshot -r <em>/dev/mapper/cryptroot/@</em> <em>/dev/mapper/@snapshots/nome_do_snapshot</em></code>
-        <p>O comando acima considera a raiz <mark>/dev/mapper/cryptroot</mark>, no subvolume <mark>@</mark>, com o diretório de snapshots em <mark>/dev/mapper/cryptroot</mark>, no subvolume <mark>@snapshots</mark>.</p>
+        <p>No caso do BTRFS, a partir do momento em que o sistema está montado siga o exemplo abaixo:</p>
+        <code>btrfs subvolume snapshot -r / /.snapshots/inicial</code>
+        <p>O comando acima faz uma snapshot de somente leitura <em>-r</em>, considera a leitura para a snapshot a partir da raiz <mark>/</mark>, com o diretório de snapshots em <mark>/.snapshots/</mark>, e nomeia a snapshot como <mark>inicial</mark>.</p>
         <h4>ZFS</h4>
-        <p>No caso do ZFS siga veja o exemplo abaixo:</p>
+        <p>No caso do ZFS siga o exemplo abaixo:</p>
         <code>zfs snapshot <em>pool/dataset@nome_da_snapshot</em></code>
-        <p>E após isso instale uma das interfaces abaixo:</p>
         <!-- Instalando backend de som -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Adendo - Instalando backend de som</h2>
@@ -1998,11 +1671,14 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>KDE</h3>
         <p>Utilize o comando:</p>
-        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs powerdevil kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam</code>
+        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam</code>
         <p><strong>Observação!</strong> Inclua esses pacotes caso também deseje essas funções:</p>
         <ul>
             <li><em>kcalc</em> (Se e somente se você utilizará uma calculadora)</li>
+            <li><em>powerdevil power-profiles-daemon</em> Para gerência de energia (altamente recomendado)</li>
             <li><em>kdenetwork-filesharing</em> (Se e somente se você utilizará compartilhamento de arquivos)</li>
+            <li><em>print-manager cups system-config-printer</em> (Se e somente se você utilizará impressora)</li>
+            <li><em>plasma-keyboard</em> (Se e somente se você utilizará teclado virtual)</li>
         </ul>
         <p>Habilite o serviço do SDDM com o comando:</p>
         <code>systemctl enable sddm</code>
@@ -2325,6 +2001,7 @@ EndSection
         <p>segundo o usuário Artoriuz no reddit:<br><i>"Zswap é um pool de memória dinâmica usado para compactar páginas swap. Ele intercepta as páginas antes que elas realmente atinjam sua partição/arquivo de troca normal e despeja páginas antigas com base em LRU. O ponto principal aqui é que o zswap não substitui o swap clássico, ele foi projetado para funcionar junto com ele como uma etapa intermediária.<br>O Zram, por outro lado, é um disco RAM compactado e alocado dinamicamente que pode ser usado para armazenar qualquer coisa, embora o caso de uso mais comum seja usá-lo como sua partição swap. Ao contrário do zswap, o zram não requer a presença de uma partição/arquivo swap normal em seu disco, pois atuará como a partição swap real. No entanto, desde o Linux 4.14, o zram agora também pode ser configurado com um dispositivo de "writeback" (CONFIG_ZRAM_WRITEBACK), que permite mover páginas inativas/incompressíveis para uma partição swap diferente (geralmente no disco), que é exatamente o que o zswap faz."</i></p>
         <h4>Resumindo...</h4>
         <p>O que a zram faz é basicamente aumentar o volume da sua RAM em troca de um pouco da performance do processador, e o que a zswap faz é otimizar a transferência necessária para a partição swap em troca de um pouco da performance do seu processador. Na esmagadora maioria dos casos o ideal é que você tenha uma partição swap otimizada com zswap, zram é recomendada se e somente se o seu sistema usa muito menos ram do que tem disponível, que a memória contenha dados que não são acessados frequentemente (dados frios) e que o sistema não dependa muito da memória em cache (pagecache) para desempenho.</p>
+        <!-- ZRAM - UDEV -->
         <h3>Habilitando zram - por regra udev</h3>
         <p>Para carregar o módulo zram no boot gere o seguinte arquivo:</p>
 <code><pre>
@@ -2344,6 +2021,7 @@ ACTION=="add", KERNEL=="zram0", ATTR{initstate}=="0", ATTR{comp_algorithm}="zstd
 /dev/zram0 none swap defaults,discard,pri=100 0 0
 </pre></code>
         <p><strong>OU:</strong></p>
+        <!-- ZRAM - ZRAM GENERATOR -->
         <h3>Habilitando zram - por zram generator</h3>
         <p>Antes de mais nada instale o pacote zram-generator:</p>
         <code>pacman -S zram-generator</code>
@@ -2354,8 +2032,10 @@ ACTION=="add", KERNEL=="zram0", ATTR{initstate}=="0", ATTR{comp_algorithm}="zstd
 [zram0]
 zram-size = min(ram / 2, 4096)
 compression-algorithm = zstd</pre></code>
+        <p>Em seguida, inicie sua instância configurada systemd-zram-setup@zramN.service (N correspondente ao ID numérico da instância, seguindo o exemplo acima seria o comando <em>systemd-zram-setup@zram0.service</em>).</p>
+        <!-- ZRAM - OTIMIZANDO -->
         <h4>Otimizando swap na zram</h4>
-        <p>O zram se comporta de maneira diferente então devemos configurar a zram para aproveitar todo o potencial das vantagens do zram:</p>
+        <p>O zram se comporta de maneira diferente então devemos configurar a zram para aproveitar todo o potencial das vantagens do zram, caso queira fazer por regra:</p>
 <code><pre>
 <em>/etc/sysctl.d/99-vm-zram-parameters.conf</em>
     
@@ -2363,7 +2043,20 @@ vm.swappiness = 180
 vm.watermark_boost_factor = 0
 vm.watermark_scale_factor = 125
 vm.page-cluster = 0</pre></code>
-        <p>Em seguida, inicie sua instância configurada systemd-zram-setup@zramN.service (N correspondente ao ID numérico da instância, seguindo o exemplo acima seria o comando <em>systemd-zram-setup@zram0.service</em>).</p>
+        <p>Ou temporariamente por:</p>
+        <code>sudo sysctl -w vm.swappiness=180 vm.watermark_boost_factor=0 vm.watermark_scale_factor=125 vm.page-cluster=0</code>
+        <!-- ZRAM - MANUAL -->
+        <h3>Habilitando zram - manualmente</h3>
+        <p>Caso você queira fazer uma zram na unha (ou caso queira implementar em um script) com poucos comandos basta usar:</p>
+        <code>modprobe zram</code>
+        <code>zramctl /dev/zram0 --algorithm <em>zstd</em> --size <em>"$(($(grep -Po 'MemTotal:\s*\K\d+' /proc/meminfo)/2))KiB"</em> </code>
+        <p><em>*</em> fique a vontade para mudar o algoritmo de compressão (como por exemplo usar <em>lz4</em> em um pc mais modesto) ou mesmo colocar um valor absoluto de tamanho (<em>como 4G</em>).</p>
+        <code>mkswap -L ZRAM -U clear /dev/zram0</code>
+        <code>swapon --discard --priority 100 /dev/zram0</code>
+        <p>Para desabilitar basta usar os comandos abaixo ou reiniciar o computador.</p>
+        <code>swapoff /dev/zram0</code>
+        <code>modprobe -r zram</code>
+        <!-- ZSWAP -->
         <h3>Habilitando zswap</h3>
         <p>Para habilitar zswap é muito simples, basta adicionar as configurações do zswap nos seus parâmetros de boot como no exemplo abaixo:</p>
         <code>zswap.enabled=1 zswap.max_pool_percent=20 zswap.zpool=zsmalloc</code>
