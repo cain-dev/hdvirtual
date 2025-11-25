@@ -1315,11 +1315,15 @@ EOF
             <p>E então você pode escolher uma das opções abaixo:</p>
             <!-- Opção A UDEV -->
             <h4>Opção A - Hooks para para udev e encrypt (initramfs tradicional, mais controle via shell sem depender de systemd, mais lento)</h4>
+            <p>INCOMPLETO</p>
+            <!-- INCOMPLETO
             <p>Para usar o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
+            -->
             <!-- Configurando os parâmetros de kernel -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!-- UDEV -->
+            <!-- INCOMPLETO
             <h4>Argumentos de boot para udev e encrypt</h4>
             <p>Ao usar LUKS com os hooks udev e encrypt, você precisa declarar para o bootloader via argumentos de kernel qual dispositivo será desencriptado na inicialização, primeiro informando qual é o dispositivo e seu mapeamento como no exemplo abaixo:</p>
             <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark></code>
@@ -1332,7 +1336,7 @@ EOF
 
 
             <code>cryptkey=rootfs:/etc/cryptsetup-keys.d/minha-chave.key</code>
-
+            -->
 
 
 
