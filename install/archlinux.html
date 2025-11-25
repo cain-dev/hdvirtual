@@ -1281,11 +1281,6 @@ EOF
             <p>E depois gerar o initramfs com:</p>
             <code>mkinitcpio -P</code>
         </details>
-        
-        
-
-
-
         <!-- (OPCIONAL) DESENCRIPTAÇÃO -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3><strong>Passo obrigatório para quem criptografou partições</strong></h3>
@@ -1295,19 +1290,20 @@ EOF
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!-- PREPARANDO AS CHAVES -->
             <h4>Preparando as chaves</h4>
-            <p>Antes de mais nada é esperado que as chaves já estejam no diretório <em>/etc/cryptsetup-keys.d</em>. Se você ainda copiou para lá, faça isso agora.</p>            
+            <p>Antes de mais nada é esperado que as chaves já estejam no diretório <em>/etc/cryptsetup-keys.d</em>, se você ainda não copiou para lá faça isso agora.</p>            
+            <code>cp cryptroot.key /mnt/etc/cryptsetup-keys.d/cryptroot.key</code>
+            <code>cp cryptswap.key /mnt/etc/cryptsetup-keys.d/cryptswap.key</code>
             <h3>Qual a razão de colocar nesse diretório?</h3>
             <p>Este é o diretório para leitura padrão no cryptsetup, além das permissões do diretório e de boas práticas, caso use os hooks <em>systemd + sd-encrypt</em> se <em>o nome da chave condizer com um volume que foi <strong>indicado</strong> para ser montado</em> então a chave será encontrada automaticamente.</p>
-            
-            
             <!-- PREPARANDO O /etc/crypttab -->
             <h4>Preparando o /etc/crypttab</h4>
             <code>nano /etc/crypttab</code>
-            <p>Este é o arquivo padrão que descreve quais <em>dispositivos físicos</em> serão descriptografados e como serão <em>mapeados</em> pelo sistema no <i><em>late boot</em></i>,  nessa tabela vamos declarar primeiro os nomes das abstrações (no caso <em>cryptswap</em> é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), depois o endereço dos dispositivos encriptados (que nesse exemplo é o <em>/dev/storageAP4</em>) e o caminho para a chave de desencriptação (<em>/etc/cryptsetup-keys.d/cryptswap.key</em>), por fim o formato de criptografia, como no exemplo abaixo:</p>            
-            <code>cryptswap /dev/storageAP4 /etc/cryptsetup-keys.d/cryptswap.key luks<em>,timeout=30</em></code>
+            <p>Este é o arquivo padrão que descreve quais <em>dispositivos físicos</em> serão descriptografados e como serão <em>mapeados</em> pelo sistema no <i><em>late boot</em></i>,  nessa tabela vamos declarar primeiro os nomes das abstrações (no caso <em>cryptswap</em> é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptswap</mark>), depois o endereço dos dispositivos encriptados (que nesse exemplo é o <em>/dev/storageAP4</em>) e o caminho para a chave de desencriptação (<em>/etc/cryptsetup-keys.d/cryptswap.key</em>), por fim o formato de criptografia (no caso <em>luks</em>), como no exemplo abaixo:</p>            
+            <code>cryptswap /dev/storageAP4 /etc/cryptsetup-keys.d/cryptswap.key luks<em>,discard,nofail</em></code>
             <p>Você também pode (na verdade é o mais recomendável) utilizar UUID para isso:</p>
-            <code>cryptswap UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX /etc/cryptsetup-keys.d/cryptswap.key luks<em>,timeout=30</em></code>
-            <p><strong>Pelo amor de tudo que é mais sagrado, não se esqueça de colocar o argumento de timeout ou você não vai mais iniciar o computador caso a montagem da swap não seja encontrada!</strong> </p>
+            <code>cryptswap UUID=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX /etc/cryptsetup-keys.d/cryptswap.key luks<em>,discard,nofail</em></code>
+            <p><strong>Pelo amor de tudo que é mais sagrado, não se esqueça de colocar o argumento de nofail ou você não vai mais iniciar o computador caso a montagem da swap não seja encontrada!</strong> </p>
+            <p><em>*</em> Remova a opção <em>discard</em> caso o dispositivo não suporte que comandos TRIM sejam enviados ao sistema de arquivos dessa partição. </p>
             <!-- PREPARANDO MKINITCPIO (UDEV OU SYSTEMD) -->
             <h4>Preparando o mkinitcpio</h4>
             <p>Agora vamos configurar o módulo de desencriptação do initramfs para que a raiz seja desencriptada automaticamente. Para isso vamos editar o arquivo <mark>/etc/mkinitcpio.conf</mark>:</p>
@@ -1316,95 +1312,70 @@ EOF
             <h4>Inserindo a chave da raiz no initramfs</h4>
             <p>Na linha <em>FILES</em> do <mark>/etc/mkinitcpio.conf</mark> vamos apontar para o arquivo de chave necessário para nosso boot, para que ele seja integrado a <em>initramfs</em>:</p>
             <code>FILES=(/etc/cryptsetup-keys.d/cryptroot.key)</code>
-            
             <p>E então você pode escolher uma das opções abaixo:</p>
             <!-- Opção A UDEV -->
             <h4>Opção A - Hooks para para udev e encrypt (initramfs tradicional, mais controle via shell sem depender de systemd, mais lento)</h4>
             <p>Para usar o módulo <em>udev</em> se utiliza o módulo <em>encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms <em>keyboard keymap consolefont</em> block <em>encrypt</em> filesystems fsck)</code>
+            <!-- Configurando os parâmetros de kernel -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <!-- UDEV -->
+            <h4>Argumentos de boot para udev e encrypt</h4>
+            <p>Ao usar LUKS com os hooks udev e encrypt, você precisa declarar para o bootloader via argumentos de kernel qual dispositivo será desencriptado na inicialização, primeiro informando qual é o dispositivo e seu mapeamento como no exemplo abaixo:</p>
+            <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark></code>
+            <p>Eu recomendo fortemente que você utilize um identificador persistente, mas caso queira definir de maneira mais intuitiva (o que é bem mais arriscado) pode usar:</p>
+            <code>cryptdevice=<em>/dev/storageAP4</em>:cryptroot</code>
+
+
+            <p>Para indicar o caminho da chave você pode usar</p>
             
+
+
+            <code>cryptkey=rootfs:/etc/cryptsetup-keys.d/minha-chave.key</code>
+
+
+
+
             <!-- Opção B SYSTEMD -->
             <h4>Opção B - Hooks para systemd e sd-encrypt (integração total com systemd, uso de crypttab.initramfs, keyring, e GPT auto-discovery, mais rápido)</h4>
-            <p>E para <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
+            <p>Para usar o módulo <em>systemd</em> se utiliza o <em>sd-encrypt</em>, como no exemplo abaixo:</p>
             <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms <em>keyboard sd-vconsole</em> block <em>sd-encrypt</em> filesystems fsck)</code>
             <!-- Opção B SYSTEMD - INITRAMFS -->
-            <p>O arquivo <mark>/etc/crypttab.initramfs</mark> é suportado quando se usa o <i>hook</i> <em>sd-encrypt</em> no <mark>mkinitcpio</mark>, isso permite especificar volumes que devem ser desencriptados durante o <i>early boot</i>. Para desbloquear a <em>cryptroot</em> no <i>early-boot</i> insira uma linha como no exemplo abaixo:</p>
+            <h5>/etc/crypttab.initramfs</h5>
+            <p>O arquivo <mark>/etc/crypttab.initramfs</mark> é suportado quando se usa o <i>hook</i> <em>sd-encrypt</em> no <mark>mkinitcpio</mark>, isso permite especificar volumes que devem ser desencriptados durante o <i>early boot</i> sem a necessidade de argumentos de kernel. Para desbloquear a <em>cryptroot</em> no <i>early-boot</i> insira uma linha como no exemplo abaixo:</p>
             <code>cryptroot /dev/storageAP4 /etc/cryptsetup-keys.d/cryptroot.key luks<em>,discard</em></code>
             <p>Dessa forma está declarado o nome da abstração (no caso cryptroot é o nome do mapeamento que vai aparecer em <mark>/dev/mapper/cryptroot</mark>), o endereço dos dispositivos encriptados (que nesse exemplo é o <mark>/dev/storageAP4</mark>) e o caminho para a chave de desencriptação (<mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>), e qual sistema será utilizado (nesse caso o <mark>luks</mark>).</p>
-            <p>Lembrando que você pode omitir o 3º campo dessa linha, ou mesmo substituir por valores como <mark>none</mark> ou <em>-</em> como no exemplo abaixo caso haja uma chave de mesmo nome no diretório de chaves padrão (embora eu não recomende você a fazer isso).</p>
-            
-            <p>adicione discard caso queira passar o trim contínuo para o sistema de arquivo</p>
-            
-            <code>cryptroot /dev/<mark>storageAP4</mark> none luks</code>
+            <p>Lembrando que você pode omitir o 3º campo dessa linha (no caso <mark>/etc/cryptsetup-keys.d/cryptroot.key</mark>) , ou mesmo substituir por valores como <mark>none</mark> ou <em>-</em> como no exemplo abaixo caso haja uma chave de mesmo nome no diretório de chaves padrão (embora eu não recomende você a fazer isso).</p>
+            <p><em>*</em> Lembre-se de remover <em>discard</em> caso o dispositivo não suporte que comandos TRIM sejam enviados ao sistema de arquivos dessa partição.</p>
             <p><strong>Alerta!</strong> Esse não é o local para indicar a desencriptação da swap! Este diretório é para volumes em <i>early boot</i> como a raiz! O que descreve a desencriptação da swap continua sendo o <em>/etc/crypttab</em> como no exemplo acima.</p>
-
-
-            <p>Se você descreveu os pontos de montagem corretamente aqui, não será necessário usá-los novamente como parâmetros de kernel (embora eu recomendo fortemente que você tenha os comandos preparados porém comentados caso algo dê errado).</p>
-
-
-            
-
-
-
-
-            <!-- AVISO -->
-            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <h4><strong>⚠️ Aviso! ⚠️</strong></h4>
-            <p>Para <em>udev + encrypt</em>:</p>
-            <p><strong>Você deve</strong> explicitar o diretório da chave da raiz na linha <em>FILES=</em> em <mark>/etc/mkinitcpio.conf</mark>, <strong>do contrário o seu sistema vai <i>borkar</i>!</strong></p>
-            <p>Para <em>systemd + sd-encrypt</em>:</p>
-            <p>Apesar da automatização para as chaves, <strong>você deve</strong> explicitar a desencriptação da raiz no <i>early boot</i> no arquivo <mark>/etc/crypttab.initramfs</mark>, <strong>do contrário o seu sistema vai <i>borkar</i>!</strong></p>
+            <p><strong>Se você descreveu os pontos de montagem corretamente aqui, não será necessário usá-los novamente como parâmetros de kernel</strong> (embora eu recomendo fortemente que você tenha os comandos preparados porém comentados caso algo dê errado).</p>
+            <!-- SYSTEMD -->
+            <h5>Argumentos de boot para systemd e sd-encrypt</h5>
+            <p><strong>Relembrando:</strong> Se você descreveu os pontos de montagem corretamente nos arquivos <em>/etc/crypttab.initramfs</em> e <em>/etc/crypttab</em>, você não precisa usar esses argumentos! Mas é interessante deixá-los em algum lugar comentados caso algo dê errado.</p>
+            <p>Para informar qual dispositivo sera desencriptado e qual mapeamento ele irá receber:</p>
+            <code>rd.luks.name=<em>UUID DO DISPOSITIVO</em>=cryptroot</code>
+            <p>Eu recomendo fortemente que você utilize um identificador persistente, mas caso queira definir de maneira mais intuitiva (o que é bem mais arriscado) pode usar:</p>
+            <code>rd.luks.name=<em>/dev/storageAP4</em>=cryptroot</code>
+            <p>Para informar o caminho em que está a chave:</p>
+            <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
+            <p>Aqui também recomendo que você utilize um identificador persistente, mas caso queira definir de maneira mais intuitiva (o que é bem mais arriscado) pode usar:</p>
+            <code>rd.luks.key=<em>/dev/storageAP4</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
+            <p>Caso você não tenha prestado atenção no alerta acima e não tenha declarado o <i>timeout</i>, você pode designar com o comando abaixo um <i>override</i> das opções do dispositivo em questão como no exemplo abaixo:</p>
+            <code>luks.options=<em>UUID DO DISPOSITIVO</em>=nofail</code>
+            <p>E sim, aqui também funciona com caminhos relativos e eu recomendo persistentes...</p>
+            <code>luks.options=<em>/dev/storageAP4</em>=nofail</code>
             <!-- GERAR INITRAMFS -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Gerando initramfs</h4>
             <p>Agora precisamos gerar os arquivos initramfs, para gerar todos os presets basta usar o comando:</p>
             <code>mkinitcpio -P</code>
-            <p>E para verificar se o arquivo foi devidamente inserido na sua initramfs use o comando:</p>
+            <p>E para verificar se o arquivo foi devidamente inserido na sua initramfs (considerando que o nome dela é <em>initramfs-linux</em>) use o comando:</p>
             <code>lsinitcpio /boot/initramfs-linux.img | grep cryptsetup-keys.d/cryptroot.key</code>
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            <!-- Configurando os parâmetros de kernel -->
-            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <!-- UDEV -->
-            <h4>Argumentos de boot para udev e encrypt</h4>
-            <p>Caso você tenha usado o LUKS para criptografar a partição raiz você precisa declarar para o bootloader qual dispositivo será desencriptado na inicialização, se você gerou a initramfs com os módulos <em>udev</em> e <em>encrypt</em>, use a linha:</p>
-            <code>cryptdevice=UUID=<mark>UUID_DO_DISCO:cryptroot</mark></code>
-            <p>Para indicar o caminho da chave você pode usar</p>
-            <code>cryptkey=<em>dispositivo</em>:<em>tipo de sistema de arquivo</em>:<em>caminho</em></code>    
-            <!-- SYSTEMD -->
-            <h4>Argumentos de boot para systemd e sd-encrypt</h4>
-            <p>Se o HOOK utilizado foi com <em>systemd</em> e <em>sd-encrypt</em> o formato deve então ser como o modelo abaixo:</p>
-            <p>Para informar qual dispositivo sera desencriptado e qual mapeamento ele irá receber:</p>
-            <code>rd.luks.name=<em>UUID DO DISPOSITIVO</em>=<em>cryptroot</em></code>
-            <p>Para informar o caminho em que está a chave:</p>
-            <code>rd.luks.key=<em>UUID DO DISPOSITIVO</em>=/etc/cryptsetup-keys.d/cryptroot.key</code>
-            
-            
-            
-            
-            
             <!-- ROOT -->
              <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h3>Caminho para <em>root (/)</em> </h3>
             <p>Lembre-se que de agora em diante, para referenciar a sua raiz não é mais options root=/dev/<em>storageA</em>, e sim <em>options root=/dev/mapper/cryptroot</em>.</p>
         </details>
-
-
-
-
-
-
         <p>E então escolha uma das opções de bootloader abaixo para prosseguir:</p>
         <!-- OPÇÃO A -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
@@ -1642,6 +1613,79 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <h4>ZFS</h4>
         <p>No caso do ZFS siga o exemplo abaixo:</p>
         <code>zfs snapshot <em>pool/dataset@nome_da_snapshot</em></code>
+        <!-- FIREWALL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Firewall - nftables</h3>
+        <p>Ok.. São diversas opções de firewall, e eu recomendo que você tire algum dia da sua vida pra fazer uma configuração mais fina, mas pelo menos pra ter algum grau de segurança siga os passos abaixo.</p>
+        <p>Antes de mais nada faça um backup do arquivo de regras com o comando abaixo:</p>
+        <code>cp /etc/nftables/nftables.rules /etc/nftables/nftables.rules.bkp</code>
+        <p>Depois edite o arquivo <mark>/etc/nftables/nftables.rules</mark> e insira o conteúdo abaixo:</p>     
+        <details class="spoiler" >
+            <summary>Regras de firewall (Clique para ver)</summary>
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->               
+<code>
+<pre>
+#!/sbin/nft -f
+
+flush ruleset
+
+# ----- IPv4 -----
+table ip filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+		ct state invalid counter drop comment "early drop of invalid packets"
+		ct state {established, related} counter accept comment "accept all connections related to connections made by us"
+		iif != lo ip daddr 127.0.0.1/8 counter drop comment "drop connections to loopback not coming from loopback"
+		iif lo accept comment "accept loopback"
+		ip protocol icmp counter accept comment "accept all ICMP types"
+		udp dport mdns ip daddr 224.0.0.251 counter accept comment "IPv4 mDNS"
+		#tcp dport 22 counter accept comment "accept SSH"
+		counter comment "count dropped packets"
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+		counter comment "count dropped packets"
+	}
+
+	# If we're not counting packets, this chain can be omitted.
+	chain output {
+		type filter hook output priority 0; policy accept;
+		counter comment "count accepted packets"
+	}
+}
+
+
+# ----- IPv6 -----
+table ip6 filter {
+	chain input {
+		type filter hook input priority 0; policy drop;
+		ct state invalid counter drop comment "early drop of invalid packets"
+		ct state {established, related} counter accept comment "accept all connections related to connections made by us"
+		iif != lo ip6 daddr ::1/128 counter drop comment "drop connections to loopback not coming from loopback"
+		iif lo accept comment "accept loopback"
+		meta l4proto ipv6-icmp counter accept comment "accept all ICMP types"
+		udp dport mdns ip6 daddr ff02::fb counter accept comment "IPv6 mDNS"
+		#tcp dport 22 counter accept comment "accept SSH"
+		counter comment "count dropped packets"
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+		counter comment "count dropped packets"
+	}
+
+	# If we're not counting packets, this chain can be omitted.
+	chain output {
+		type filter hook output priority 0; policy accept;
+		counter comment "count accepted packets"
+	}
+}
+</pre>
+</code>
+        </details>
+        <p>Depois ative o serviço do firewall com o comando:</p>
+        <code>systemctl enable --now nftables</code>
         <!-- Instalando backend de som -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Adendo - Instalando backend de som</h2>
