@@ -1754,6 +1754,35 @@ table ip6 filter {
         <p>O KDE Wallet é um subsistema de controle de senhas do Plasma, permite guardar as senhas de eventos ou aplicações (como por exemplo senhas de Wi-Fi). Se você utiliza SDDM o módulo <em>kwallet-pam</em> faz com que a carteira de <em>kdewallet</em> seja aberta automaticamente durante o login se essa tiver a mesma senha da conta de usuário (recomendado). Também é recomendável desmarcar a opção <em>Fechar a carteira () Quando o último aplicativo terminar de usá-la</em> em <em>Configurações do sistema > Carteira do KDE</em>.</p>
         <p>Navegadores <i>Chromium based</i> possuem integração nativa com a carteira, para ativar isso basta acrescentar a linha abaixo em <em>~/.config/chromium-flags.conf</em>:</p>
         <code>--password-store=kwallet6</code>
+        <h4>Integração com IBus</h4>
+        <p>Se você tentou digitar algo no WhatsApp Web do KDE e percebeu que começar uma linha com caracteres especiais não funciona no Wayland, é um bug que tende a ser corrigido em breve, mas considerando que isso é Linux e tem solução funcional podemos integrar com o IBus e resolver este problema. Antes de mais nada instale o pacote <em>IBus</em> com o comando:</p>
+        <code>pacman -S ibus</code>
+        <p>Agora vamos setar o IBus como o framework de entrada editando o arquivo <mark>/etc/environment</mark> e inserindo as variáveis abaixo:</p>
+<pre><code>GTK_IM_MODULE=ibus
+QT_IM_MODULE=ibus
+XMODIFIERS=@im=ibus</code></pre>
+        <p>Agora basta criar um arquivo para iniciar o <i>daemon</i> para sanar o nosso problema, para isso edite o arquivo <mark>/etc/xdg/autostart/ibus-daemon.desktop</mark> e insira o código abaixo caso só queira resolver o problema dos caracteres:</p>
+<pre><code>[Desktop Entry]
+Name=IBus
+GenericName=Input Method Framework
+Comment=Start IBus Input Method Framework
+Exec=ibus-daemon -rxR
+Icon=ibus
+NoDisplay=true
+Type=Application
+Categories=System;Utility;</code></pre>
+        <p><strong>OU</strong></p>
+        <p>Insira esse conteúdo caso queira integração com o <em>KIMPanel</em>:</p>
+<pre><code>[Desktop Entry]
+Name=IBus (KIMPanel)
+GenericName=Input Method Framework
+Comment=Start IBus Input Method Framework
+Exec=ibus-daemon -rxR --panel=/usr/lib/kimpanel-ibus-panel
+Icon=ibus
+NoDisplay=true
+Type=Application
+Categories=System;Utility;
+X-KDE-autostart-after=panel</code></pre>
         <!-- CINNAMON -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Cinnamon</h3>
@@ -2008,9 +2037,10 @@ EndSection
         <p>E em seguida salve o arquivo.</p>
         <!-- Ativando o TRIM -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Ativando o TRIM:</h3>
-        <p>Caso você utilize SSD's é essencial que você ative o serviço TRIM, para isso use o comando abaixo:</p>
+        <h3>Ativando o TRIM periódico:</h3>
+        <p>Caso você utilize SSD's é essencial que você ative o serviço de TRIM periódico, para isso use o comando abaixo:</p>
         <code>systemctl enable fstrim.timer</code>
+        <p><strong>Dê preferência ao serviço <em>fstrim.timer</em> no lugar da flag <em>discard</em> para volumes swap!</strong> </p>
         <!-- Desabilite o Watchdog timer -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Melhore o desempenho desabilitando o Watchdog timer:</h3>
