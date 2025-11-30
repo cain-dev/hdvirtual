@@ -1009,6 +1009,46 @@ EOF
         <p><strong>*</strong> Caso você queira utilizar um kernel <em>LTS</em> você pode substituir o pacote <mark>linux</mark> por <mark>linux-lts</mark>.</p>
         <p><strong>*</strong> Caso você esteja usando BTRFS lembre-se de instalar o pacote <mark>btrfs-progs</mark>.</p>
         <p><strong>*</strong> Caso você esteja usando encriptação lembre-se de instalar o pacote <mark>cryptsetup</mark>.</p>
+
+        
+        <details class="spoiler" >
+            <summary>Explicação sobre o pacote linux-firmware (Clique para ver)</summary>
+            <p>Num passado não tão distante, o pacote linux-firmware era uma amálgama de binários esperados para o funcionamento da máquina, basicamente tudo que há de mais comum. Hoje em dia se trata de um meta-pacote que ainda trás esses binários, porém agora com a possibilidade de instalá-los separadamente.</p>
+            <p>Por padrão os seguintes pacotes serão instalados:</p>
+            <ul>
+                <li><p>linux-firmware-amdgpu</p></li>
+                <li><p>linux-firmware-atheros</p></li>
+                <li><p>linux-firmware-broadcom</p></li>
+                <li><p>linux-firmware-cirrus</p></li>
+                <li><p>linux-firmware-intel</p></li>
+                <li><p>linux-firmware-mediatek</p></li>
+                <li><p>linux-firmware-nvidia</p></li>
+                <li><p>linux-firmware-other</p></li>
+                <li><p>linux-firmware-radeon</p></li>
+                <li><p>linux-firmware-realtek</p></li>
+            </ul>
+            <p>De pacotes opcionais para serem instalados separadamente tem:</p>
+            <ul>
+                <li><p>linux-firmware-liquidio</p></li>
+                <li><p>linux-firmware-marvell</p></li>
+                <li><p>linux-firmware-mellanox</p></li>
+                <li><p>linux-firmware-nfp</p></li>
+                <li><p>linux-firmware-qcom</p></li>
+                <li><p>linux-firmware-qlogic</p></li>
+            </ul>
+            <p>De pacotes <i>third-party</i> para serem instalados separadamente tem:</p>
+            <ul>
+                <li><p>alsa-firmware</p></li>
+                <li><p>sane-gt68xx-firmware</p></li>
+                <li><p>sigrok-firmware-fx2lafw</p></li>
+                <li><p>sof-firmware</p></li>
+            </ul>
+            <p>Se quiser saber que firmware é carregado pelo seu pc você pode usar o parâmetro de kernel abaixo:</p>
+            <code>yndbg="func fw_log_firmware_info +p"</code>
+            <p>Então ao usar esse comando vai saber qual firmware você utiliza:</p>
+            <code>journalctl -kg 'loaded f'</code>
+            <p>Então <strong>se e somente se</strong> você sabe todo o firmware necessário para a sua máquina, você pode instalar o pacote separadamente aqui, do contrário eu recomendo que você fique com o meta-pacote linux-firmware para evitar maiores problemas.</p>
+        </details>
         <!-- Passo 7 Instalar sistema -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////
         <h2>Passo 7 - Instalar sistema</h2>
