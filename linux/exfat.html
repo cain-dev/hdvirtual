@@ -35,7 +35,7 @@
         <p>O formato padrão e universal continua sendo o <em>FAT32</em>, se você quiser um pendrive que funcione em qualquer porcaria este é o formato de arquivo que você deve escolher, entretanto é um formato muito limitado e a maioria dos dispositivos hoje em dia suporta <em>EXFAT</em>. Então, se você está na dúvida vá de FAT32 mas verifique se o uso (por exemplo no caso do OpenPS2Loader) é possível em EXFAT para fugir do limite de 4GB por arquivos do FAT32.</p>
         <h2>Criando a tabela de partição</h2>
         <p>Antes de começar qualquer alteração é importante ter certeza de qual unidade vamos alterar, eu recomendo o uso do Gnome Disks para isso:</p>
-        <img class="responsiva" src="https://apps.gnome.org/assets/screenshots/org.gnome.DiskUtility/disks-main.png" alt="gnome-disk-utility">
+        <img class="responsiva" src="https://static.gnome.org/catalog/app-screenshot/org.gnome.DiskUtility/disks-main.png" alt="gnome-disk-utility">
         <p>Mas caso queira listar as unidades de armazenamento pelo terminal utilize o comando:</p>
         <code>fdisk -l</code>
         <details class="spoiler" >
@@ -77,13 +77,18 @@
         <p>Para gravar as alterações da tabela de partição e sair do programa utilize o comando abaixo:</p>
         <code>w</code>
         <h2>Formatando as partições</h2>
+        <h3>FAT 32</h3>
         <p>Para formatar a partição em <em>FAT32</em> use o comando:</p>
-        <code>mkfs.fat -F 32 -n 'PENDRIVE' -v /dev/sdX</code>
-        <p>Lembre-se de substituir o valor 'PENDRIVE' pelo rótulo desejado da partição, deve ser no máximo 11 caracteres em maiúsculo.</p>
+        <code>mkfs.fat -F 32 -n '<mark>PENDRIVE</mark>' -v /dev/sd<em>XY</em></code>
+        <p>Lembre-se de substituir o valor <em>PENDRIVE</em> pelo rótulo desejado da partição, deve ser no máximo 11 caracteres (de preferência em maiúsculo), não pode começar ou terminar com espaço, e alguns caracteres especiais são permitidos (como por exemplo <mark>$ % ' - _ @ ~ ! ( ) { } ^ # &</mark>).</p>
+        <h4>Formatação avançada</h4>
+        <p>Caso queira informar o tamanho de bytes do setor pode usar o argumento <em>-S</em> seguido do número de bytes do setor:</p>
+        <code>mkfs.fat -F 32 -n 'PENDRIVE' -S <em>512</em> -v /dev/sd<em>XY</em></code>
+        <h3>exFAT</h3>
         <p>Para formatar a partição em <em>EXFAT</em> use o comando:</p>
-        <code>mkfs.exfat  -L 'PENDRIVE' -v /dev/sdX</code>
-        <p>Lembre-se de substituir o valor 'PENDRIVE' pelo rótulo desejado da partição, deve ser no máximo 11 caracteres em maiúsculo.</p>
-        <h3>block size, sector size, cluster size e full format</h3>
+        <code>mkfs.exfat  -L '<mark>PENDRIVE</mark>' -v /dev/sd<em>XY</em></code>
+        <p>Lembre-se de substituir o valor <em>PENDRIVE</em> pelo rótulo desejado da partição, deve ser no máximo 11 caracteres em maiúsculo.</p>
+        <h4>Formatação avançada: block size, sector size, cluster size e full format</h4>
         <p>Se você quiser uma formatação completa do dispositivo, ou seja, preenchendo os espaços vazios com 0, pode acrescentar a flag <em>-f</em>;</p>
         <p>Se você quiser determinar o sector size do dispositivo, pode acrescentar a flag <em>-s</em> e depois acrescentar o tamanho do setor (como por exemplo -s 512);</p>
         <p>Se você quiser determinar o boundary align do dispositivo, pode acrescentar a flag <em>-b</em> e depois acrescentar o valor de alinhamento (como por exemplo -b 32M);</p>
@@ -183,9 +188,9 @@
             <p>&nbsp;</p>
         <h3>Exemplo:</h3>
         <p>Formatar um dispositivo de forma verbosa de 32GB, com 512 bytes de tamanho de setor, com o rótulo <em>OPLPS2LD</em>, zerando o dispositivo:</p>
-        <code>mkfs.exfat -L '<em>OPLPS2LD</em>' -c <em>32K</em> -b <em>4M</em> -s <em>512</em> -f -v /dev/<em>sdXY</em></code>
+        <code>mkfs.exfat -L '<em>OPLPS2LD</em>' -c <em>32K</em> -b <em>4M</em> -s <em>512</em> -f -v /dev/sd<em>XY</em></code>
         <p>Formatar um dispositivo de forma silenciosa de 128GB, com 4096 bytes de tamanho de setor, com o rótulo <em>DATA</em>, sem zerar o dispositivo:</p>
-        <code>mkfs.exfat -L '<em>DATA</em>' -c <em>128K</em> -b <em>4M</em> -s <em>4096</em> -q /dev/<em>sdXY</em></code>
+        <code>mkfs.exfat -L '<em>DATA</em>' -c <em>128K</em> -b <em>4M</em> -s <em>4096</em> -q /dev/sd<em>XY</em></code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
