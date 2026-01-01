@@ -65,13 +65,65 @@
         <p>Recomendo também que configure as opções de locale internas do framework, encontre a linha <em>export LANG=en_US.UTF-8</em> e substitua por:</p>
         <code>export LANG=pt_BR.UTF-8</code>
         <h3>Opção B - Zinit</h3>
-        <p>Este é de longe o mais rápido e obviamente é o meu preferido, caso você queira instalar manualmente o <em>zinit</em> edite o seu <em>~/.zshrc</em> e insira o seguinte <i>snippet</i>:</p>
+        <p>Este é de longe o mais rápido e obviamente é o meu preferido, caso queira usar a minha configuração inicial basta usar o comando abaixo:</p>
+        <code>curl -L https://raw.githubusercontent.com/cain-dev/dotfiles/refs/heads/main/.zshrc -o ~/.zshrc</code>
+        <p>Caso você queira instalar manualmente o <em>zinit</em> edite o seu <em>~/.zshrc</em> e insira o seguinte <i>snippet</i>:</p>
 <code><pre>ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
 [ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 source "${ZINIT_HOME}/zinit.zsh"</pre></code>
         <p>Para habilitar os plugins <em>autosuggestions</em> e o <em>syntax-highlighting</em> adicione as linhas abaixo no seu <em>~/.zshrc</em>:</p>
         <code>zinit light zsh-users/zsh-autosuggestions<br>zinit light zdharma-continuum/fast-syntax-highlighting</code>
+        <p>Por padrão a configuração de teclado do zsh é bem complicada de lidar, caso queira resolver isso basta adicionar as linhas abaixo no seu <em>~/.zshrc</em>:</p>
+<code><pre># create a zkbd compatible hash;
+# to add other keys to this hash, see: man 5 terminfo
+typeset -g -A key
+
+key[Home]="${terminfo[khome]}"
+key[End]="${terminfo[kend]}"
+key[Insert]="${terminfo[kich1]}"
+key[Backspace]="${terminfo[kbs]}"
+key[Delete]="${terminfo[kdch1]}"
+key[Up]="${terminfo[kcuu1]}"
+key[Down]="${terminfo[kcud1]}"
+key[Left]="${terminfo[kcub1]}"
+key[Right]="${terminfo[kcuf1]}"
+key[PageUp]="${terminfo[kpp]}"
+key[PageDown]="${terminfo[knp]}"
+key[Shift-Tab]="${terminfo[kcbt]}"
+
+# setup key accordingly
+[[ -n "${key[Home]}"      ]] && bindkey -- "${key[Home]}"       beginning-of-line
+[[ -n "${key[End]}"       ]] && bindkey -- "${key[End]}"        end-of-line
+[[ -n "${key[Insert]}"    ]] && bindkey -- "${key[Insert]}"     overwrite-mode
+[[ -n "${key[Backspace]}" ]] && bindkey -- "${key[Backspace]}"  backward-delete-char
+[[ -n "${key[Delete]}"    ]] && bindkey -- "${key[Delete]}"     delete-char
+[[ -n "${key[Up]}"        ]] && bindkey -- "${key[Up]}"         up-line-or-history
+[[ -n "${key[Down]}"      ]] && bindkey -- "${key[Down]}"       down-line-or-history
+[[ -n "${key[Left]}"      ]] && bindkey -- "${key[Left]}"       backward-char
+[[ -n "${key[Right]}"     ]] && bindkey -- "${key[Right]}"      forward-char
+[[ -n "${key[PageUp]}"    ]] && bindkey -- "${key[PageUp]}"     beginning-of-buffer-or-history
+[[ -n "${key[PageDown]}"  ]] && bindkey -- "${key[PageDown]}"   end-of-buffer-or-history
+[[ -n "${key[Shift-Tab]}" ]] && bindkey -- "${key[Shift-Tab]}"  reverse-menu-complete
+
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
+	autoload -Uz add-zle-hook-widget
+	function zle_application_mode_start { echoti smkx }
+	function zle_application_mode_stop { echoti rmkx }
+	add-zle-hook-widget -Uz zle-line-init zle_application_mode_start
+	add-zle-hook-widget -Uz zle-line-finish zle_application_mode_stop
+fi
+</pre></code>
+        <p>Por fim, recomendo fazer a seguinte configuração de histórico no seu <em>~/.zshrc</em>:</p>
+<code><pre>
+HISTSIZE=999999
+SAVEHIST=999999
+HISTFILE="$HOME/.zsh_history"
+setopt SHARE_HISTORY
+</pre></code>
+        <p>Essa configuração aumenta o histórico, define um arquivo de gravação na sua pasta de usuário, e compartilha os comandos entre as sessões.</p>
         <h2>Editor de texto - Neovim com lazy.nvim</h2>
         <p>Existem diversos editores de texto para terminal, mas dentre todos eles o que de longe é mais customizável e adotado pela comunidade é o <i>neovim</i>, e pra ele existem diversos gerenciadores de plugins, mas entre todos os <i>setups</i> certamente o mais tranquilo de lidar é o neovim + lazy.nvim (não confunda com o IDE Lazyvim!). Você certamente tem o neovim nos pacotes da sua distribuição, considerando que você esteja utilizando o Arch pode usar o comando:</p>
         <code>pacman -S neovim</code>
