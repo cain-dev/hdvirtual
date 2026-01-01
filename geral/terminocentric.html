@@ -50,9 +50,11 @@
         <p>Caso tenha uma máquina mais modesta e precise de algo mais simples eu recomendo fortemente o foot.</p>
         <code>pacman -S foot</code>
         <h2>Passo 2 - A escolha (de um outro) Shell (opcional, mas altamente recomendado)</h2>
-        <p>A verdade é que existem diversas escolhas para shell mas poucas delas são viáveis, o bash e dash <i>podem</i> ser bons o suficiente embora não os considero desejáveis de forma alguma. A maioria das opções não são <i>POSIX compliant</i>, que eu acho inaceitável para um shell em qualquer sistema Unix, e entre os que são o que escolher? Algo escrito em C99 ou Python? No fim do dia eu só vejo uma escolha viável que é o <em>zsh</em>.</p>
+        <p>A verdade é que existem diversas escolhas para shell mas poucas delas são viáveis, o bash e dash <i>podem</i> ser bons o suficiente embora não os considero desejáveis de forma alguma para o uso comum. A maioria das opções não são <i>POSIX compliant</i>, que eu acho inaceitável para um shell em qualquer sistema Unix, e entre os que são o que escolher? Algo escrito em C99 ou Python? No fim do dia eu só vejo uma escolha viável que é o <em>zsh</em>.</p>
         <p>O zsh está disponível na esmagadora maioria das distribuições, considerando que você esteja no Arch você pode instalá-lo com o comando abaixo:</p>
         <code>pacman -S zsh</code>
+        <p>Para deixá-lo como shell padrão você pode usar o comando:</p>
+        <code>chsh -s $(which zsh)</code>
         <p>O zsh é bastante customizável, você pode facilitar (e muito) a sua usabilidade com a adição de alguns plugins, existem diversas maneiras de gerenciar plugins no zsh mas eu recomendarei 2: Uma delas sendo a mais completa (oh my zsh) e uma delas sendo extremamente rápida e portável (zinit).</p>
         <h3>Opção A - Oh my zsh</h3>
         <p>Para instalar o framework do Oh-My-Zsh, abra seu terminal e use o comando abaixo:</p>
