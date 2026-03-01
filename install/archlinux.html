@@ -1759,7 +1759,7 @@ table ip6 filter {
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>KDE</h3>
         <p>Utilize o comando:</p>
-        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam</code>
+        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam breeze-gtk</code>
         <p><strong>Observação!</strong> Inclua esses pacotes caso também deseje essas funções:</p>
         <ul>
             <li><em>kcalc</em> (Se e somente se você utilizará uma calculadora)</li>
@@ -2317,6 +2317,21 @@ WantedBy=timers.target
         <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms keyboard <em>sd-vconsole</em> block sd-encrypt filesystems fsck)</code>
         <p>Depois basta gerar novamente a initramfs com o comando:</p>
         <code>mkinitcpio -P</code>
+        <!-- MUDAR SCHEDULER -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Mudando o I/O scheduler</h3>
+        <p>O Arch, por padrão, não faz muita seleção de qual agendador usar para os dispositivos de armazenamento, e o ideal seria você mudar para qual dispositivo e <i>workload</i>... Mas é bom ter uma base para que as coisas sejam voltadas para o uso de um desktop ao invés de um servidor. Para isso crie o arquivo <mark>/etc/udev/rules.d/60-ioschedulers.rules</mark> com o conteúdo:</p>
+<code><pre>
+# HDD
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
+
+# SSD
+ACTION=="add|change", KERNEL=="sd[a-z]*|mmcblk[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="bfq"
+
+# NVMe SSD
+ACTION=="add|change", KERNEL=="nvme[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+</pre></code>
+        <p>Isso vai fazer com que todo HD e SSD use o <em>bfq</em> e todo NVME use <em>none</em>. É o ideal? Não! O ideal é você escolher o scheduler e tunar por conta, mas até lá use pelo menos isso.</p>
         <!-- Dracut ao invés de Mkinitcpio -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Usar Dracut ao invés de Mkinitcpio</h3>
