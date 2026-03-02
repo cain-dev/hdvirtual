@@ -2317,6 +2317,19 @@ WantedBy=timers.target
         <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms keyboard <em>sd-vconsole</em> block sd-encrypt filesystems fsck)</code>
         <p>Depois basta gerar novamente a initramfs com o comando:</p>
         <code>mkinitcpio -P</code>
+        <!-- MTP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>MTP</h3>
+        <p>Se você tem um tocador de MP3 ou um Switch desbloqueado as chances são que você quer usar o protocolo mtp para fazer as transferências de arquivo, para isso você pode usar o <em>libmtp</em> ao instalar o pacote abaixo:</p>
+        <code>pacman -S libmtp</code>
+        <p>Se você desejar uma aplicação gráfica pode usar o <em>gMTP</em>(não recomendado):</p>
+        <code>pacman -S gmtp</code>
+        <p>Para integração com os gerenciadores de arquivo, você pode instalar para o Gnome os pacotes:</p>
+        <code>pacman -S gvfs-mtp gvfs-gphoto2</code>
+        <p>E para o KDE:</p>
+        <code>pacman -S kio-extras</code>
+        <p>As vezes pode ser necessário que você faça parte do grupo <em>adbusers</em>, pode fazer isso com o comando abaixo:</p>
+        <code>sudo usermod -aG adbusers $USER</code>
         <!-- MUDAR SCHEDULER -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Mudando o I/O scheduler</h3>
