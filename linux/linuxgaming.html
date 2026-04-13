@@ -230,6 +230,15 @@ filesystems=/mnt/HD/games:rw;
     <code>gamescope -W 1920 -H 1080 -w 3840 -h 2160 -f -- %command%</code>
     <p>Se ao usar o Gamescope o movimento do mouse ficar errático você pode usar o argumento abaixo para tentar corrigir:</p>
     <code>--force-grab-cursor</code>
+    <!-- VKBASALT -->
+    <h2>VkBasalt</h2>
+    <p>Lembra do Reshade? Então, o VkBasalt nada mais é do que uma camada de pós-processamento para Vulkan, inclusive com a possibilidade de usar diversos shaders do próprio ReShade.</p>
+    <p>Quando se fala em pós-processamento, é um assunto imenso por si só, então nada de muitas firulas aqui pois isso deve ser estudado a parte, o que você precisa saber é que:</p>
+    <p>1 - O Arquivo de configuração fica em</p>
+    <code>~/.config/vkBasalt/vkBasalt.conf</code>
+    <p>2 - Se quiser habilitar em algum jogo da Steam basta usar o argumento</p>
+    <code>ENABLE_VKBASALT=1 %command%</code>
+    <p>Daí em diante, pode baixar o pacote de shaders do próprio ReShade e configurar como quiser. Como isso é caso a caso, o meu intuito aqui é mostrar pra você que a ferramenta existe para quem quer usar algo próximo do ReShade no Linux.</p>
     <!-- CAPTURA DIRETA -->
     <h3>Captura Direta</h3>
     <p>O Gamescope expõe um fluxo de vídeo no PipeWire para gravação que você pode gravar usando o <em>gstreamer</em>. Instale o pacote <em>gst-plugin-va</em> para suporte VA-API ou <em>gst-plugins-bad</em> e <em>nvidia-utils</em> para suporte ao NVDECODE/NVENCODE. Por fim instale o <em>gst-plugins-good</em> para usar o plugin <em>pulsesrc</em> e <em>gst-plugin-pipewire</em> para suporte ao PipeWire.</p>
