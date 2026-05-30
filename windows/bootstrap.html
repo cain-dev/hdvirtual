@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="formatação, windows, bios, uefi, instalação, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalando o Windows por boostrap</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="Instalando o Windows por boostrap"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="Gravando imagem direto no disco sem dor de cabeça"/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="../assets/images/cainlogo.ico">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+    <main id="main-area">
+        <h1>Instalando o Windows por "boostrap"</h1>
+        <h2>Introdução</h2>
+        <p>Se você lida com manutenção de computadores e tem que instalar o Windows de tempos em tempos, com a mais absoluta certeza você já perdeu uma instalação e teve que reiniciar por algum erro bizarro que o Windows teve, tudo se resolveria se você pudesse usar as ferramentas de uma máquina que já está com o Windows para passar a imagem de sistema Windows direto para um novo disco sem passar pelo processo de instalação... E é o que vamos fazer aqui!</p>    
+        <p>O que você vai precisar:</p>
+        <ul>
+            <li><p>Um computador que já tenha o Windows instalado;</p></li>
+            <li><p>Conectar o disco em que você queira fazer a nova instalação neste computador que já tem o Windows instalado;</p></li>
+            <li><p>Ter baixado uma ISO da versão do Windows que você quer instalar no novo disco;</p></li>
+        </ul>
+        <h2>Instalação em MBR/BIOS</h2>
+        <h3>Preparar disco</h3>
+        <p>Obviamente precisamos limpar o disco alvo e fazer nele a tabela de partição em MBR, eu vou presumir que você conhece o diskpart e não vou explicar comando a comando. <strong>Obviamente</strong> substitua o <em>X</em> pelo número do disco desejado.</p>
+        <code>diskpart<br>list disk<br>select disk <em>X</em><br>clean<br>convert mbr</code>
+        <h3>Partição de Sistema</h3>
+        <p>Faremos aqui a partição ativa que guarda o código de inicialização do sistema e atribuir a ela a letra <em>S</em>.</p>
+        <code>create partition primary size=100<br>format quick fs=ntfs label="System"<br>assign letter=S<br>active</code>
+        <h3>Partição do Windows</h3>
+        <p>E agora vamos criar a partição do próprio Windows reservando 600 MB ao final do disco para deixar a partição de Recovery, atribuindo a ela a letra <em>W</em>.</p>
+        <code>create partition primary<br>shrink minimum=600<br>format quick fs=ntfs label="Windows"<br>assign letter=W</code>
+        <h3>Partição de Recovery</h3>
+        <p>E agora vamos criar a partição oculta de Recovery atribuindo a ela a letra <em>R</em>.</p>
+        <code>create partition primary<br>format quick fs=ntfs label="WinRE"<br>assign letter=R<br>set id=27</code>
+        <p>Com as partições prontas quite o diskpart.</p>
+        <code>exit</code>
+        <h2>Aplicar imagem de sistema</h2>
+        <p>Vamos supor que você montou a ISO de instalação no <em>E:</em>, essa ISO geralmente guarda diversas versões do Windows, liste as imagens contidas na ISO com o comando abaixo:</p>
+        <code>dism /Get-WimInfo /WimFile:E:\sources\install.wim</code>
+        <p>Vamos supor que você queira instalar o <em>Windows Home Edition</em> que é o item <em>1</em> da lista, para aplicar essa imagem específica para a partição <em>W</em> que preparamos basta usar o comando abaixo:</p>
+        <code>dism /Apply-Image /ImageFile:E:\sources\install.wim /Index:<em>1</em> /ApplyDir:W:\</code>
+        <p>Em algumas isos o nome do arquivo muda, nesse caso troque <em>install.wim</em> por <em>install.esd</em> se necessário.</p>
+        <h2>Configurar inicialização</h2>
+        <p>Preparar a MBR:</p>
+        <code>E:\boot\bootsect.exe /nt60 S: /mbr</code>
+        <p>Preparar o bootloader:</p>
+        <code>bcdboot W:\Windows /s S: /f BIOS</code>
+        <h2>Partição de Recovery</h2>
+        <code>mkdir R:\Recovery\WindowsRE</code>
+        <code>copy W:\Windows\System32\Recovery\Winre.wim R:\Recovery\WindowsRE\Winre.wim</code>
+        <p>Este último passo só pode ser feito pelo próprio sistema instalado após o primeiro boot!</p>
+        <code>reagentc /setreimage /path R:\Recovery\WindowsRE /target W:\Windows</code>
+        <!--
+        <code>\sources\install.wim\1\Windows\System32\Recovery\ onde o arquivo winre.wim está localizado</code>
+        -->
+        <h2>Instalação em GPT/UEFI</h2>
+        <h3>Preparar disco</h3>
+        <p>Obviamente precisamos limpar o disco alvo e fazer nele a tabela de partição em GPT, eu vou presumir que você conhece o diskpart e não vou explicar comando a comando. <strong>Obviamente</strong> substitua o <em>X</em> pelo número do disco desejado.</p>
+        <code>diskpart<br>list disk<br>select disk <em>X</em><br>clean<br>convert gpt</code>
+        <h3>Partição ESP</h3>
+        <p>Faremos aqui a partição que guarda o .efi de inicialização do sistema e atribuir a ela a letra <em>S</em>.</p>
+        <code>create partition efi size=300<br>format quick fs=fat32 label="System"<br>assign letter=S</code>
+        <h3>Partição MSR</h3>
+        <p>Para fazer a partição MSR use o comando abaixo.</p>
+        <code>create partition msr size=16</code>
+        <h3>Partição do Windows</h3>
+        <p>E agora vamos criar a partição do próprio Windows reservando 600 MB ao final do disco para deixar a partição de Recovery, atribuindo a ela a letra <em>W</em>.</p>
+        <code>create partition primary<br>shrink minimum=600<br>format quick fs=ntfs label="Windows"<br>assign letter=W</code>
+        <h3>Partição de Recovery</h3>
+        <p>E agora vamos criar a partição oculta de Recovery atribuindo a ela a letra <em>R</em>.</p>
+        
+        <code>create partition primary<br>format quick fs=ntfs label="WinRE"<br>assign letter=R<br>set id="de94bba4-06d1-4d40-a16a-bfd50179d6ac"<br>gpt attributes=0x8000000000000001</code>
+        <p>Com as partições prontas quite o diskpart.</p>
+        <code>exit</code>
+        <h2>Aplicar imagem de sistema</h2>
+        <p>Vamos supor que você montou a ISO de instalação no <em>E:</em>, essa ISO geralmente guarda diversas versões do Windows, liste as imagens contidas na ISO com o comando abaixo:</p>
+        <code>dism /Get-WimInfo /WimFile:E:\sources\install.wim</code>
+        <p>Vamos supor que você queira instalar o <em>Windows Home Edition</em> que é o item <em>1</em> da lista, para aplicar essa imagem específica para a partição <em>W</em> que preparamos basta usar o comando abaixo:</p>
+        <code>dism /Apply-Image /ImageFile:E:\sources\install.wim /Index:<em>1</em> /ApplyDir:W:\</code>
+        <p>Em algumas isos o nome do arquivo muda, nesse caso troque <em>install.wim</em> por <em>install.esd</em> se necessário.</p>
+        <h2>Configurar inicialização</h2>
+        <p>Preparar o bootloader:</p>
+        <code>bcdboot W:\Windows /s S: /f UEFI</code>
+        <h2>Partição de Recovery</h2>
+        <code>mkdir R:\Recovery\WindowsRE</code>
+        <code>copy W:\Windows\System32\Recovery\Winre.wim R:\Recovery\WindowsRE\Winre.wim</code>
+        <p>Este último passo só pode ser feito pelo próprio sistema instalado após o primeiro boot!</p>
+        <code>reagentc /setreimage /path R:\Recovery\WindowsRE /target W:\Windows</code>
+        <!--
+        <code>\sources\install.wim\1\Windows\System32\Recovery\ onde o arquivo winre.wim está localizado</code>
+        -->
+    </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
