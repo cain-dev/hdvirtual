@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="formatação, windows, linux, freebsd, bios, uefi, instalação, balena, etcher, ventoy, os">
+    <meta name="author" content="Cain">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arch Linux root on ZFS</title>
+    <!--Social Media Open Graph-->
+    <meta property="og:title" content="Arch com raiz em ZFS"/>
+    <meta property="og:url" content="https://cain-dev.github.io/default/"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description" content="Que tal migrar para um Arch sem nenhuma chance de nukar sistema ou ter que reinstalar?"/>
+    <meta property="og:image" content="https://raw.githubusercontent.com/cain-dev/default/main/assets/images/ogimage.jpg"/>
+    <!--/Social Media Open Graph-->
+    <!--Links-->
+    <link rel="shortcut icon" href="../assets/images/cainlogo.ico">
+    <link rel="stylesheet" type="text/css"href="../os_style.css">   
+    <!--/Links-->
+</head>
+<body>
+    <header id="main-header">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><p>@cain-dev</p></li>
+            <li><a href="../extra/contact.html">Contato</a></li>
+        </ul>
+    </header>
+	<main id="main-area">
+        <!-- INTRODUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h1>Instalando o Arch com raiz em ZFS v2</h1>
+        <p>Dessa vez por eu mesmo e não por Sakamoto.</p>
+        <h2>Introdução</h2>
+        <p>Considerando que quase tudo em que o tutorial 1.0 foi baseado está descontinuado (fora o dkms) eu vou tentar criar um tutorial funcional já que os filhos da puta da página do Arch Linux Root on ZFS tão cagando pra documentação.</p>
+        <!-- BAIXANDO O SISTEMA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Preparando o sistema</h2>
+        <p>Aqui vamos começar como está lá, mas com uma diferença: Baixar a versão mais recente para não ficar na mão!</p>
+        <p>Acesse a página <a class="link" href="https://www.alpinelinux.org/downloads/">Downloads do Alpine</a> e baixe a versão <em>Extended x86_64</em>. Vamos fazer a preparação através dela.</p>
+        <!-- LOGANDO NO SISTEMA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Uma vez no sistema...</h2>
+        <p>Assim que você tiver acessado o sistema e ele tiver carregado vai parar na tela de login:</p>
+        <code>localhost login:</code>
+        <p>Logue como <em>root</em> e o primeiro comando que você vai usar é o</p>
+        <code>setup-interfaces -r</code>
+        <p>Vai retornar uma tela como a do exemplo abaixo:</p>
+<code><pre>
+Available interfaces are: eth0.
+Enter '?' for help on bridges, bonding and vlans.
+Which one do you want to initialize? (or '?' or 'done') [eth0]
+Ip address for eth0? (or 'dhcp', 'none', '?') [dhcp]
+Do you want to do any manual network configuration? (y/n) [n]
+udhcpc: started, v1.37.0
+udhcpc: broadcasting select for 192.168.1.100, server 192.168.1.1</pre></code>
+        <p>Para o meu caso (usando conexão via cabo) eu só apertei <em>Enter</em> 3 vezes pois as opções padrão estavam ok, mas fique a vontade pra configurar.</p>
+        <h3>SSH (opcional)</h3>
+        <p>Você pode fazer isso na unha, mas eu recomendo fortemente que você faça isso através de ssh, para configurar basta fazer como no exemplo abaixo:</p>
+<code><pre>
+setup-sshd
+
+Which ssh server? ('openssh', 'dropbear' or 'none') [openssh]
+Allow root ssh login? ('?' for help) [prohibit-password] <em>yes</em>
+Enter ssh key or URL for root (or 'none') [none]
+ * service sshd added to runlevel default
+ * Caching service dependencies ...
+ssh-keygen: generating new host keys: RSA ECDSA ED25519
+ * Starting sshd ...
+</pre></code>
+        <p>Perceba que eu usei <em>yes</em> para <em>Allow root ssh login</em>, como é lan eu vou logar com senha e tá tudo certo.</p>
+        <!-- PREPARANDO O SISTEMA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Engatilhando...</h2>
+        <p>Vamos ativar o ntp com</p>
+        <code>setup-ntp busybox</code>
+        <p>Se quiser configurar os mirrors pode usar o comando abaixo, geralmente eu uso o ufpr (que no momento dessa instalação é <em>36</em>):</p>
+        <code>setup-apkrepos</code>
+        <p>Mirrors prontos, atualize com:</p>
+        <code>apk update</code>
+        <p>Instalar eudev</p>
+        <code>apk add eudev</code>
+        <p>setar para usar udev</p>
+        <code>setup-devd udev</code>
+        <p>Você pode fazer o seu particionamento e formatação por aqui, mas eu vou presumir que você já tenha feito, só para fins de explicação os pactes que você pode precisar são:</p>
+        <ul>
+            <li><p><em>cfdisk, fdisk, sfdisk</em> (já vem por padrão)</p></li>
+            <li><p><em>gptfdisk</em> para o comando gdisk e cgdisk</p></li>
+            <li><p><em>sgdisk</em> para o comando sgdisk</p></li>
+            <li><p><em>parted</em> para o comando parted</p></li>
+        </ul>
+        <p>Só usar o comando abaixo para adicionar pacotes:</p>
+        <code>apk add <em>nomedopacote</em></code>
+        <p>E o que não pode faltar de forma alguma para gerenciar esse arranjo de ZFS:</p>
+        <code>apk add zfs util-linux</code>
+        <code>modprobe zfs</code>
+        <!-- ARQUITETURA DE PARTIÇÕES DO SISTEMA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Arquitetura de partições do sistema</h2>
+        <p>Existem diversas maneiras de fazer os arranjos, nos meus sistemas eu geralmente faço uma partição de boot (XBOOTLDR) separada e não utilizo o GRUB2, portanto, não tenho gerência do ZFS na partição <em>/boot</em>.</p>
+        <p>Caso você tenha uma partição <em>XBOOTLDR</em> padrão e não queira usar gerência, basta montar ela em <em>/mnt/boot</em>. Caso queira uma partição de boot com ZFS e compatível com tal gerência basta seguir a documentação e usar a configuração de bpool como no exemplo abaixo.</p>
+        <!-- RPOOL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>rpool (piscina da raiz do sistema)</h3>
+        <p>Para criar a piscina de dados para a <em>rpool</em> use o comando:</p>
+        <code>zpool create \<br>
+        -o ashift=12 \<br>
+        -R /mnt \<br>
+        -O acltype=posixacl \<br>
+        -O canmount=off \<br>
+        -O dnodesize=auto \<br>
+        -O normalization=formD \<br>
+        -O relatime=on \<br>
+        -O xattr=sa \<br>
+        -O compression=zstd-3 \<br>
+        -O mountpoint=none \<br>
+        rpool \<br>
+        /dev/disk/by-id/<em>ID_DO_DISCO</em>-part<em>NR_DA_PARTIÇÃO_ROOT</em></code>
+        <!-- AVISO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p><em>AVISO!</em></p>
+        <p>Sinta-se a vontade para utilizar <em>-O atime=off</em> ao invés <em>-O relatime=on</em> de  para remover o <i>access time</i>, <em>-O compression=off</em> caso não queira compressão nessa partição e <em>-o autotrim=on</em> para habilitar o trim automático (útil para memórias flash).</p>
+        <!-- BPOOL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>bpool (piscina do boot do sistema)</h3>
+        <p>Para criar a piscina de dados para a <em>bpool</em> use o comando:</p>
+        <code>zpool create \<br>
+        -o ashift=12 \<br>
+        -R /mnt \<br>
+        -o compatibility=grub2 \<br>
+        -O dnodesize=legacy \<br>
+        -O devices=off \<br>
+        -O acltype=posixacl \<br>
+        -O xattr=sa \<br>
+        -O compression=lz4 \<br>
+        -O normalization=formD \<br>
+        -O relatime=on \<br>
+        -O canmount=off \<br>
+        -O mountpoint=none \<br>
+        bpool \<br>
+        /dev/disk/by-id/<em>ID_DO_DISCO</em>-part<em>NR_DA_PARTIÇÃO_BOOT</em></code>
+        <!-- AVISO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p><em>AVISO!</em></p>
+        <p>Mais uma vez: Sinta-se a vontade para utilizar <em>-O atime=off</em> ao invés <em>-O relatime=on</em> de  para remover o <i>access time</i>, <em>-O compression=off</em> caso não queira compressão nessa partição e <em>-o autotrim=on</em> para habilitar o trim automático (útil para memórias flash).</p>
+        <!-- DPOOL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>dpool (piscina de dados do sistema)</h3>
+        <p>Data Pool ou dpool é aquele arranjo preparado com os arquivos de dados para além do sistema, seja para caso você tenha um disco que queira usar como <em>/home</em> ou para coisas que podem ser desacoplados de um sistema específico para serem usados fora, como por exemplo imagens em <em>/var/lib/libvirt</em>.</p>
+        <p>Para criar a piscina de dados para a <em>dpool</em> use o comando:</p>
+        <code>zpool create \<br>    
+        -o ashift=12 \<br>
+        -R /mnt \<br>
+        -O acltype=posixacl \<br>
+        -O canmount=off \<br>
+        -O dnodesize=auto \<br>
+        -O normalization=formD \<br>
+        -O relatime=on \<br>
+        -O xattr=sa \<br>
+        -O compression=zstd-3 \<br>
+        -O mountpoint=none \<br>
+        dpool \<br>
+        /dev/disk/by-id/<em>ID_DO_DISCO</em>-part<em>NR_DA_PARTIÇÃO_HOME</em></code>
+        <!-- AVISO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <p><em>AVISO!</em></p>
+        <p>E mais uma última vez: Sinta-se a vontade para utilizar <em>-O atime=off</em> ao invés <em>-O relatime=on</em> de  para remover o <i>access time</i>, <em>-O compression=off</em> caso não queira compressão nessa partição e <em>-o autotrim=on</em> para habilitar o trim automático (útil para memórias flash).</p>
+        <h3>Criando datasets</h3>
+        <p>Entenda o dataset como uma "partição virtual", é mais complexo que isso, mas é como se fosse uma partição com pontos de montagem e atributos do próprios. Isso aqui é só uma média, fique a vontade para alterar ou mesmo não fazer algum desses se você souver o que está fazendo.</p>
+        <h4>Conteiners principais</h4>
+        <!-- ROOT & BOOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/ROOT<br>zfs create -o canmount=off -o mountpoint=none bpool/BOOT</code>
+        <h4>Pontos de montagem para a raiz e boot</h4>
+        <code>zfs create -o canmount=noauto -o mountpoint=/ rpool/ROOT/arch<br>zfs mount rpool/ROOT/arch<br>zfs create -o mountpoint=/boot bpool/BOOT/arch</code>
+        <!-- /HOME -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/home</h4>
+        <code>zfs create -o exec=on -o setuid=on -o mountpoint=/home rpool/home</code>
+        <!-- /ROOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/root</h4>
+        <code>zfs create -o exec=on -o setuid=on -o mountpoint=/root rpool/root<br>chmod 700 /mnt/root</code>
+        <!-- /VAR -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var</h4>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var<br>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/log rpool/var/log<br>zfs create -o com.sun:auto-snapshot=false -o compression=off -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/cache rpool/var/cache<br>zfs create -o com.sun:auto-snapshot=false -o exec=on -o setuid=off -o devices=off -o mountpoint=/var/tmp rpool/var/tmp<br>chmod 1777 /mnt/var/tmp</code>
+        <!-- /VAR/LIB -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib</h4>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib<br>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/AccountsService rpool/var/lib/AccountsService</code>
+        <!-- /USR -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/usr</h4>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/usr<br>zfs create -o exec=on -o setuid=off -o mountpoint=/usr/local rpool/usr/local</code>
+        <!-- /OPT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/opt</h4>
+        <code>zfs create -o exec=on -o setuid=off -o devices=off -o mountpoint=/opt rpool/opt</code>
+        <!-- /TMP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/tmp</h4>
+        <p>Um alerta rápido sobre o <em>/tmp</em>, tanto você pode simplesmente deixar esse diretório na memória (maioria dos casos), ou dependendo do teu uso (talvez compilação) você pode fazer uso de mais espaço do que a sua memória ram. Depende do uso de arquivos temporários na sua máquina e o quanto de ram você tem.</p>
+        <code>zfs create -o com.sun:auto-snapshot=false -o exec=on -o setuid=off -o devices=off -o mountpoint=/tmp rpool/tmp<br>chmod 1777 /mnt/tmp</code>
+        <h3>Datasets de função específica (opcionais)</h3>
+        <!-- DOCKER -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/docker</h4>
+        <p>Armazena imagens, containers e volumes do Docker. Cresce muito rapidamente e gerencia próprios snapshots internamente. Fora do snapshot do sistema para não reverter dados de containers junto com o OS.</p>
+        <code>zfs create -o com.sun:auto-snapshot=false -o compression=zstd -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/docker rpool/var/lib/docker</code>
+        <!-- LIBVIRT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/libvirt</h4>
+        <p>Armazena configurações e imagens de máquinas virtuais. Imagens de VM podem ocupar dezenas de GB e gerenciam próprios snapshots. Fora do snapshot do sistema para não reverter VMs junto com o OS.</p>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib/libvirt<br>zfs create -o com.sun:auto-snapshot=false -o compression=off -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/libvirt/images rpool/var/lib/libvirt/images</code>
+        <!-- WWW -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/www</h4>
+        <p>Armazena arquivos de sites e aplicações web servidos pelo servidor HTTP. Dados do site têm ciclo de vida independente do OS e não devem reverter junto.</p>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/www rpool/var/www</code>
+        <!-- NFS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/nfs</h4>
+        <p>Armazena estado de bloqueios e tabelas de montagem do servidor NFS. Estado de rede não deve reverter com o OS pois causaria inconsistência nos clientes.</p>
+        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/nfs rpool/var/lib/nfs</code>
+        <!-- SAMBA -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/samba</h4>
+        <p>Armazena senhas, configurações de compartilhamento e estado de conexões do Samba. Estado de rede não deve reverter com o OS pois causaria perda de configurações de compartilhamento.</p>
+        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/samba rpool/var/lib/samba</code>
+        <!-- SPOOL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/spool</h4>
+        <p>Armazena filas de impressão, cron e outros serviços de fila. Em desktop raramente relevante, mas vale separar se usar impressora ou serviços de fila intensivamente.</p>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/spool rpool/var/spool</code>
+        <!-- SRV -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/srv</h4>
+        <p>Armazena dados servidos por serviços como FTP e HTTP. Convenção do FHS para dados de serviços — ciclo de vida independente do OS.</p>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/srv rpool/srv</code>
+        <!-- MAIL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/mail</h4>
+        <p>Armazena emails locais entregues por MTAs como Sendmail ou Postfix. Emails têm ciclo de vida independente do OS e não devem reverter junto. Não relevante para clientes de email como Thunderbird.</p>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/mail rpool/var/mail</code>
+        <!-- SNAP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/snap</h4>
+        <p>Armazena pacotes e dados de aplicações instaladas via Snap. No Arch Linux raramente usado — AUR e Flatpak são preferidos.</p>
+        <code>zfs create -o compression=off -o exec=on -o setuid=off -o devices=off -o mountpoint=/var/snap rpool/var/snap</code>
+        <!-- GAMES -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/games</h4>
+        <p>Armazena pontuações e dados de jogos instalados via gerenciador de pacotes. Diretório legado do FHS — jogos modernos como Steam usam diretórios próprios.</p>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/games rpool/var/games</code>
+        <!-- EM CONSTRUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+
+        
+        <h3>Criando o ZFS cache</h3>
+        <code>zpool set cachefile=/etc/zfs/zpool.cache rpool<br>zpool set cachefile=/etc/zfs/zpool.cache bpool<br>mkdir -p /mnt/etc/zfs<br>cp /etc/zfs/bpool.cache /mnt/etc/zfs/</code>
+        
+
+
+
+
+
+        <h3>Configurando mkinitcpio</h3>
+        <p>Edite o arquivo <em>/etc/mkinitcpio.conf</em> e insira <em>zfs</em> em <em>MODULES</em> como no exemplo abaixo:</p>
+        <code>MODULES=(zfs)</code>
+        <p>Insira <em>zfs</em> antes de <em>filesystems</em> <em>HOOKS</em> como no exemplo abaixo:</p>
+        <code>HOOKS=(... <em>zfs</em> filesystems)</code>
+        <p>Regere o initramfs</p>
+
+
+
+        <h3>Configurando os pontos de montagem ZFS</h3>
+        <p>Para cada pool que você quer que seja montada automaticamente execute:</p>
+        <code>zpool set cachefile=/etc/zfs/zpool.cache <em>pool</em></code>
+        <code>systemctl enable zfs.target</code>
+        <code>zfs-import-cache.service</code>
+        <code>zfs-mount.service</code>
+        <code>zfs-import.target</code>
+
+
+        <!-- EM CONSTRUÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+    </main>
+    <footer id="main-footer">
+        <p>Está página ainda está em construção 🚧</p>
+        <a class="footerlink" href="#main-header">↑ Retornar ao topo ↑</a>
+    </footer>
+</body>
+</html>
