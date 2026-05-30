@@ -482,6 +482,118 @@ td {
   background-color: #18141c;
 }*/
 
+/* INÍCIO - WINDOWS BOOTSTRAP */
+
+/* ============================================================
+ *   .disk-map
+ *   ============================================================ */
+
+.disk-map {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.disk-map-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8880;
+}
+
+
+/* ============================================================
+ *   .disk-map-track
+ *   ============================================================ */
+
+.disk-map-track {
+  list-style: none;
+  display: flex;
+  gap: 4px;
+}
+
+
+/* ============================================================
+ *   .partition — base comum
+ *   ============================================================ */
+
+.partition {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 10px 8px;
+  min-height: 72px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.partition-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.partition-size {
+  font-size: 0.6875rem;
+  opacity: 0.75;
+}
+
+.partition-fs {
+  font-size: 0.625rem;
+  opacity: 0.55;
+}
+
+
+/* ============================================================
+ *   .partition-* — variantes por tipo
+ *   ============================================================ */
+
+.partition-efi {
+  flex: 0 0 80px;
+  background: #e6f1fb;
+  border-color: #b5d4f4;
+  color: #0c447c;
+}
+
+.partition-msr {
+  flex: 0 0 58px;
+  background: #eaf3de;
+  border-color: #c0dd97;
+  color: #27500a;
+}
+
+.partition-system {
+  flex: 0 0 80px;
+  background: #f1efe8;
+  border-color: #d3d1c7;
+  color: #444441;
+}
+
+.partition-main {
+  flex: 1 1 auto;
+  background: #eeedfe;
+  border-color: #cecbf6;
+  color: #3c3489;
+}
+
+.partition-recovery {
+  flex: 0 0 96px;
+  background: #faeeda;
+  border-color: #fac775;
+  color: #633806;
+}
+
+@media (prefers-color-scheme: dark) {
+  .partition-efi      { background: #0c447c; border-color: #185fa5; color: #b5d4f4; }
+  .partition-msr      { background: #27500a; border-color: #3b6d11; color: #c0dd97; }
+  .partition-system   { background: #444441; border-color: #5f5e5a; color: #d3d1c7; }
+  .partition-main     { background: #3c3489; border-color: #534ab7; color: #cecbf6; }
+  .partition-recovery { background: #633806; border-color: #854f0b; color: #fac775; }
+}
+
+/* FIM - WINDOWS BOOTSTRAP */
+
 @media only screen and (max-width: 480px), only screen and (max-device-width: 640px) {
   #main-area {
     max-width: 90%;
