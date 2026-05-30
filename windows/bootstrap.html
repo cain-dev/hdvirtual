@@ -39,6 +39,26 @@
         </ul>
         <h2>Instalação em MBR/BIOS</h2>
         <h3>Preparar disco</h3>
+        <figure class="disk-map">
+        <figcaption class="disk-map-title">BIOS — MBR</figcaption>
+        <ol class="disk-map-track">
+            <li class="partition partition-system">
+                <span class="partition-name">System</span>
+                <span class="partition-size">100 MB</span>
+                <span class="partition-fs">NTFS · ativa</span>
+            </li>
+            <li class="partition partition-main">
+                <span class="partition-name">Windows (C:)</span>
+                <span class="partition-size">resto</span>
+                <span class="partition-fs">NTFS</span>
+            </li>
+            <li class="partition partition-recovery">
+                <span class="partition-name">Recovery</span>
+                <span class="partition-size">600 MB</span>
+                <span class="partition-fs">NTFS</span>
+            </li>
+        </ol>
+  </figure>
         <p>Obviamente precisamos limpar o disco alvo e fazer nele a tabela de partição em MBR, eu vou presumir que você conhece o diskpart e não vou explicar comando a comando. <strong>Obviamente</strong> substitua o <em>X</em> pelo número do disco desejado.</p>
         <code>diskpart<br>list disk<br>select disk <em>X</em><br>clean<br>convert mbr</code>
         <h3>Partição de Sistema</h3>
@@ -73,6 +93,31 @@
         -->
         <h2>Instalação em GPT/UEFI</h2>
         <h3>Preparar disco</h3>
+        <figure class="disk-map">
+        <figcaption class="disk-map-title">UEFI — GPT</figcaption>
+        <ol class="disk-map-track">
+            <li class="partition partition-efi">
+                <span class="partition-name">EFI</span>
+                <span class="partition-size">300 MB</span>
+                <span class="partition-fs">FAT32</span>
+            </li>
+            <li class="partition partition-msr">
+                <span class="partition-name">MSR</span>
+                <span class="partition-size">16 MB</span>
+                <span class="partition-fs">—</span>
+            </li>
+            <li class="partition partition-main">
+                <span class="partition-name">Windows (C:)</span>
+                <span class="partition-size">resto</span>
+                <span class="partition-fs">NTFS</span>
+            </li>
+            <li class="partition partition-recovery">
+                <span class="partition-name">Recovery</span>
+                <span class="partition-size">600 MB</span>
+                <span class="partition-fs">NTFS</span>
+            </li>
+        </ol>
+        </figure>
         <p>Obviamente precisamos limpar o disco alvo e fazer nele a tabela de partição em GPT, eu vou presumir que você conhece o diskpart e não vou explicar comando a comando. <strong>Obviamente</strong> substitua o <em>X</em> pelo número do disco desejado.</p>
         <code>diskpart<br>list disk<br>select disk <em>X</em><br>clean<br>convert gpt</code>
         <h3>Partição ESP</h3>
@@ -86,7 +131,6 @@
         <code>create partition primary<br>shrink minimum=600<br>format quick fs=ntfs label="Windows"<br>assign letter=W</code>
         <h3>Partição de Recovery</h3>
         <p>E agora vamos criar a partição oculta de Recovery atribuindo a ela a letra <em>R</em>.</p>
-        
         <code>create partition primary<br>format quick fs=ntfs label="WinRE"<br>assign letter=R<br>set id="de94bba4-06d1-4d40-a16a-bfd50179d6ac"<br>gpt attributes=0x8000000000000001</code>
         <p>Com as partições prontas quite o diskpart.</p>
         <code>exit</code>
