@@ -2081,6 +2081,27 @@ EndSection
         <p>Caso você utilize SSD's é essencial que você ative o serviço de TRIM periódico, para isso use o comando abaixo:</p>
         <code>systemctl enable fstrim.timer</code>
         <p><strong>Dê preferência ao serviço <em>fstrim.timer</em> no lugar da flag <em>discard</em> para volumes swap!</strong> </p>
+        <!-- Active State Power Management - ASPM -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Configurando o ASPM</h3>
+        <p>O Active State Power Management (ou ASPM), é um controle de economia de energia, como qualquer controle de economia de energia, é extremamente útil para ser configurado, especialmente em laptops... Mas muitas vezes você não está usando um laptop, e as vezes mesmo usando um laptop o controle padrão do ASPM é absurdamente agressivo.</p>
+        <p>Para verificar as políticas possíveis (e a em uso pelo seu sistema):</p>
+        <code>cat /sys/module/pcie_aspm/parameters/policy</code>
+        <p>Você vai ver uma linha como:</p>
+        <code>[default] performance powersave powersupersave</code>
+        <p>Para alterar o estado de ASPM via parâmetro de kernel basta usar o argumento <em>pcie_aspm=</em> seguido da política que deseja, por exemplo, para alterar para performance, basta usar:</p>
+        <code>pcie_aspm=performance</code>
+        <p>Porém, no default já existe a possibilidade do firmware já decidir o ideal, se você tem problemas com NVME deixando o sistema morrer ao ficar ocioso, pode impedir power states com latência de saída usando o comando abaixo como parâmetro de kernel:</p>
+        <code>nvme_core.default_ps_max_latency_us=0</code>
+        <p>Porém este é mais agressivo, se quiser um controle mais fino pode verificar os Power States do seu NVME com o comando:</p>
+        <code>sudo nvme id-ctrl /dev/nvme0 | grep -A5 "ps "</code>
+        <p>Se quiser mais detalhado:</p>
+        <code>sudo nvme id-ctrl /dev/nvme0 -H | grep -A3 "Power State"</code>
+        <p>Se quiser criar uma regra de udev para desabilitar o APST (feature <em>0x0c</em>) para que ele não altera o power state automaticamente, e depois fixe no nvme o power state 0 (feature <em>0x02</em>), crie um arquivo em <em>/etc/udev/rules.d/99-nvme.rules</em> com o conteúdo:</p>
+        <pre><code>ACTION=="add", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]", RUN+="/usr/sbin/nvme set-feature /dev/%k -f 0x0c -v 0", RUN+="/usr/sbin/nvme set-feature /dev/%k -f 0x02 -v 0"</code></pre>
+        <p>Vamos supor que você queira immpedir os power states não operacionais no drive, você poderia então declarar a latência máxima aceita por parâmetro de kernel:</p>
+        <code>nvme_core.default_ps_max_latency_us=2499</code>
+        <p>A lógica disso é que o P3 é o primeiro estado não operacional com 2500, então qualquer coisa entre 0 e 2499 impede de que power states não operacionais sejam ativados, mas lembre-se que isso depende de cada nvme! 2499 não é um valor universal!</p>
         <!-- Desabilite o Watchdog timer -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Melhore o desempenho desabilitando o Watchdog timer:</h3>
