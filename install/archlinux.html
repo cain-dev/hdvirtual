@@ -2366,6 +2366,32 @@ ACTION=="add|change", KERNEL=="sd[a-z]*|mmcblk[0-9]*", ATTR{queue/rotational}=="
 ACTION=="add|change", KERNEL=="nvme[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
 </pre></code>
         <p>Isso vai fazer com que todo HD e SSD use o <em>bfq</em> e todo NVME use <em>none</em>. É o ideal? Não! O ideal é você escolher o scheduler e tunar por conta, mas até lá use pelo menos isso.</p>
+        <h4>Indo um pouco mais a fundo</h4>
+        <p>A maneira que a partição é montada e que o <em>X</em> agendador funciona delimitam a carga de transferência de dados que vai ocorrer alí, vamos citar explorar alguns exemplos aqui.</p>
+<code><pre>
+# HDD 1TB 7200rpm - PARA JOGOS
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/scheduler}="mq-deadline"
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/reads_starved}="4"
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/read_expire}="150"
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/write_expire}="3000"
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/fifo_batch}="16"
+ACTION=="add|change", KERNEL=="sdb", ATTR{bdi/read_ahead_kb}="4096"
+ACTION=="add|change", KERNEL=="sdb", ATTR{queue/nr_requests}="64"
+
+# HDD 2TB 5400rpm - PARA BACKUP 
+
+ACTION=="add|change", KERNEL=="sda", ATTR{queue/scheduler}="bfq"
+ACTION=="add|change", KERNEL=="sda", ATTR{queue/iosched/low_latency}="1"
+ACTION=="add|change", KERNEL=="sda", ATTR{queue/iosched/slice_idle}="8"
+ACTION=="add|change", KERNEL=="sda", ATTR{bdi/read_ahead_kb}="2048"
+ACTION=="add|change", KERNEL=="sda", ATTR{queue/nr_requests}="64"
+
+# NVMe - Sistema
+ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
+ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{queue/nr_requests}="1024"
+ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{bdi/read_ahead_kb}="0"
+</pre></code>
+        <p>Embora seja implícito para <em>noatime</em>, é interessante inserir o <em>nodiratime</em> explicitamente no <em>/etc/fstab</em>. Em um volume para jogos <strong>e sem nenhum dado crítico!</strong> Também seria interessante o uso do <em>data=writeback</em>.</p>
         <!-- Dracut ao invés de Mkinitcpio -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Usar Dracut ao invés de Mkinitcpio</h3>
