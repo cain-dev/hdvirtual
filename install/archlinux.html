@@ -2367,7 +2367,7 @@ ACTION=="add|change", KERNEL=="nvme[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/sch
 </pre></code>
         <p>Isso vai fazer com que todo HD e SSD use o <em>bfq</em> e todo NVME use <em>none</em>. É o ideal? Não! O ideal é você escolher o scheduler e tunar por conta, mas até lá use pelo menos isso.</p>
         <h4>Indo um pouco mais a fundo</h4>
-        <p>A maneira que a partição é montada e que o <em>X</em> agendador funciona delimitam a carga de transferência de dados que vai ocorrer alí, vamos citar explorar alguns exemplos aqui.</p>
+        <p>A maneira que a partição é montada e que o <em>X</em> agendador funciona delimitam a carga de transferência de dados que vai ocorrer alí, vamos explorar alguns exemplos aqui.</p>
 <code><pre>
 # HDD 1TB 7200rpm - PARA JOGOS
 ACTION=="add|change", KERNEL=="sdb", ATTR{queue/scheduler}="mq-deadline"
