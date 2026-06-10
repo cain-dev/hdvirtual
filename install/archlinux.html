@@ -543,20 +543,20 @@
             <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
             <p>A partição BIOS BOOT deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
             <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
-            <code>echo '2048,+1M,00,*' | sfdisk /dev/<em>storageA</em></code>
+            <code>echo '2048,+1M,00,*' | sfdisk /dev/<mark>storageA</mark></code>
             <!-- Partição EXTENDED -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>EXTENDED</em> (necessário dependendo da sua tabela de partições)</h4>
             <p>Devido as próprias limitações da tabela MBR, o máximo que você pode ter de partições dentro de um disco é de <mark>4 partições</mark> primárias, ou seja, 4 partições capazes de iniciar o sistema. E isso seria um problema gigantesco... Se você estivesse usando outro sistema.</p>
             <p>Quando se trata de Linux e BSDs, contanto que o bootloader faça seu trabalho de redirecionar para o lugar certo o sistema vai iniciar. Então, para não ficarmos limitados a 4 partições, vamos criar 1 partição primária para o GRUB, 1 partição extendida que ocupe o resto do disco e inserir as demais partições lógicas dentro desse espaço.</p>
             <p>Para criar a nova extendida que será usada para encapsular as pelas demais partições utilize o comando:</p>
-            <code>echo ',,05' | sfdisk --append /dev/<em>storageA</em></code>
+            <code>echo ',,05' | sfdisk --append /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
             <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
             <p>Supondo a adição de uma partição swap de <em>3G</em>, vamos usar o comando abaixo:</p>
-            <code>echo ',+<em>3G</em>,82' | sfdisk --append /dev/<em>storageA</em></code>
+            <code>echo ',+<em>3G</em>,82' | sfdisk --append /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS ROOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
@@ -566,14 +566,14 @@
             <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
             <p>A partição / deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
             <p>Supondo a adição de uma partição root de <em>20G</em>, vamos usar o comando abaixo: </p>
-            <code>echo ',+<em>20G</em>,83' | sfdisk --append /dev/sdX</code>
+            <code>echo ',+<em>20G</em>,83' | sfdisk --append /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS HOME -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição para <em>/home</em> separada (opcional e não recomendado)</h4>
             <p>Se decidiu fazer uma partição separada para a /home recomendo que ocupe todo o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição da mesma maneira que a raiz).</p></p>
             <p>A partição /home deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
             <p>Supondo a adição de uma partição /home que ocupe todo o resto do disco, vamos usar o comando abaixo: </p>
-            <code>echo ',,83' | sfdisk --append /dev/sdX</code>
+            <code>echo ',,83' | sfdisk --append /dev/<mark>storageA</mark></code>
             <h4>E qual seria a vantagem de usar o sfdisk?</h4>
             <p>A vantagem é que se você souber o que está fazendo pode finalizar a sua tabela de partição completa em poucos comandos ou mesmo por script como no exemplo abaixo:</p>
 <pre><code>
@@ -749,9 +749,9 @@ EOF
         <details class="spoiler" >
             <summary>Método determinístico com <em>SGDISK</em> (Scripting - Hard) (Clique para ver)</summary>
             <p>Antes de mais nada, caso queira limpar (<i>zap-all</i>) a tabela de partições completamente (MBR e GPT para deixar o disco como novo) você pode usar o comando:</p>
-            <code>sgdisk -Z /dev/<em>storageA</em></code>
+            <code>sgdisk -Z /dev/<mark>storageA</mark></code>
             <p>Caso queira criar uma nova tabela de partição vazia pode usar o comando:</p>
-            <code>sgdisk -o /dev/<em>storageA</em></code>
+            <code>sgdisk -o /dev/<mark>storageA</mark></code>
             <p>Para usar o sgdisk para criar as partições é bem simples na verdade, para criar uma partição com o sgdisk o comando é: </p>
             <code>sgdisk -I /dev/<em>dispositivo</em> --new=<em>A</em>:<em>B</em>:<em>C</em> --typecode=<em>X</em>:<em>Y</em></code>
             <p>Que para o argumento <em>-I</em> indica habilitar o uso de alinhamento ao final da partição, <em>--new</em> (que indica nova partição), onde é <mark>A</mark> é o número da partição, <mark>B</mark> é o início da partição e <mark>C</mark> é o fim da partição. Para o argumento <em>--typecode</em> (que o tipo da partição), onde é <mark>X</mark> é o número da partição e <mark>B</mark> é o código da partição.</p>
@@ -760,17 +760,17 @@ EOF
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>ESP</em> (EFI system partition)</h4>
             <p>Para uma instalação de sistema em modo UEFI precisamos criar uma partição <em>ESP</em>, esta é uma partição específica para ser acessada pela placa mãe para iniciar os sistemas. É uma partição do tipo <em>ef00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>550M</mark>.</p>
-            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+550M</em>  --typecode=0:<em>ef00</em></code>
+            <code>sgdisk -I /dev/<mark>storageA</mark> --new=0:0:<em>+550M</em>  --typecode=0:<em>ef00</em></code>
             <!-- XBOOTLDR -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>/boot</em> separada - <em>XBOOTLDR</em> (opcional e não recomendado para iniciantes)</h4>
             <p>O diretório <em>XBOOTLDR</em> contém as imagens de kernel e initramfs, bem como o arquivo de configuração do bootloader, muito útil para não enfrentar problemas de multiboot com o Windows. Um diretório <em>XBOOTLDR</em> separado não é necessário para operação normal do sistema. É uma partição do tipo <em>ea00</em>. Por questões de compatibilidade recomendo o tamanho de <mark>1G</mark>.</p>
-            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+1G</em>  --typecode=0:<em>ea00</em></code>
+            <code>sgdisk -I /dev/<mark>storageA</mark> --new=0:0:<em>+1G</em>  --typecode=0:<em>ea00</em></code>
             <!-- SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
             <p>É uma partição do tipo <em>8200</em>, para o comando abaixo estou supondo que eu tenha uma máquina com 2GB de ram e pretendo utilizar hibernação, nesse caso o recomendado conforme a tabela é utilizar 3G <strong>mas mude o comando abaixo conforme o ideal para o seu caso!</strong>.</p>
-            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
+            <code>sgdisk -I /dev/<mark>storageA</mark> --new=0:0:<em>+3G</em>  --typecode=0:<em>8200</em> </code>
             <!-- ROOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
@@ -778,16 +778,16 @@ EOF
             <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
             <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
             <p>É uma partição do tipo <em>8304</em>. Que por questões de compatibilidade recomendo o tamanho <strong>mínimo</strong> de <mark>20G</mark> e se possível o valor <mark>0</mark> para que ela ocupe o disco até o fim.</p>
-            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>+20G</em> --typecode=0:<em>8304</em> </code>
+            <code>sgdisk -I /dev/<mark>storageA</mark> --new=0:0:<em>+20G</em> --typecode=0:<em>8304</em> </code>
             <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
             <!-- HOME -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição para <em>/home</em> separada (opcional)</h4>
             <p>É uma partição do tipo <em>8302</em>. Se você leu a explicação acima da partição raiz, eu vou presumir que para esse exemplo de raiz delimitada a partição <em>/home</em> ocupe até o fim do disco, mas lembre-se de alterar o valor abaixo de <em>0</em> para o tamanho desejado caso queira delimitar também essa partição.</p>
-            <code>sgdisk -I /dev/<em>storageA</em> --new=0:0:<em>0</em> --typecode=0:<em>8302</em></code>
+            <code>sgdisk -I /dev/<mark>storageA</mark> --new=0:0:<em>0</em> --typecode=0:<em>8302</em></code>
             <h4>Verificando a tabela</h4>
             <p>Para verificar se a sua tabela de partições está correta você pode usar o comando:</p>
-            <code>sgdisk /dev/<em>storageA</em> --print</code>
+            <code>sgdisk /dev/<mark>storageA</mark> --print</code>
             <h4>E qual seria a vantagem de usar o sgdisk?</h4>
             <p>A vantagem é que se você souber o que está fazendo pode finalizar a sua tabela de partição completa num comando só como no exemplo abaixo:</p>
             <code>sgdisk -I /dev/storageA -n=1:0:+550M -c=1:esp -t=1:ef00 -n=2:0:+1G -c=2:boot -t=2:ea00 -n=3:0:+3G -c=3:swap -t=3:8200 -n=4:0:0 -c=4:root -t=4:8304</code>
