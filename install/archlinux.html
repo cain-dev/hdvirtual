@@ -373,6 +373,26 @@
         <!-- Passo 4 Opção A - armazenamento em sistemas baseados em BIOS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Opção A - Preparação para armazenamento em sistemas baseados em <mark>BIOS</mark></h3>
+        <p><strong>Alerta!</strong></p>
+        <p>Se você é mais novo e não tem costume de lidar com sistemas antigos talvez não saiba como funciona a <mark>MBR</mark> ou <mark>Master Boot Record</mark>, então aqui vai um breve resumo:</p>
+        <p>Por via de regra, a esmagadora maioria dos <em>firmwares do tipo BIOS apenas conseguem ler tabelas de partição em MBR</em>, um ou outro lê outros modelos como <mark>BSD Labels</mark>, mas quase nenhum consegue ler o tipo <mark>GPT</mark>. Por isso a maioria dos computadores que usam BIOS são formatados com o tipo de partição <em>MBR</em>, mas a MBR é extremamente limitada se comparado ao GPT, especialmente no que diz respeito ao <em>limite de 4 partições</em>.</p>
+        <p>A tabela em MBR só permite <em>4 partições primárias</em>, entenda como partição primária uma partição direta, então elas podem conter diretamente sistemas de arquivo e mais importante, podem ser <i>bootáveis</i>.</p>
+        <p>Então, se você faz um dualboot, Windows sozinho pode comer 3 partições primárias! E aí? Bom, para esse tipo de problema foram criadas as partições <em>extendidas</em> e <em>lógicas</em>.</p>
+        <p>Entenda a partição extendida como uma partição contêiner, é uma partição direta que ao invés de guardar um sistema de arquivos guarda um espaço no disco para partições indiretas (no caso as partições <em>lógicas</em>). Para fins de usuário final você pode ter quase que infinitas partições lógicas dentro de uma partição extendida.</p>
+        <h4>Sua BIOS não lê GPT, mas não quer dizer que ninguém mais lê</h4>
+        <p>Tá, o que precisa ser dito:</p>
+        <ol>
+            <li>
+                <p>O Linux (e mesmo os BSDs) não tem absolutamente nenhuma exigência com relação a partição primária;</p>
+            </li>
+            <li>
+                <p>O Windows exige uma partição primária para a instalação, mas ele pode fazer o <i>handoff</i> da partição <em>System</em> (primária) para o disco <em>C:</em> (lógica);</p>
+            </li>
+            <li>
+                <p>Mesmo se sua BIOS não reconhece GPT você pode particionar seu disco todo em GPT e deixar para que o bootloader no começo do disco faça o direcionamento;</p>
+            </li>
+        </ol>
+        <p>Sendo assim sempre deixe em partição primária <strong>apenas</strong> aquilo que <strong>precisa</strong> ser inicializável, como toda tabela GPT também guarda uma MBR interna (e eu aposto que você não sabia dessa), essa MBR pode ser usada para redirecionar para um bootloader capaz de trabalhar com GPT. </p>
         <!-- BIOS - LUKS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!--
@@ -407,7 +427,7 @@
             <!-- Easy Mode CFDISK swap -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
+            <p>A partição swap deve ser uma partição <mark>logical</mark> do tipo <mark>82 Linux swap</mark>.</p>
             <!-- Easy Mode CFDISK / -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição raiz do sistema (<em>root</em> ou <em>/</em>)</h4>
@@ -415,12 +435,12 @@
             <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
             <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo e <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
             <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
-            <p>A partição / deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>         
+            <p>A partição / deve ser uma partição <mark>logical</mark> do tipo <mark>83 Linux</mark>.</p>         
             <!-- Easy Mode CFDISK /home -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição para <em>/home</em> separada (opcional e não recomendado)</h4>
             <p>Se decidiu fazer uma partição separada para a /home recomendo que ocupe todo o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição da mesma maneira que a raiz).</p></p>
-            <p>A partição /home deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
+            <p>A partição /home deve ser uma partição <mark>logical</mark> do tipo <mark>83 Linux</mark>.</p>
             <h4>Terminado!</h4>
             <p>Pule para o <em>Passo 5 - Formatar as partições</em></p>
         </details>
@@ -458,6 +478,16 @@
             <code>L</code>
             <p>O código para o tipo vazio é o <em>00</em>, digite 00 e dê enter para mudar o tipo para "Empty"</p>
             <p>Agora precisamos deixar essa partição <i>bootável</i>, tecle <em>a</em> para deixar essa partição ativada para boot.</p>
+            <!-- Partição EXTENDED em BIOS -->
+            <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+            <h4>Partição <em>EXTENDED</em> (necessário dependendo da sua tabela de partições)</h4>
+            <p>Devido as próprias limitações da tabela MBR, o máximo que você pode ter de partições dentro de um disco é de <mark>4 partições</mark> primárias, ou seja, 4 partições capazes de iniciar o sistema. E isso seria um problema gigantesco... Se você estivesse usando outro sistema.</p>
+            <p>Quando se trata de Linux e BSDs, contanto que o bootloader faça seu trabalho de redirecionar para o lugar certo o sistema vai iniciar. Então, para não ficarmos limitados a 4 partições, vamos criar 1 partição primária para o GRUB, 1 partição extendida que ocupe o resto do disco e inserir as demais partições lógicas dentro desse espaço.</p>
+            <p>Para criar a nova extendida que será usada para encapsular as pelas demais partições utilize o comando:</p>
+            <code>n</code>
+            <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
+            <code>Partition type<br>&nbsp;p&nbsp;primary<br>&nbsp;e&nbsp;extended<br>Select (default p):</code>
+            <p>Tecle <em>e</em> (para <i>extended</i>) e dê enter para a criar uma nova partição extendida.</p>
             <!-- Partição SWAP em BIOS -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
@@ -554,7 +584,7 @@
             <!-- Partição BIOS SWAP -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
-            <p>A partição swap deve ser uma partição <mark>extended</mark> do tipo <mark>82 Linux swap</mark>.</p>
+            <p>A partição swap deve ser uma partição <mark>logical</mark> do tipo <mark>82 Linux swap</mark>.</p>
             <p>Supondo a adição de uma partição swap de <em>3G</em>, vamos usar o comando abaixo:</p>
             <code>echo ',+<em>3G</em>,82' | sfdisk --append /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS ROOT -->
@@ -564,14 +594,14 @@
             <p>É importante ressaltar que pastas de usuário <strong>não são compatíveis entre distribuições distintas</strong> e ainda numa mesma distribuição podem gerar problemas de incompatibilidade ou com configurações de aplicativos, variáveis e afins. Recomendo delimitar o tamanho da partição de sistema apenas e somente se você pretende fazer mudanças na partição de raiz do sistema sem ter que reinstalar o sistema.</p>
             <p>Se você é um usuário iniciante ou não pretende fazer tais mudanças, faça backup dos seus arquivos num outro dispositivo <strong>e não delimite o tamanho da partição raiz e também não faça uma partição separada para a /home!</strong></p>
             <p><strong>Observação:</strong> Existe muito debate a respeito de qual é o tamanho necessário para uma partição raiz do sistema, obviamente o necessário varia conforme o tipo da instalação e a quantidade de programas a serem instalados. Na maioria das documentações que vi, a recomendação é de no mínimo <em>20G</em> para a grande maioria dos usuários e de <em>40G</em> a <em>60G</em> para casos mais extremos. Lembrando que <strong>se você pretende usar um arquivo swap na partição do sistema você deve contabilizar o espaço necessário para o arquivo de swap aqui também!</strong></p>
-            <p>A partição / deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
+            <p>A partição / deve ser uma partição <mark>logical</mark> do tipo <mark>83 Linux</mark>.</p>
             <p>Supondo a adição de uma partição root de <em>20G</em>, vamos usar o comando abaixo: </p>
             <code>echo ',+<em>20G</em>,83' | sfdisk --append /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS HOME -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição para <em>/home</em> separada (opcional e não recomendado)</h4>
             <p>Se decidiu fazer uma partição separada para a /home recomendo que ocupe todo o resto do armazenamento (embora você também pode delimitar o tamanho dessa partição da mesma maneira que a raiz).</p></p>
-            <p>A partição /home deve ser uma partição <mark>extended</mark> do tipo <mark>83 Linux</mark>.</p>
+            <p>A partição /home deve ser uma partição <mark>logical</mark> do tipo <mark>83 Linux</mark>.</p>
             <p>Supondo a adição de uma partição /home que ocupe todo o resto do disco, vamos usar o comando abaixo: </p>
             <code>echo ',,83' | sfdisk --append /dev/<mark>storageA</mark></code>
             <h4>E qual seria a vantagem de usar o sfdisk?</h4>
@@ -989,6 +1019,15 @@ EOF
         <h4>Montagem da partição <em>SWAP</em></h4>
         <p><strong>Se e somente se</strong> você fez uma partição separada para swap é recomendável você montar ela agora com o comando abaixo, basta substituir <mark>storageAP2</mark> pelo endereço da partição <em>swap</em> de acordo com o <em>seu</em> sistema:</p>
         <code>swapon /dev/<mark>storageAP2</mark></code>
+        <details class="spoiler" >
+            <summary>Usando TRIM na partição SWAP (Clique para ver)</summary>
+            <p>Ao contrário das demais partições onde o serviço <mark>fstrim.timer</mark> semanal resolve tudo sozinho, o fstrim ignora a partição swap completamente.</p>
+            <p>Se você quiser montar a partição com o trim no carregamento você pode usar:</p>
+            <code>swapon --discard=once /dev/<mark>storageAP2</mark></code>
+            <p>Se você quiser montar a partição com algo mais próximo do trim contínuo você pode usar:</p>
+            <code>swapon --discard=pages /dev/<mark>storageAP2</mark></code>
+        </details>
+
         <!-- Passo 6 - Montar a XBOOTLDR -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Montagem da partição <em>XBOOTLDR</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI" e fez a partição <em>XBOOTLDR</em>)</strong> </h4>
@@ -1115,6 +1154,7 @@ EOF
         -->
         <p>Ative a swap com o comando abaixo:</p>
         <code>swapon <em>caminho_do_swapfile</em></code>
+        <p>E não, você não precisa de um argumento de <em>discard</em> para um volume swap dentro de uma partição compatível com TRIM.</p>
         <p>Para fazer com que este arquivo seja montado automaticamente basta adicioná-lo na tabela de sistema de arquivos, para acessar o arquivo da tabela de sistema de arquivos utilize o comando:</p>
         <code>nano /etc/fstab</code>
         <p>E aqui podemos adicionar ao final do arquivo uma linha para a montagem do arquivo swap, conforme o exemplo abaixo:</p>
@@ -2080,7 +2120,17 @@ EndSection
         <h3>Ativando o TRIM periódico:</h3>
         <p>Caso você utilize SSD's é essencial que você ative o serviço de TRIM periódico, para isso use o comando abaixo:</p>
         <code>systemctl enable fstrim.timer</code>
+        <!-- falei muita merda aqui pqp
         <p><strong>Dê preferência ao serviço <em>fstrim.timer</em> no lugar da flag <em>discard</em> para volumes swap!</strong> </p>
+        -->
+        <!-- Ativando o TRIM (na SWAP) -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Ativando o TRIM (na SWAP):</h3>
+        <p>Como foi dito na montagem da swap, ao contrário das demais partições onde o serviço <mark>fstrim.timer</mark> semanal resolve tudo sozinho, o fstrim ignora a partição swap completamente.</p>
+        <p>Se configurar o fstab na partição SWAP com o trim no carregamento você pode usar:</p>
+        <code>UUID=XXXXXXXXXXXXXXXXXXXX  none swap defaults,<mark>discard=once</mark> 0 0</code>
+        <p>Se configurar o fstab na partição SWAP com algo mais próximo do trim contínuo você pode usar:</p>
+        <code>UUID=XXXXXXXXXXXXXXXXXXXX  none swap defaults,<mark>discard=pages</mark> 0 0</code>
         <!-- Active State Power Management - ASPM -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>Configurando o ASPM</h3>
