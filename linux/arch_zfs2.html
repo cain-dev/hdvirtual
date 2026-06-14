@@ -449,7 +449,11 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <p>Edite o <mark>/etc/mkinitcpio.conf</mark>, e insira o módulo <em>zfs</em>:</p>
         <code>MODULES=(<em>zfs</em>)</code>
         <p>E o hook <em>zfs</em>:</p>
-        <code>HOOKS=(... <em>zfs</em> filesystems ...)</code>
+        <code>HOOKS=(... <em>zfs</em> filesystems ...)</code>        
+        <p>Aparentemente o systemd não tem módulos de hook para zfs, sendo assim faça a substituição dos gatilhos <em>systemd</em> e <em>sd-vconsole</em> para <em>udev</em>, <em>keymap</em> e <em>consolefont</em> como no exemplo abaixo:</p>
+        <code>HOOKS=(base <em>systemd</em> autodetect microcode modconf kms keyboard <em>sd-vconsole</em> block sd-encrypt zfs filesystems fsck)</code>
+        <p>Para:</p>
+        <code>HOOKS=(base <em>udev</em> autodetect microcode modconf kms keyboard <em>keymap consolefont</em> block encrypt zfs filesystems fsck)</code>
         <p>Vamos gerar o hostid:</p>
         <code>zgenhostid -f -o /etc/hostid</code>
         <h2>Configurando a instalação</h2>
