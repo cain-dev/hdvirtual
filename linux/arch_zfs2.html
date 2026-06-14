@@ -100,6 +100,11 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <h2>Arquitetura de partições do sistema</h2>
         <p>Existem diversas maneiras de fazer os arranjos, nos meus sistemas eu geralmente faço uma partição de boot (XBOOTLDR) separada e não utilizo o GRUB2, portanto, não tenho gerência do ZFS na partição <em>/boot</em>.</p>
         <p>Caso você tenha uma partição <em>XBOOTLDR</em> padrão e não queira usar gerência, basta montar ela em <em>/mnt/boot</em>. Caso queira uma partição de boot com ZFS e compatível com tal gerência basta seguir a documentação e usar a configuração de bpool como no exemplo abaixo.</p>
+        <!-- BY ID -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Nada de SDA!</h2>
+        <p>Sempre que for fazer algo baseado em ZFS, dê preferência a utilizar ID do disco/partição ao invés de qualquer outro meio, para listar as partições disponíveis use:</p>
+        <code>find /dev/disk/by-id/</code>
         <!-- RPOOL -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>rpool (piscina da raiz do sistema)</h3>
@@ -171,121 +176,315 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <h4>Conteiners principais</h4>
         <!-- ROOT & BOOT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <code>zfs create -o canmount=off -o mountpoint=none rpool/ROOT<br>zfs create -o canmount=off -o mountpoint=none bpool/BOOT</code>
-        <h4>Pontos de montagem para a raiz e boot</h4>
-        <code>zfs create -o canmount=noauto -o mountpoint=/ rpool/ROOT/arch<br>zfs mount rpool/ROOT/arch<br>zfs create -o mountpoint=/boot bpool/BOOT/arch</code>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/ROOT</code>
+        <p>Se e somente se fez a bpool</p>
+        <code>zfs create -o canmount=off -o mountpoint=none bpool/BOOT</code>
+        <h4>Ponto de montagem para a raiz e boot</h4>
+        <code>zfs create -o canmount=noauto -o mountpoint=legacy rpool/ROOT/arch</code>
+        <!-- montagem no final
+        <code>zfs mount rpool/ROOT/arch</code>
+        -->
+        <p>Se e somente se fez a bpool</p>
+        <code>zfs create -o mountpoint=legacy bpool/BOOT/arch</code>
         <!-- /HOME -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/home</h4>
-        <code>zfs create -o exec=on -o setuid=on -o mountpoint=/home rpool/home</code>
+        <code>zfs create -o setuid=off -o devices=off -o mountpoint=legacy rpool/home</code>
         <!-- /ROOT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/root</h4>
-        <code>zfs create -o exec=on -o setuid=on -o mountpoint=/root rpool/root<br>chmod 700 /mnt/root</code>
+        <code>zfs create -o devices=off -o mountpoint=legacy rpool/root</code>
+        <!-- permissões no final
+        <code>chmod 700 /mnt/root</code>
+        -->
         <!-- /VAR -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var</h4>
-        <code>zfs create -o canmount=off -o mountpoint=none rpool/var<br>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/log rpool/var/log<br>zfs create -o com.sun:auto-snapshot=false -o compression=off -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/cache rpool/var/cache<br>zfs create -o com.sun:auto-snapshot=false -o exec=on -o setuid=off -o devices=off -o mountpoint=/var/tmp rpool/var/tmp<br>chmod 1777 /mnt/var/tmp</code>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/log</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o compression=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/cache</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/tmp</code>
+        <!-- permissões no final
+        <code>chmod 1777 /mnt/var/tmp</code>
+        -->
         <!-- /VAR/LIB -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/lib</h4>
-        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib<br>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/AccountsService rpool/var/lib/AccountsService</code>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/lib/AccountsService</code>
         <!-- /USR -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/usr</h4>
-        <code>zfs create -o canmount=off -o mountpoint=none rpool/usr<br>zfs create -o exec=on -o setuid=off -o mountpoint=/usr/local rpool/usr/local</code>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/usr</code>        
+        <code>zfs create -o devices=off -o mountpoint=legacy rpool/usr/local</code>
         <!-- /OPT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/opt</h4>
-        <code>zfs create -o exec=on -o setuid=off -o devices=off -o mountpoint=/opt rpool/opt</code>
+        <code>zfs create -o devices=off -o mountpoint=legacy rpool/opt</code>
         <!-- /TMP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/tmp</h4>
         <p>Um alerta rápido sobre o <em>/tmp</em>, tanto você pode simplesmente deixar esse diretório na memória (maioria dos casos), ou dependendo do teu uso (talvez compilação) você pode fazer uso de mais espaço do que a sua memória ram. Depende do uso de arquivos temporários na sua máquina e o quanto de ram você tem.</p>
-        <code>zfs create -o com.sun:auto-snapshot=false -o exec=on -o setuid=off -o devices=off -o mountpoint=/tmp rpool/tmp<br>chmod 1777 /mnt/tmp</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o setuid=off -o devices=off -o mountpoint=legacy rpool/tmp</code>
+        <!-- permissões ao final
+        <code>chmod 1777 /mnt/tmp</code>
+        -->
         <h3>Datasets de função específica (opcionais)</h3>
         <!-- DOCKER -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/lib/docker</h4>
         <p>Armazena imagens, containers e volumes do Docker. Cresce muito rapidamente e gerencia próprios snapshots internamente. Fora do snapshot do sistema para não reverter dados de containers junto com o OS.</p>
-        <code>zfs create -o com.sun:auto-snapshot=false -o compression=zstd -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/docker rpool/var/lib/docker</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o compression=zstd -o mountpoint=legacy rpool/var/lib/docker</code>
         <!-- LIBVIRT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/lib/libvirt</h4>
         <p>Armazena configurações e imagens de máquinas virtuais. Imagens de VM podem ocupar dezenas de GB e gerenciam próprios snapshots. Fora do snapshot do sistema para não reverter VMs junto com o OS.</p>
-        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib/libvirt<br>zfs create -o com.sun:auto-snapshot=false -o compression=off -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/libvirt/images rpool/var/lib/libvirt/images</code>
+        <code>zfs create -o canmount=off -o mountpoint=none rpool/var/lib/libvirt</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o compression=off -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/lib/libvirt/images</code>
         <!-- WWW -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/www</h4>
         <p>Armazena arquivos de sites e aplicações web servidos pelo servidor HTTP. Dados do site têm ciclo de vida independente do OS e não devem reverter junto.</p>
-        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/www rpool/var/www</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/www</code>
         <!-- NFS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/lib/nfs</h4>
         <p>Armazena estado de bloqueios e tabelas de montagem do servidor NFS. Estado de rede não deve reverter com o OS pois causaria inconsistência nos clientes.</p>
-        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/nfs rpool/var/lib/nfs</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/lib/nfs</code>
         <!-- SAMBA -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/lib/samba</h4>
         <p>Armazena senhas, configurações de compartilhamento e estado de conexões do Samba. Estado de rede não deve reverter com o OS pois causaria perda de configurações de compartilhamento.</p>
-        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/lib/samba rpool/var/lib/samba</code>
+        <code>zfs create -o com.sun:auto-snapshot=false -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/lib/samba</code>
         <!-- SPOOL -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/spool</h4>
         <p>Armazena filas de impressão, cron e outros serviços de fila. Em desktop raramente relevante, mas vale separar se usar impressora ou serviços de fila intensivamente.</p>
-        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/spool rpool/var/spool</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/spool</code>
         <!-- SRV -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/srv</h4>
         <p>Armazena dados servidos por serviços como FTP e HTTP. Convenção do FHS para dados de serviços — ciclo de vida independente do OS.</p>
-        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/srv rpool/srv</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/srv</code>
         <!-- MAIL -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/mail</h4>
         <p>Armazena emails locais entregues por MTAs como Sendmail ou Postfix. Emails têm ciclo de vida independente do OS e não devem reverter junto. Não relevante para clientes de email como Thunderbird.</p>
-        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/mail rpool/var/mail</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/mail</code>
         <!-- SNAP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/snap</h4>
         <p>Armazena pacotes e dados de aplicações instaladas via Snap. No Arch Linux raramente usado — AUR e Flatpak são preferidos.</p>
-        <code>zfs create -o compression=off -o exec=on -o setuid=off -o devices=off -o mountpoint=/var/snap rpool/var/snap</code>
+        <code>zfs create -o compression=off -o mountpoint=legacy rpool/var/snap</code>
         <!-- GAMES -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>/var/games</h4>
         <p>Armazena pontuações e dados de jogos instalados via gerenciador de pacotes. Diretório legado do FHS — jogos modernos como Steam usam diretórios próprios.</p>
-        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=/var/games rpool/var/games</code>
+        <code>zfs create -o exec=off -o setuid=off -o devices=off -o mountpoint=legacy rpool/var/games</code>
         <!-- EM CONSTRUÇÃO -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-
-        
-        <h3>Criando o ZFS cache</h3>
-        <code>zpool set cachefile=/etc/zfs/zpool.cache rpool<br>zpool set cachefile=/etc/zfs/zpool.cache bpool<br>mkdir -p /mnt/etc/zfs<br>cp /etc/zfs/bpool.cache /mnt/etc/zfs/</code>
-        
-
-
-
-
-
-        <h3>Configurando mkinitcpio</h3>
-        <p>Edite o arquivo <em>/etc/mkinitcpio.conf</em> e insira <em>zfs</em> em <em>MODULES</em> como no exemplo abaixo:</p>
-        <code>MODULES=(zfs)</code>
-        <p>Insira <em>zfs</em> antes de <em>filesystems</em> <em>HOOKS</em> como no exemplo abaixo:</p>
-        <code>HOOKS=(... <em>zfs</em> filesystems)</code>
-        <p>Regere o initramfs</p>
-
-
-
-        <h3>Configurando os pontos de montagem ZFS</h3>
-        <p>Para cada pool que você quer que seja montada automaticamente execute:</p>
-        <code>zpool set cachefile=/etc/zfs/zpool.cache <em>pool</em></code>
+        <!-- MONTANDO DATASETS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Montando datasets</h3>
+        <!-- raiz -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Montando a raiz</h4>
+        <code>mount -t zfs rpool/ROOT/arch /mnt</code>
+        <!-- boot -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Montando /boot</h4>
+        <p># Opção A: bpool (boot em ZFS / GRUB2)</p>
+        <code>mount -o X-mount.mkdir -t zfs bpool/BOOT/arch /mnt/boot</code>
+        <p># Opção B: XBOOTLDR sem ZFS (padrão deste guia)</p>
+        <!--
+        <code>mkdir -p /mnt/boot</code>
+        <code>mount /dev/<em>storageAP1</em> /mnt/boot</code>
+        -->
+        <code>mount -o fmask=0077,dmask=0077,iocharset=iso8859-1,X-mount.mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
+        <!-- home -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/home</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/home /mnt/home</code>
+        <!-- root -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/root</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/root /mnt/root</code>
+        <!-- var -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/log /mnt/var/log</code>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/cache /mnt/var/cache</code>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/tmp /mnt/var/tmp</code>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/lib/AccountsService /mnt/var/lib/AccountsService</code>
+        <!-- /usr/local -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/usr/local</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/usr/local /mnt/usr/local</code>
+        <!-- opt -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/opt</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/opt /mnt/opt</code>
+        <!-- tmp -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>Se e somente se criou o dataset de /tmp</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/tmp /mnt/tmp</code>
+        <h3>Montando datasets opcionais</h3>
+        <!-- /var/lib/docker -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/docker</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/lib/docker /mnt/var/lib/docker</code>
+        <!-- /var/lib/libvirt -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/libvirt</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/lib/libvirt/images /mnt/var/lib/libvirt/images</code>
+        <!-- /var/www -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/www</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/www /mnt/var/www</code>
+        <!-- /var/lib/nfs -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/nfs</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/lib/nfs /mnt/var/lib/nfs</code>
+        <!-- /var/lib/samba -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/lib/samba</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/lib/samba /mnt/var/lib/samba</code>
+        <!-- /var/spool -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/spool</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/spool /mnt/var/spool</code>
+        <!-- /srv -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/srv</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/srv /mnt/srv</code>
+        <!-- /var/mail -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/mail</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/mail /mnt/var/mail</code>
+        <!-- /var/snap -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/snap</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/snap /mnt/var/snap</code>
+        <!-- /var/games -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h4>/var/games</h4>
+        <code>mount -o X-mount.mkdir -t zfs rpool/var/games /mnt/var/games</code>
+        <!-- ESP & SWAP -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Monte as demais partições</h3>
+        <h4>swap</h4>
+        <p>Se você fez uma partição SWAP, ou vai usar ESP ou qualquer que seja, monte elas agora.</p>        
+        <code>swapon /dev/<mark>storageAP2</mark></code>
+        <details class="spoiler" >
+            <summary>Usando TRIM na partição SWAP (Clique para ver)</summary>
+            <p>Ao contrário das demais partições onde o serviço <mark>fstrim.timer</mark> semanal resolve tudo sozinho, o fstrim ignora a partição swap completamente.</p>
+            <p>Se você quiser montar a partição com o trim no carregamento você pode usar:</p>
+            <code>swapon --discard=once /dev/<mark>storageAP2</mark></code>
+            <p>Se você quiser montar a partição com algo mais próximo do trim contínuo você pode usar:</p>
+            <code>swapon --discard=pages /dev/<mark>storageAP2</mark></code>
+        </details>
+        <h4>esp</h4>
+        <code>mount -o fmask=0077,dmask=0077,iocharset=iso8859-1,X-mount.mkdir /dev/<mark>storageAP1</mark> /mnt/efi</code>
+        <h3>Setando as permissões</h3>
+        <code>chmod 700 /mnt/root</code>
+        <code>chmod 1777 /mnt/tmp</code>
+        <code>chmod 1777 /mnt/var/tmp</code>
+        <h2>Preparando o bootstrap</h2>
+        <h3>Preparando cachefile</h3>
+        <p>Para livrar de algumas dores de cabeça, é interessante preparar o arquivo de cache antes do bootstrap:</p>
+        <code>zpool set cachefile=/etc/zfs/zpool.cache rpool</code>
+        <p>Se e somente se fez uma bpool</p>
+        <code>zpool set cachefile=/etc/zfs/zpool.cache bpool</code>
+        <code>mkdir -p /mnt/etc/zfs</code>
+        <code>cp /etc/zfs/zpool.cache /mnt/etc/zfs/zpool.cache</code>
+        <h3>Preparando o pacote</h3>
+        <code>apk add curl</code>
+        <code>curl --fail-early --fail -L https://archlinux.c3sl.ufpr.br/iso/latest/archlinux-bootstrap-x86_64.tar.zst -o rootfs.tar.zst</code>
+        <details class="spoiler" >
+            <summary>(Opcional porém recomendado) Verificar assinatura (Clique para ver)</summary>
+            <code>apk add gnupg</code>
+            <code>curl --fail-early --fail -L https://archlinux.c3sl.ufpr.br/iso/latest/archlinux-bootstrap-x86_64.tar.zst.sig -o rootfs.tar.zst.sig</code>
+            <code>gpg --auto-key-retrieve --keyserver hkps://keyserver.ubuntu.com --verify rootfs.tar.zst.sig rootfs.tar.zst</code>
+        </details>
+        <h3>Fazendo o strap</h3>
+        <p>Agora que temos o pacote preciamos do suporte ao zstd:</p>
+        <code>apk add zstd</code>
+        <p>E agora fazer o strap:</p>
+        <code>zstd -dc rootfs.tar.zst | tar xf - -C /mnt --strip-components=1</code>
+        <p>Verifique se o boostrap funcionou com:</p>
+        <code>ls -p /mnt</code>
+        <p>Deve resultar em:</p>
+        <code>bin boot/ dev/ etc/ home/ lib lib64 mnt/ opt/ proc/ root/ run/ sbin srv/ sys/ tmp/ usr/ var/</code>
+        <h3>Habilitando o repositório community e arch-install-scripts</h3>
+        <p>Habilite o repositório com os comandos:</p>
+        <code>sed -i '/edge/d' /etc/apk/repositories</code>
+        <code>sed -i -E 's/#(.*)community/\1community/' /etc/apk/repositories</code>
+        <p>Instale o arch-install-scripts com o comando:</p>
+        <code>apk add arch-install-scripts</code>
+        <p>Prepare a fstab com o comando:</p>
+        <code>genfstab -t PARTUUID /mnt | grep -v swap | sed "s|vfat.*rw|vfat rw,x-systemd.idle-timeout=1min,x-systemd.automount,noauto,nofail|" > /mnt/etc/fstab</code>
+        <p>Verifique com o comando:</p>
+        <code>cat /mnt/etc/fstab</code>
+        <h3>Fazendo o chroot</h3>
+        <code>cp /etc/resolv.conf /mnt/etc/resolv.conf</code>
+        <code>for i in /dev /proc /sys; do mkdir -p /mnt/"${i}"; mount --rbind "${i}" /mnt/"${i}"; done</code>
+        <code>chroot /mnt /usr/bin/env bash</code>
+        <h3>Preparando o repositório ArchZFS</h3>
+        <code>pacman-key --init</code>
+        <code>pacman-key --refresh-keys</code>
+        <code>pacman-key --populate</code>
+        <code>pacman-key --recv-keys 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9</code>
+        <code>pacman-key --lsign-key 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9</code>
+        <code>echo -e "\n[archzfs]\nSigLevel = Required\nServer = https://github.com/archzfs/archzfs/releases/download/experimental" >> /etc/pacman.conf</code>
+        <code>sed -i '/c3sl.ufpr.br/s/^#//' /etc/pacman.d/mirrorlist</code>
+        <code>pacman -Sy</code>
+        <!--
+        <code>pacman -S --noconfirm mkinitcpio</code>
+        -->
+        <code>kernel_compatible_with_zfs="$(pacman -Si zfs-linux | grep 'Depends On' | sed 's|.*linux=||' | awk '{print $1}')"</code>
+        <code>pacman -U --noconfirm https://archlinux.c3sl.ufpr.br/core/os/x86_64/linux-"${kernel_compatible_with_zfs}"-x86_64.pkg.tar.zst</code>
+        <code>pacman -S --noconfirm zfs-linux zfs-utils linux-firmware</code>
+        <p>Instale o seu editor de texto de preferência, para este tutorial vou usar o <em>nano</em>:</p>
+        <code>pacman -S nano</code>
+        <p>Edite o <mark>/etc/mkinitcpio.conf</mark>, e insira o módulo <em>zfs</em>:</p>
+        <code>MODULES=(<em>zfs</em>)</code>
+        <p>E o hook <em>zfs</em>:</p>
+        <code>HOOKS=(... <em>zfs</em> filesystems ...)</code>
+        <p>Vamos gerar o hostid:</p>
+        <code>zgenhostid -f -o /etc/hostid</code>
+        <h2>Configurando a instalação</h2>
+        <p>Para que isso fique dedicado as alterações do ZFS peço para que você vá documentação da instalação do Arch e siga do <a class="link" href="../install/archlinux.html#passo10" >Passo 10 - Configurar o sistema instalado</a> até a instalação do <mark>ucode</mark> no <mark>Passo 13 - Instalação de inicializador</mark>.</p>
+        <br>
+        <p>Instale normalmente o seu bootloader, mas lembre-se de adicionar o parâmetro abaixo para apontar para o volume em ZFS:</p>
+        <code>root=ZFS=rpool/ROOT/arch rw</code>
+        <p>No caso do GRUB seria como no exemplo abaixo:</p>
+        <code>GRUB_CMDLINE_LINUX="root=ZFS=rpool/ROOT/arch rw"</code>
+        <h3>Setar a raiz</h3>
+        <p>Este comando básicamente diz "até que se diga o contrário, busque a raiz aqui":</p>
+        <code>zpool set bootfs=rpool/ROOT/arch rpool</code>
+        <p>Criando o initramfs:</p>
+        <code>mkinitcpio -P</code>
+        <h3>Habilitar serviços do systemd</h3>
         <code>systemctl enable zfs.target</code>
-        <code>zfs-import-cache.service</code>
-        <code>zfs-mount.service</code>
-        <code>zfs-import.target</code>
-
-
-        <!-- EM CONSTRUÇÃO -->
-        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <code>systemctl enable zfs-import-cache.service</code>
+        <code>systemctl enable zfs-import.target</code>
+        <h2>Finalizando a instalação</h2>
+        <p>Antes de mais nada, saia do ambiente chroot:</p>
+        <code>exit</code>
+        <p>Criar snapshots da instalação original:</p>
+        <code>zfs snapshot -r rpool@initial</code>
+        <p>Se e somente se você tem bpool:</p>
+        <code>zfs snapshot -r bpool@initial</code>
+        <p>Agora, desmontar todas partições:</p>
+        <code>umount /mnt/efi</code>
+        <code>umount /mnt/boot</code>
+        <code>swapoff -a</code>
+        <p>Exportar a rpool:</p>
+        <code>zpool export rpool</code>
+        <p>Se tiver a bpool:</p>
+        <code>zpool export bpool</code>
+        <p>Reiniciar a máquina:</p>
+        <code>reboot</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
