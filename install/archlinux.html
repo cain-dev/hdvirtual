@@ -421,9 +421,10 @@
             </ul>
             <!-- Easy Mode CFDISK BIOS BOOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
-            <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
-            <p>A partição BIOS BOOT deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <h4>Partição <em>GRUB CORE.IMG</em> (opcional mas necessário em computadores muito antigos)</h4>
+            <p>Em computadores que utilizam BIOS muito antigas, instalar o GRUB pode ser uma dor de cabeça sem uma partição no commeço do disco específica para ele. Isso as vezes pode ser resolvido com uma partição vazia no começo do disco.</p>
+            <p>Essa partição deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <p>Então lembre-se: Se o seu computador é muito antigo e você tentou instalar o GRUB e não conseguiu, faça essa partição e tente instalar o GRUB nela, ok?</p>
             <!-- Easy Mode CFDISK swap -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <h4>Partição <em>SWAP</em> (opcional mas altamente recomendado)</h4>
@@ -454,8 +455,10 @@
             <code>o</code>
             <!-- Partição BIOS BOOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
-            <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
+            <h4>Partição <em>GRUB CORE.IMG</em> (opcional mas necessário em computadores muito antigos)</h4>
+            <p>Em computadores que utilizam BIOS muito antigas, instalar o GRUB pode ser uma dor de cabeça sem uma partição no commeço do disco específica para ele. Isso as vezes pode ser resolvido com uma partição vazia no começo do disco.</p>
+            <p>Essa partição deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <p>Então lembre-se: Se o seu computador é muito antigo e você tentou instalar o GRUB e não conseguiu, faça essa partição e tente instalar o GRUB nela, ok?</p>
             <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
             <code>n</code>
             <p>O programa vai perguntar que tipo de partição você deseja como no exemplo abaixo:</p>
@@ -569,9 +572,10 @@
             <code>echo 'label: dos' | sfdisk --wipe always /dev/<mark>storageA</mark></code>
             <!-- Partição BIOS BOOT -->
             <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-            <h4>Partição <em>BIOS BOOT</em> (opcional mas altamente recomendado)</h4>
-            <p>Em computadores que utilizam BIOS (especialmente os mais antigos), instalar o GRUB pode ser uma dor de cabeça sem uma partição específica para ele. Isso pode ser resolvido facilmente com uma partição do tipo <em>BIOS BOOT</em>.</p>
-            <p>A partição BIOS BOOT deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <h4>Partição <em>GRUB CORE.IMG</em> (opcional mas necessário em computadores muito antigos)</h4>
+            <p>Em computadores que utilizam BIOS muito antigas, instalar o GRUB pode ser uma dor de cabeça sem uma partição no commeço do disco específica para ele. Isso as vezes pode ser resolvido com uma partição vazia no começo do disco.</p>
+            <p>Essa partição deve ser uma partição <mark>primary</mark> de <mark>1 MB</mark> do tipo <mark>00 Empty</mark> <strong>e marcada como</strong> <mark>bootable</mark>.</p>
+            <p>Então lembre-se: Se o seu computador é muito antigo e você tentou instalar o GRUB e não conseguiu, faça essa partição e tente instalar o GRUB nela, ok?</p>
             <p>Para criar a nova partição que será usada pelo GRUB utilize o comando:</p>
             <code>echo '2048,+1M,00,*' | sfdisk /dev/<mark>storageA</mark></code>
             <!-- Partição EXTENDED -->
