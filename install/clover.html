@@ -168,6 +168,8 @@
         <code>cp /mnt/iso/usr/standalone/i386/x64/boot6 /mnt/efi/boot</code>
         <p>Por fim demonte as partições com o comando:</p>
         <code>umount /mnt/efi /mnt/iso</code>
+        <h3>Um detalhe importante...</h3>
+        <p>Obviamente que o após esse processo de instalação, o <em>/efi/EFI/BOOT/BOOTX64.EFI</em> vai ser o loader do Clover... Mas nada impede você de substituir pelo rEFInd ou qualquer outro <strong>desde que</strong> ele não presuma um comportamento complexo e/ou de baixo nível do firmware UEFI. Sendo assim fique a vontade para usar esse load do Clover para usar o seu <i>bootloader</i> preferido.</p>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
