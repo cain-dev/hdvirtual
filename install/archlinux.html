@@ -393,6 +393,21 @@
             </li>
         </ol>
         <p>Sendo assim sempre deixe em partição primária <strong>apenas</strong> aquilo que <strong>precisa</strong> ser inicializável, como toda tabela GPT também guarda uma MBR interna (e eu aposto que você não sabia dessa), essa MBR pode ser usada para redirecionar para um bootloader capaz de trabalhar com GPT. </p>
+        <p>Dito isso, <em>o tutorial abaixo <strong>presume</strong> que você vai usar MBR para BIOS e GPT para UEFI,</em> pois isso é o mais comum e compatível, porém sinta-se a vontade para tentar usar a partição <em>BIOS BOOT</em> em conjunto com um bootloader de BIOS (eu recomendo o GRUB mesmo) para ter GPT no seu computador com BIOS.</p>
+        <!-- GPT EM BIOS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <details class="spoiler" >
+            <summary>Usando <em>GPT</em> em <em>BIOS</em> (Clique para ver)</summary>
+            <p>Para usar GPT em BIOS não é nada complicado, o problema é que <strong>nem toda placa mãe é compatível</strong>, então pode ser que você faça a instalação completa e simplesmenta não consiga <i>bootar</i> lembre-se disso ok?</p>
+            <p>Você pode tentar preparar só o começo do disco e colocar um bootloader com uma entrada para <i>bootar</i> para outro sistema em <i>chainload</i> para testar, aí é com você... Mas você me pergunta:</p>
+            <p>-<i>Tá, mas o que então é necessário para usar GPT em BIOS?</i></p>
+            <p>Primeiro, lembre-se que <strong>algumas</strong> placas-mãe com firmware BIOS suportam GPT, raro mais existe.</p>
+            <p>Se você já testou a sua placa-mãe e sabe que este não é o caso, você vai saltar a preparação abaixo no caso, pular o <em>Preparando a MBR</em>, e ir direto para a <em>Opção B - Preparação para armazenamento em sistemas baseados em UEFI</em>, porém ao invés da partição <em>ESP</em> no começo do disco você vai fazer uma partição <em>BIOS BOOT</em>, que é uma partição de <em>1MB</em> do tipo <em>EF02</em>, mas que ao contrário da ESP, <strong>depois de limpar ela com um wipe ou blkdiscard, ela não deve ser formatada para sistema de arquivo algum!</strong> Entendido?</p>
+            <p>Esta é a <strong>única</strong> diferença do processo de instalação, de resto você vai formatar as outras partições da mesma forma, montar da mesma forma, e inclusive selecionar as opções que condizem com <strong>BIOS!</strong> Ter um bootloader que te permite usar um disco GPT não transforma o seu firmware em UEFI, entendido?</p>
+            <p>E embora dê pra fazer isso com outros <i>bootloaders</i> eu recomendo fortemente que você use o GRUB pra isso. E não precisa alterar nada, o comando é exatamente o mesmo já que o GRUB consegue perceber a presença da partição e usar ela para este processo. No caso do limine a única diferença é que ao invés de indicar a o disco você também indica a partição para o segundo estágio, como no exemplo abaixo:</p>
+            <code>limine bios-install /dev/storageA <em>1</em></code>
+        </details>
+        <h3>Preparando a MBR:</h3>
         <!-- BIOS - LUKS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
             <!--
@@ -631,6 +646,7 @@ EOF
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4><strong>AVISO!</strong> Quaisquer partições encriptadas <em>LUKS Partition</em></h4>
         <p>Um aviso rápido: Qualquer que seja a partição que você deseja encriptar, <strong>DEVE</strong> ser descrita como do tipo <mark>8309</mark>.</p>
+        <h3>Preparando a GPT:</h3>
         <!-- Modo Easy CGDISK -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <details class="spoiler" >
@@ -1911,6 +1927,7 @@ X-KDE-autostart-after=panel</code></pre>
         <code>systemctl enable lightdm</code>
         <!-- XDG-USER-DIRS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>XDG User Dirs</h2>
         <p>Ao instalar alguma dessas interfaces, pode ser que ela não gere os diretórios padrão de usuário (Downloads, Músicas, Imagens, etc.), para corrigir isso precisamos instalar o <mark>XDG User Directories</mark> com o comando:</p>
         <code>sudo pacman -S xdg-user-dirs</code>
         <p>Para atualizar a lista de diretórios utilize o comando:</p>
