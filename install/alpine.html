@@ -76,7 +76,7 @@ udhcpc: broadcasting select for 192.168.1.100, server 192.168.1.1</pre></code>
         <p>Para o meu caso (usando conexão via cabo) eu só apertei <em>Enter</em> 3 vezes pois as opções padrão estavam ok, mas fique a vontade pra configurar.</p>
         <!-- SSH -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>SSH (opcional)</h3>
+        <h3>SSH (opcional mas altamente recomendado)</h3>
         <p>Você pode fazer isso na unha, mas eu recomendo fortemente que você faça isso através de ssh. Antes de mais nada mude a senha do <em>root</em> com o comando: </p>
         <code>passwd</code>
         <p>Insira a nova senha e para configurar o serviço de ssh basta fazer como no exemplo abaixo:</p>
@@ -92,6 +92,13 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
  * Starting sshd ...
 </pre></code>
         <p>Perceba que eu usei <em>yes</em> para <em>Allow root ssh login</em>, como é lan eu vou logar com senha e tá tudo certo.</p>
+        <!-- TIMEZONE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>timezone</h3>
+        <p>Vamos configurar a timezone com o comando:</p>
+        <code>setup-timezone</code>
+        <p>Caso já souber a sua timezone e quiser setar diretamente pode usar o comando:</p>
+        <code>setup-timezone America/Sao_Paulo</code>
         <!-- NTP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>NTP</h3>
@@ -104,15 +111,182 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <code>setup-apkrepos</code>
         <p>Mirrors prontos? Atualize o cache com:</p>
         <code>apk update</code>
+        <!-- UDEV -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>UDEV (opcional mas altamente recomendado)</h3>
+        <p>Por padrão o Alpine usa o <em>mdev</em> que é mais do que suficiente para a esmagadora maioria dos casos, entretanto, se você quer setups mais complexos e modernos (como por exemplo, com uso de ZFS) mudar para <em>udev</em> é fundamental. Para instalar <em>eudev</em> use o comando:</p>
+        <code>apk add eudev</code>
+        <p>Agora você pode setar o sistema para usar <em>udev</em> com o comando:</p>
+        <code>setup-devd udev</code>
+        <!-- PARTICIONAMENTO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Particionamento</h3>
+        <p>Para não repetir toda a explicação de <em>particionamento</em>, <em>formatação</em> e <em>montagem</em> que eu fiz no guia de instalação do Arch eu vou deixar o link <a class="link" href="../install/archlinux.html#passo4">Passo 4 - Particionar as unidades de armazenamento</a>. Nesse parte do tutorial vou deixar apenas os nomes das ferramentas no Alpine, siga até após a montagem das partições e antes do <mark>Passo 7</mark>.</p>
+        <ul>
+            <li><p>As ferramentas <em>cfdisk</em>, <em>fdisk</em> e <em>sfdisk</em></em> já vem por padrão;</p></li>
+            <li><p>Instale o pacote <em>gptfdisk</em> para o comando <em>gdisk</em> e <em>cgdisk</em>;</p></li>
+            <li><p>Instale o pacote <em>sgdisk</em> para o comando <em>sgdisk</em>;</p></li>
+            <li><p>Instale o pacote <em>parted</em> para o comando <em>parted</em>;</p></li>
+            <li><p>Instale o pacote <em>lsblk</em> para o comando <em>lsblk</em>;</p></li>
+            <li><p>Instale o pacote <em>zfs</em> para a gerência completa de zfs;</p></li>
+            <li><p>Instale o pacote <em>btrfs-progs</em> para o comando <em>mkfs.btrfs</em>;</p></li>
+            <li><p>Instale o pacote <em>wipefs</em> para o comando <em>wipefs</em>;</p></li>
+            <li><p>Instale o pacote <em>dosfstools</em> para o comando <em>mkfs.fat</em>;</p></li>
+            <li><p>Instale o pacote <em>exfatprogs</em> para o comando <em>mkfs.exfat</em>;</p></li>
+            <li><p>Instale o pacote <em>xfsprogs</em> para o comando <em>mkfs.xfs</em>;</p></li>
+            <li><p>Instale o pacote <em>e2fsprogs</em> para o comando <em>mkfs.ext4</em>;</p></li>
+        </ul>
+        <p>Lembre-se de carregar os módulos, como para <em>modprobe btrfs</em> e <em>modprobe zfs</em>!</p>
+        <!-- INSTALL -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Instalar o sistema</h3>
+        <p>A alternativa do pacstrap para o Alpine é:</p>
+        <code>apk --arch x86 -X https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/ -U --allow-untrusted --root /mnt --initdb add alpine-base linux-lts linux-firmware</code>
+        <!-- GENFSTAB -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Instalando o arch-install-scripts</h3>
+        <code>echo "https://mirror.ufpr.br/alpine/edge/community" >> /etc/apk/repositories</code>
+        <p>Habilitando repositório <mark>community</mark>:</p>
+        <code>sed -i -E 's/#(.*)community/\1community/' /etc/apk/repositories</code>
+        <code>Habilitar repositório <mark>edge</mark>:</code>
+        <code>echo "$(grep 'main' /etc/apk/repositories | head -1 | sed 's/v[0-9.]*/edge/' | sed 's/main/community/')" >> /etc/apk/repositories</code>
+        <p>Atualizar cache:</p>
+        <code>apk update</code>
+        <p>Instalar <mark>arch-install-scripts</mark> </p>
+        <code>apk add arch-install-scripts</code>
+        <p>Faça a <mark>fstab</mark> com o comando:</p>
+        <code>genfstab -U /mnt >> /mnt/etc/fstab</code>
+        <p>Verifique com o comando:</p>
+        <code>cat /mnt/etc/fstab</code>
+        <p>Lembre-se de validar manualmente a <mark>fstab</mark>! E como corrigir flags como <em>compress=zstd:1</em> ou remover os <em>subvolid</em> nas entradas.</p>
+        <!-- RESOLV.CONF -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>resolv.conf</h3>
+        <p>Para garantir o funcionamento da rede dentro do volume é interessante copiar o <em>resolv.conf</em>:</p>
+        <code>cp -L /etc/resolv.conf /mnt/etc/</code>
+        <!-- CHROOT -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>chroot</h3>
+        <p>Para preparar o chroot use os comandos:</p>
+        <code>mount -t proc none /mnt/proc</code>
+        <code>mount -t sysfs none /mnt/sys</code>
+        <code>mount -o bind /dev /mnt/dev</code>
+        <code>mount -o bind /dev/pts /mnt/dev/pts</code>
+        <p>E para completar use o comando:</p>
+        <code>chroot /mnt /bin/sh</code>
+        <!-- MIRRORS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>Mirrors</h3>
+        <p>Se quiser configurar os mirrors pode usar o comando abaixo, geralmente eu uso o da UFPR (que no momento dessa instalação é <em>36</em>):</p>
+        <code>setup-apkrepos</code>
+        <p>Mirrors prontos? Atualize o cache com:</p>
+        <code>apk update</code>
+        <!-- BASE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>pacotes base do sistema</h3>
+        <code>apk add nano dosfstools e2fsprogs btrfs-progs kbd-bkeymaps tzdata iputils</code>
 
 
 
 
+        <p>Edite o init:</p>
+        <code>nano /etc/mkinitfs/mkinitfs.conf</code>
+        <code>feature="...base <em>btrfs</em>..."</code>
+        <code>feature="...base <em>intel</em>..."</code>
+        <code>mkinitfs</code>
 
 
+        <p>Configurações de hardware, relógio e periféricos misc</p>
+        <code>rc-update add hostname boot</code>
+        <code>rc-update add hwclock boot</code>
+        <code>rc-update add bootmisc boot</code>
+        <p>Módulos do kernel e parâmetros do sistema (sysctl.conf)</p>
+        <code>rc-update add modules boot</code>
+        <code>rc-update add sysctl boot</code>
+        <!--
+        <p>Gerenciamento de gerador de números aleatórios (criptografia/segurança)</p>
+        <code>rc-update add urandom boot</code>
+        -->
+        <p>Para garantir que o Alpine monte suas partições locais e ative a SWAP durante a inicialização:</p>
+        <code>rc-update add localmount boot</code>
+        <code>rc-update add swap boot</code>
+        <!-- TIMEZONE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>timezone</h3>
+        <p>Vamos configurar a timezone com o comando:</p>
+        <code>setup-timezone</code>
+        <p>Caso já souber a sua timezone e quiser setar diretamente pode usar o comando:</p>
+        <code>setup-timezone America/Sao_Paulo</code>
+        <!-- HOSTNAME -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>hostname</h3>
+        <p>Para configurar o hostname use o comando:</p>
+        <code>setup-hostname <em>seu-hostname</em></code>
+        <!-- TECLADO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>teclado</h3>
+        <p>Para configurar o teclado use o comando:</p>
+        <code>setup-keymap</code>
+        <p>Determine o layout como <mark>br</mark> como no exemplo abaixo:</p>
+        <code>Select keyboard layout: <em>br</em></code>
+        <p>Determine a variante como <mark>br</mark> como no exemplo abaixo:</p>
+        <code>Select keyboard variant: <em>br</em></code>
+        <p>Confirme a edição com o comando:</p>
+        <code>cat /etc/conf.d/loadkmap</code>
+        <!-- REDE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>rede</h3>
+        <code>apk add networkmanager networkmanager-wifi networkmanager-tui networkmanager-cli wpa_supplicant dnsmasq</code>
+        <code>rc-update add networkmanager default</code>
+        <p>Nota: Ao utilizar o NetworkManager no Alpine, certifique-se de desabilitar o serviço de rede padrão (networking) para evitar conflitos:</p>
+        <code>rc-update del networking boot</code>
+        <!-- PASSWD -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>passwd</h3>
+        <p>Configure a senha do root com o comando:</p>
+        <code>passwd</code>
+        <code>adduser -D -G wheel <em>seu-usuario</em></code>
+        <code>passwd <em>seu-usuario</em></code>
+        <!-- DOAS -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>doas</h3>
+        <p>Para permitir elevação de privilégio recomendo o uso do <em>doas</em>, instale com:</p>
+        <code>apk add doas</code>
+        <p>Permitir o grupo wheel a elevação de privilégio:</p>
+        <code>echo "permit persist :wheel" > /etc/doas.conf</code>
+        <p>Setando as permissões do arquivo:</p>
+        <code>chmod 600 /etc/doas.conf</code>
+        <!-- GERENCIAMENTO DE HARDWARE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>gerenciamento de hardware</h3>
+        <code>apk add eudev udev-init-scripts udev-init-scripts-openrc acpid cronie</code>
+        <p>Garante o escaneamento e reconhecimento do hardware no sysinit</p>
+        <code>rc-update add udev sysinit</code>
+        <code>rc-update add udev-trigger sysinit</code>
+        <code>rc-update add udev-settle sysinit</code>
+        <p>Gerenciamento de eventos de energia (botão de desligar, fechar tampa do notebook, etc.)</p>
+        <code>rc-update add acpid default</code>
+        <p>Agendador de tarefas do sistema (Cron)</p>
+        <code>rc-update add crond default</code>
+        <!-- BOOTLOADER -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>bootloader</h3>
+        <p>Instalação dos pacotes:</p>
+        <code>apk add grub grub-efi efibootmgr</code>
+        <p>Instalação do grub:</p>
+        <code>grub-install --target=i386-efi --efi-directory=/efi --boot-directory=/boot --bootloader-id=GRUB --removable</code>
+        <p>Gerar arquivo de configuração:</p>
+        <code>grub-mkconfig -o /boot/grub/grub.cfg</code>
+        <!-- FINALIZANDO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>finalizando</h3>
+        <code>exit</code>
+
+        <code>poweroff</code>
 
 
-
+        <code>umount -R /mnt</code>
+        <code>shutdown now</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
