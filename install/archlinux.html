@@ -2448,7 +2448,6 @@ ACTION=="add|change", KERNEL=="nvme[0-9]*", ENV{DEVTYPE}=="disk", ATTR{queue/sch
 <code><pre>
 # HDD 1TB 7200rpm - PARA JOGOS
 ACTION=="add|change", KERNEL=="sdb", ATTR{queue/scheduler}="mq-deadline"
-ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/reads_starved}="4"
 ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/read_expire}="150"
 ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/write_expire}="3000"
 ACTION=="add|change", KERNEL=="sdb", ATTR{queue/iosched/fifo_batch}="16"
@@ -2465,7 +2464,7 @@ ACTION=="add|change", KERNEL=="sda", ATTR{queue/nr_requests}="64"
 
 # NVMe - Sistema
 ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{queue/scheduler}="none"
-ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{queue/nr_requests}="1024"
+ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{queue/nr_requests}="64"
 ACTION=="add|change", KERNEL=="nvme0n1", ENV{DEVTYPE}=="disk", ATTR{bdi/read_ahead_kb}="0"
 </pre></code>
         <p>Embora seja implícito para <em>noatime</em>, é interessante inserir o <em>nodiratime</em> explicitamente no <em>/etc/fstab</em>. Em um volume para jogos <strong>e sem nenhum dado crítico!</strong> Também seria interessante o uso do <em>data=writeback</em>.</p>
