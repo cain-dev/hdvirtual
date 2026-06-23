@@ -1052,14 +1052,14 @@ EOF
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Montagem da partição <em>XBOOTLDR</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI" e fez a partição <em>XBOOTLDR</em>)</strong> </h4>
         <p><strong>Se e somente se</strong> você está instalando o sistema em modo UEFI e fez a partição <em>XBOOTLDR</em>, será necessário montar o diretório <em>/mnt/boot</em> nessa partição como no comando abaixo, basta substituir <mark>storageAP1</mark> pelo endereço da partição <em>ESP</em> de acordo com o <em>seu</em> sistema:</p>
-        <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
+        <code>mount --mkdir -o rw,noatime,fmask=0077,dmask=0077,iocharset=utf8,errors=remount-ro /dev/<mark>storageAP1</mark> /mnt/boot</code>
         <!-- Passo 6 - Montar a ESP -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h4>Montagem da partição <em>ESP</em> <strong>(Apenas se você seguiu "Opção B para sistemas baseados em UEFI")</strong> </h4>
         <p><strong>Se e somente se</strong> você está instalando o sistema em modo UEFI, será necessário montar o diretório <em>/mnt/boot</em> nessa partição como no comando abaixo (caso tenha feito a partição <em>XBOOTLDR</em> deve ser montado como <em>/mnt/efi</em> ), basta substituir <mark>storageAP1</mark> pelo endereço da partição <em>ESP</em> de acordo com o <em>seu</em> sistema:</p>
-        <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/boot</code>
+        <code>mount --mkdir -o rw,noatime,fmask=0077,dmask=0077,iocharset=utf8,errors=remount-ro /dev/<mark>storageAP1</mark> /mnt/boot</code>
         <p><strong>OU</strong> caso tenha feito a partição <em>XBOOTLDR</em>:</p>
-        <code>mount --mkdir /dev/<mark>storageAP1</mark> /mnt/efi</code>
+        <code>mount --mkdir -o rw,noatime,fmask=0077,dmask=0077,iocharset=utf8,errors=remount-ro /dev/<mark>storageAP1</mark> /mnt/efi</code>
         <!-- Passo 7 Instalar sistema -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h2>Passo 7 - Instalar sistema</h2>
