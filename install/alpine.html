@@ -142,20 +142,47 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <h3>Instalar o sistema</h3>
         <p>A alternativa do pacstrap para o Alpine é:</p>
         <code>apk --arch x86 -X https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/ -U --allow-untrusted --root /mnt --initdb add alpine-base linux-lts linux-firmware</code>
+        
+        <p>Considere o uso do:</p>
+        <code>linux-firmware-none</code>
+        <code>linux-firmware-rtl_nic</code>
+
+
         <!-- GENFSTAB -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <!-- NOPE
         <h3>Instalando o arch-install-scripts</h3>
+        -->
+        <!--
         <code>echo "https://mirror.ufpr.br/alpine/edge/community" >> /etc/apk/repositories</code>
+        -->
+        
+        
         <p>Habilitando repositório <mark>community</mark>:</p>
+
+        <!--
         <code>sed -i -E 's/#(.*)community/\1community/' /etc/apk/repositories</code>
-        <code>Habilitar repositório <mark>edge</mark>:</code>
+        <code>sed -i '/community/s/^#//' /etc/apk/repositories</code>
+        -->
+        <code>sed -i 's/^#\(.*community\)/\1/' /etc/apk/repositories</code>
+
+        <code>Habilitar repositório <mark>edge/community</mark>:</code>
+        <!--
         <code>echo "$(grep 'main' /etc/apk/repositories | head -1 | sed 's/v[0-9.]*/edge/' | sed 's/main/community/')" >> /etc/apk/repositories</code>
+        -->
+        <code>echo "@edge-community $(grep -m1 'main' /etc/apk/repositories | sed -E 's|v[0-9.]+|edge|; s|main|community|')" >> /etc/apk/repositories</code>
+        <code>Habilitar repositório <mark>edge/testing</mark>:</code>
+        <code>echo "@edge-testing $(grep -m1 'main' /etc/apk/repositories | sed -E 's|v[0-9.]+|edge|; s|main|testing|')" >> /etc/apk/repositories</code>
+
+
         <p>Atualizar cache:</p>
         <code>apk update</code>
+        <!--
         <p>Instalar <mark>arch-install-scripts</mark> </p>
-        <code>apk add arch-install-scripts</code>
+        <code>apk add arch-install-scripts@edge-community</code>
+        -->
         <p>Faça a <mark>fstab</mark> com o comando:</p>
-        <code>genfstab -U /mnt >> /mnt/etc/fstab</code>
+        <code>genfstab -U /mnt > /mnt/etc/fstab</code>
         <p>Verifique com o comando:</p>
         <code>cat /mnt/etc/fstab</code>
         <p>Lembre-se de validar manualmente a <mark>fstab</mark>! E como corrigir flags como <em>compress=zstd:1</em> ou remover os <em>subvolid</em> nas entradas.</p>
@@ -187,12 +214,14 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <code>apk add nano dosfstools e2fsprogs btrfs-progs kbd-bkeymaps tzdata iputils</code>
 
 
-
+        <code>apk add intel/amd-ucode</code>
 
         <p>Edite o init:</p>
         <code>nano /etc/mkinitfs/mkinitfs.conf</code>
         <code>feature="...base <em>btrfs</em>..."</code>
+        <!--
         <code>feature="...base <em>intel</em>..."</code>
+        -->
         <code>mkinitfs</code>
 
 
@@ -238,36 +267,46 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <h3>rede</h3>
         <code>apk add networkmanager networkmanager-wifi networkmanager-tui networkmanager-cli wpa_supplicant dnsmasq</code>
         <code>rc-update add networkmanager default</code>
+        <!--
         <p>Nota: Ao utilizar o NetworkManager no Alpine, certifique-se de desabilitar o serviço de rede padrão (networking) para evitar conflitos:</p>
         <code>rc-update del networking boot</code>
+        -->
         <!-- PASSWD -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>passwd</h3>
         <p>Configure a senha do root com o comando:</p>
         <code>passwd</code>
-        <code>adduser -D -G wheel <em>seu-usuario</em></code>
+        <code>adduser -G wheel <em>seu-usuario</em></code>
+        <!--
         <code>passwd <em>seu-usuario</em></code>
+        -->
         <!-- DOAS -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>doas</h3>
         <p>Para permitir elevação de privilégio recomendo o uso do <em>doas</em>, instale com:</p>
         <code>apk add doas</code>
-        <p>Permitir o grupo wheel a elevação de privilégio:</p>
-        <code>echo "permit persist :wheel" > /etc/doas.conf</code>
+        <p>Permitir o grupo wheel a elevação de privilégio, edite o arquivo <mark>/etc/doas.conf</mark> e habilite a linha:</p>
+        <code># permit persist :wheel</code>
         <p>Setando as permissões do arquivo:</p>
         <code>chmod 600 /etc/doas.conf</code>
         <!-- GERENCIAMENTO DE HARDWARE -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>gerenciamento de hardware</h3>
+        <!--
         <code>apk add eudev udev-init-scripts udev-init-scripts-openrc acpid cronie</code>
+        -->
+        <code>apk add eudev udev-init-scripts udev-init-scripts-openrc</code>
         <p>Garante o escaneamento e reconhecimento do hardware no sysinit</p>
         <code>rc-update add udev sysinit</code>
         <code>rc-update add udev-trigger sysinit</code>
         <code>rc-update add udev-settle sysinit</code>
+        <code>rc-update add udev-postmount default</code>
+        <!--
         <p>Gerenciamento de eventos de energia (botão de desligar, fechar tampa do notebook, etc.)</p>
         <code>rc-update add acpid default</code>
         <p>Agendador de tarefas do sistema (Cron)</p>
         <code>rc-update add crond default</code>
+        -->
         <!-- BOOTLOADER -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>bootloader</h3>
@@ -275,18 +314,22 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <code>apk add grub grub-efi efibootmgr</code>
         <p>Instalação do grub:</p>
         <code>grub-install --target=i386-efi --efi-directory=/efi --boot-directory=/boot --bootloader-id=GRUB --removable</code>
+        <p>Editar arquivo de configuração:</p>
+        <code>nano /etc/default/grub</code>
+        <p>Adicione a linha:</p>
+        <code>GRUB_CMDLINE_LINUX="modules=btrfs rootflags=subvol=@"</code>
         <p>Gerar arquivo de configuração:</p>
         <code>grub-mkconfig -o /boot/grub/grub.cfg</code>
         <!-- FINALIZANDO -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>finalizando</h3>
+        <p>saindo do chroot:</p>
         <code>exit</code>
-
-        <code>poweroff</code>
-
-
-        <code>umount -R /mnt</code>
-        <code>shutdown now</code>
+        <p>desmontando</p>
+        <code>umount -l /mnt/dev/pts<br>umount -l /mnt/dev<br>umount /mnt/proc<br>umount /mnt/sys</code>
+        <code>umount /mnt/efi<br>umount /mnt/boot</code>
+        <code>reboot</code>
+        
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
