@@ -359,6 +359,28 @@ user = "greetd"
         <code>echo "rc_need=seatd" | doas tee -a /etc/conf.d/greetd</code>
         <p>E adicione o serviço do greetd:</p>
         <code>doas rc-update add greetd default</code>
+        <!-- LOCALE -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+         <h3>locale</h3>
+         <p>O MUSL não trabalha com locale da mesma forma, mas dependendo do seu ambiente tem como adicionar um suporte suficiente. Instale:</p>
+         <code>doas apk add musl-locales</code>
+         <p>Deixaremos as variáveis para:</p>
+         <code>echo 'LANG=pt_BR.UTF-8' | doas tee -a /etc/environment</code>
+         <code>echo 'LC_ALL=pt_BR.UTF-8' | doas tee -a /etc/environment</code>
+
+        <h3>gnome-disk-utility</h3>
+        <code>doas apk add polkit polkit-openrc udisks2</code>
+        <code>doas rc-update add polkit default</code>
+        <code>doas rc-service polkit start</code>
+        <code>doas nvim /etc/polkit-1/rules.d/50-udisks.rules</code>
+        <code><pre>
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.udisks2.") === 0 &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});</pre></code>
+        <code>doas rc-service polkit restart</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
