@@ -1708,12 +1708,25 @@ Exec = /usr/bin/cp /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/</pre></code>
         <p>Ok, você instalou o Arch, meus parabéns! Mas tudo que você vai ver ao fim dessa instalação é uma tela de login e nenhuma otimização. Mas tem muito que podemos fazer para deixar o Arch mais convidativo para um usuário final.</p>
         <!-- SNAPSHOT -->
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
-        <h3>Adendo - Snapshot do sistema</h3>
+        <h3>Adendo - Snapshot do sistema e manutenção</h3>
         <p>A minha primeira recomendação é que se você instalou o Arch com <em>BTRFS</em> ou <em>ZFS</em>, você deve antes de mais nada fazer um snapshot do sistema recém instalado.</p>        
         <h4>BTRFS</h4>
-        <p>No caso do BTRFS, a partir do momento em que o sistema está montado siga o exemplo abaixo:</p>
+        <p>No caso do BTRFS, a partir do momento em que o sistema está foi instalado faça uma snapshot inicial como no exemplo abaixo:</p>
         <code>btrfs subvolume snapshot -r / /.snapshots/inicial</code>
         <p>O comando acima faz uma snapshot de somente leitura <em>-r</em>, considera a leitura para a snapshot a partir da raiz <mark>/</mark>, com o diretório de snapshots em <mark>/.snapshots/</mark>, e nomeia a snapshot como <mark>inicial</mark>.</p>
+        <h5>E como restaurar?</h5>
+        <p>Se quiser restaurar o estado anterior, é muito simples, basta alterar em seus parâmetros de kernel o seu volume de root para:</p>
+        <code>rootflags=subvol=@snapshots/inicial</code>
+        <p>Uma vez que logar no seu sistema monte <strong>a partição do btrfs</strong>:</p>
+        <code>mount -t btrfs dev/<mark>storageAP4</mark> /mnt</code>
+        <p>E apague o antigo volume <mark>@</mark>:</p>
+        <code>btrfs subvolume delete /mnt/@</code>
+        <p>Por fim, basta copiar a snapshot <mark>@snapshots/inicial</mark> como a sua nova <mark>@</mark>:</p>
+        <code>btrfs subvolume snapshot /mnt/@snapshots/inicial /mnt/@</code>
+        <p>Por fim, desmonte a partição...</p>
+        <code>umount /mnt</code>
+        <p>e reinicie para o seu novo <mark>@</mark>:</p>
+        <code>reboot</code>
         <h4>ZFS</h4>
         <p>No caso do ZFS siga o exemplo abaixo:</p>
         <code>zfs snapshot <em>pool/dataset@nome_da_snapshot</em></code>
