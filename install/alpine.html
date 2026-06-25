@@ -329,7 +329,36 @@ ssh-keygen: generating new host keys: RSA ECDSA ED25519
         <code>umount -l /mnt/dev/pts<br>umount -l /mnt/dev<br>umount /mnt/proc<br>umount /mnt/sys</code>
         <code>umount /mnt/efi<br>umount /mnt/boot</code>
         <code>reboot</code>
-        
+        <!-- PÓS-INSTALAÇÃO -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h2>Pós-instalação</h2>
+        <h3>fontes básicas</h3>
+        <p>Para instalar o pacote básico de fontes use:</p>
+        <code>apk add ttf-liberation font-noto font-noto-cjk font-noto-emoji font-noto-extra</code>
+        <!-- GREETD -->
+        <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
+        <h3>greetd</h3>
+        <p>Para usar o greetd instale os pacotes:</p>
+        <code>doas apk add seatd greetd greetd-gtkgreet cage</code>
+        <p>Adicione seu usuário no grupo <em>seat</em>:</p>
+        <code>doas adduser <em>seu_usuario</em> seat</code>
+        <p>Adicione o <em>greetd</em> ao grupo seat:</p>
+        <code>doas adduser greetd seat</code>
+        <p>Edite o arquivo de configuração do greetd:</p>
+        <code>doas nvim /etc/greetd/config.toml</code>
+<pre><code>
+[terminal]
+vt = 7
+
+[default_session]
+command = "cage -s -- gtkgreet -l"
+user = "greetd"
+</code></pre>
+        <p>Adicione o serviço do seatd:</p>
+        <code>doas rc-update add seatd boot</code>
+        <code>echo "rc_need=seatd" | doas tee -a /etc/conf.d/greetd</code>
+        <p>E adicione o serviço do greetd:</p>
+        <code>doas rc-update add greetd default</code>
     </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
