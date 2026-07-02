@@ -113,6 +113,66 @@ options edns0 trust-ad
         <p>Isso vai fazer com que seus requests de DNS sejam resolvidos localmente, depois disso recomendo deixar o arquivo <mark>/etc/resolv.conf</mark> imutável com o comando:</p>
         <code>sudo chattr +i /etc/resolv.conf</code>
         <p>E se tudo deu certo você pode testar acessando <a class="link" href="https://one.one.one.one/help/">essa página</a> e verificar se a linha <em>Using DNS over TLS (DoT)</em> retorna <em>Yes</em>.</p>
+        <h3>nftables</h3>
+        <p>Esssa é a configuração mínima recomendada para o <mark>/etc/nftables.conf</mark>:</p>
+<pre><code>
+table ip filter {
+
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ct state invalid counter drop comment "IN: drop pacotes invalidos"
+    ct state {established, related} counter accept comment "IN: aceita conexoes estabelecidas/relacionadas"
+    iif lo accept comment "IN: aceita loopback"
+    iif != lo ip daddr 127.0.0.1/8 counter drop comment "IN: bloqueia trafego externo pra loopback"
+    ip protocol icmp ct state {established, related} counter accept comment "IN: ICMP established/related"
+    counter comment "IN: contagem de dropados"
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+    counter comment "FWD: contagem de dropados"
+  }
+
+  chain output {
+    type filter hook output priority 0; policy drop;
+    oif lo accept comment "OUT: aceita loopback (essencial: unbound -> stubby na porta 8053)"
+    ip protocol icmp ct state {new, established, related} counter accept comment "OUT: ICMP"
+    tcp dport 853 ct state {new, established} counter accept comment "OUT: DNS-over-TLS TCP (stubby -> Cloudflare)"
+    tcp dport 443 ct state {new, established} counter accept comment "OUT: HTTPS (inclui download do root.hints via roothints.timer)"
+    counter comment "OUT: contagem de aceitos"
+  }
+}
+
+table ip6 filter {
+
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ct state invalid counter drop comment "IN: drop pacotes invalidos"
+    ct state {established, related} counter accept comment "IN: aceita conexoes estabelecidas/relacionadas"
+    iif lo accept comment "IN: aceita loopback"
+    iif != lo ip6 daddr ::1/128 counter drop comment "IN: bloqueia trafego externo pra loopback"
+    ip6 nexthdr icmpv6 icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply } ct state {established, related} counter accept comment "IN: ICMPv6 established/related"
+    ip6 nexthdr icmpv6 icmpv6 type { nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert, nd-redirect } counter accept comment "IN: ICMPv6 NDP essencial"
+    counter comment "IN: contagem de dropados"
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+    counter comment "FWD: contagem de dropados"
+  }
+
+  chain output {
+    type filter hook output priority 0; policy drop;
+    oif lo accept comment "OUT: aceita loopback (essencial: unbound -> stubby na porta 8053)"
+    ip6 nexthdr icmpv6 icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem, echo-request, echo-reply } ct state {new, established, related} counter accept comment "OUT: ICMPv6 established/related"
+    ip6 nexthdr icmpv6 icmpv6 type { nd-router-solicit, nd-neighbor-solicit, nd-neighbor-advert, nd-redirect } counter accept comment "OUT: ICMPv6 NDP essencial"
+    tcp dport 853 ct state {new, established} counter accept comment "OUT: DNS-over-TLS TCP (stubby -> Cloudflare IPv6)"
+    tcp dport 443 ct state {new, established} counter accept comment "OUT: HTTPS"
+    counter comment "OUT: contagem de aceitos"
+  }
+}
+</code></pre>
+        
         <h3>Finalizando</h3>
         <p>Agora eu recomendo que você ache uma solução também para o <em>Network Time Security</em>...</p>
         </main>
