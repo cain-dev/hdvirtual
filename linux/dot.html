@@ -105,7 +105,7 @@ upstream_recursive_servers:
         <p>Uma vez configurado inicie os serviços:</p>
         <code>sudo systemctl enable stubby unbound</code>
         <h3>Configurando nameserver</h3>
-        <p>Considerando que você está fazendo uso direto do <mark>/etc/resolv.conf</mark> (você taambém pode usar o <em>openresolv</em> para gerenciar aqui, embora seja desnecessário), basta deixar de conteúdo as linhas abaixo:</p>
+        <p>Considerando que você está fazendo uso direto do <mark>/etc/resolv.conf</mark> (você também pode usar o <em>openresolv</em> para gerenciar aqui, embora seja desnecessário), basta deixar de conteúdo as linhas abaixo:</p>
 <pre><code>nameserver ::1
 nameserver 127.0.0.1
 options edns0 trust-ad
@@ -172,9 +172,51 @@ table ip6 filter {
   }
 }
 </code></pre>
-        
-        <h3>Finalizando</h3>
-        <p>Agora eu recomendo que você ache uma solução também para o <em>Network Time Security</em>...</p>
+        <h2>NTS</h2>
+        <p>Ótimo, você tem um DoT funcional, e isso é excelente! Correto? Não! Isso é inútil sem um NTS em diversas situações, então vamos configurar o nosso <em>Network Time Security</em>...</p>
+        <h3>Configurando o Chrony</h3>
+        <p>Para a maioria das distribuições de usuário final as chances são que você já está utilizando o Chrony... Caso não esteja, obviamente instale ele, se tiver no arch o comando é:</p>
+        <code>pacman -S chrony</code>
+        <p>Uma vez que tem o chrony instalado vamos preparar o seu arquivo de configuração, editando o <mark>/etc/chrony.conf</mark> (e sim, eu joguei em IA pra ficar mais organizado do que o meu):</p>
+<code><pre>
+# /etc/chrony.conf
+# Configuracao usando servidores NTP.br com NTS (Network Time Security)
+
+# --- Servidores NTP.br com NTS ---
+# Anycast (redireciona para o no mais proximo geograficamente)
+server a.ntp.br iburst nts
+server b.ntp.br iburst nts
+server c.ntp.br iburst nts
+
+# Stratum 1 direto (referencia de alta precisao)
+server a.st1.ntp.br iburst nts
+
+# --- Persistencia de cookies NTS (evita repetir o handshake NTS-KE a cada boot) ---
+ntsdumpdir /var/lib/chrony
+
+# --- Arquivo de drift do clock ---
+driftfile /var/lib/chrony/drift
+
+# --- Sincroniza o RTC (hardware clock) automaticamente ---
+rtcsync
+
+# --- Permite correcao abrupta do relogio nos 3 primeiros ajustes (boot) ---
+makestep 1.0 3
+
+# --- Nao aceita sincronizar com fontes nao autenticadas por engano ---
+# (garante que, se o NTS falhar, o chrony recusa a fonte em vez de usar sem autenticacao)
+authselectmode require
+
+# --- Log basico (opcional, remova se nao quiser) ---
+logdir /var/log/chrony
+log measurements statistics tracking
+</pre></code>
+        <p>Lembre-se de permitir as portas no <em>nftables</em> adicionando a regra abaixo no seu <mark>output</mark> de IPv4 e IPv6:</p>
+        <code>tcp dport 4460 ct state {new, established} counter accept comment "OUT: NTS-KE (handshake TLS para NTP autenticado)"</code>
+        <p>Configuração de chrony e firewall pronta? Agora vamos colocar os serviços em ordem com os comandos:</p>
+        <code>sudo systemctl disable --now systemd-timesyncd</code>
+        <code>sudo systemctl mask systemd-timesyncd</code>
+        <code>sudo systemctl enable --now chronyd</code>
         </main>
     <footer id="main-footer">
         <p>Está página ainda está em construção 🚧</p>
