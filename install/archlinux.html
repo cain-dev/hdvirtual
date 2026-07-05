@@ -976,7 +976,7 @@ EOF
         <code>cd</code>
         <p>Então vamos desmontar a raiz padrão...</p>
         <code>umount /mnt</code>
-        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>, usando compressão <em>zstd:3</em> com a opção <mark>compress=zstd</mark>, desativando o atime com a opção <mark>noatime</mark>, considere o a remoção da opção <mark>ssd</mark> caso seja o dispositivo não seja um SSD e a remoção da opção <mark>discard=async</mark> caso o dispositivo não suporte TRIM ou você prefira usar o TRIM periódico.</p>
+        <p>E então remontaremos a raiz já dentro do subvolume <em>@</em>, usando compressão <em>zstd:3</em> com a opção <mark>compress=zstd</mark>, desativando o atime com a opção <mark>noatime</mark>, considere a remoção da <i>flag</i> <mark>ssd</mark> caso seja o dispositivo não seja um SSD e a remoção da opção <mark>discard=async</mark> caso o dispositivo não suporte TRIM (ou caso você prefira usar o TRIM periódico ao invés do TRIM contínuo).</p>
         <code>mount -o noatime,<em>compress=zstd</em>,<mark>ssd</mark>,<mark>discard=async</mark>,subvol=<em>@</em> /dev/<mark>storageAP4</mark> /mnt</code>
         <h5><strong>⚠️ Aviso! ⚠️</strong></h5>
         <p>No exemplo acima está sendo usado a flag de compressão <em>compress=zstd</em>, que vai marcar para comprimir o volume montado com o padrão <em>zstd</em> com o nível <em>3</em> de compressão (que é o padrão ao se utilizar zstd). Este costuma ser o padrão em termos de custo x benefício para um computador médio, porém, podendo ser problemático para máquinas com uma CPU menos capaz.</p>
