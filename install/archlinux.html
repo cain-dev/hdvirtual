@@ -1832,7 +1832,7 @@ table ip6 filter {
         <!-- ///////////////////////////////////////////////////////////////////////////////////////////////-->
         <h3>KDE</h3>
         <p>Utilize o comando:</p>
-        <code>pacman -S plasma-workspace plasma-desktop sddm sddm-kcm plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam breeze-gtk</code>
+        <code>pacman -S plasma-workspace plasma-desktop plasma-login-manager <!-- sddm sddm-kcm -->plasma-nm plasma-pa konsole dolphin kio-admin ark 7zip unarchiver unrar kdegraphics-thumbnailers ffmpegthumbs kscreen kdeplasma-addons kde-gtk-config kwallet kwalletmanager kwallet-pam breeze-gtk</code>
         <p><strong>Observação!</strong> Inclua esses pacotes caso também deseje essas funções:</p>
         <ul>
             <li><em>kcalc</em> (Se e somente se você utilizará uma calculadora)</li>
@@ -1841,8 +1841,12 @@ table ip6 filter {
             <li><em>print-manager cups system-config-printer</em> (Se e somente se você utilizará impressora)</li>
             <li><em>plasma-keyboard</em> (Se e somente se você utilizará teclado virtual)</li>
         </ul>
+        <!--
         <p>Habilite o serviço do SDDM com o comando:</p>
         <code>systemctl enable sddm</code>
+        -->
+        <p>Habilite o serviço do Plasma Login Manager com o comando:</p>
+        <code>systemctl enable plasmalogin</code>
         <p>Para habilitar o compatilhamento de tela instale os pacotes:</p>
         <!--<code>pacman -S xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-kde</code>-->   
         <code>pacman -S xdg-desktop-portal xdg-desktop-portal-kde</code>
