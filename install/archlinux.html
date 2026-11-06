@@ -2118,8 +2118,8 @@ EndSection
                 </ul>
         </ul>
         <h3>Configurar VDPAU</h3>
-        <p>Adicione a variável <mark>VDPAU_DRIVER=</mark> seguido do driver para ser utilizado, por exemplo, vamos supor que o driver para ser utilizado no meu caso seja o <mark>radeonsi</mark>, logo a linha para ser acrescentada no arquivo seria:</p>
-        <code>VDPAU_DRIVER=radeonsi</code>
+        <p>Adicione a variável <mark>VDPAU_DRIVER=</mark> seguido do driver para ser utilizado, por exemplo, vamos supor que o driver para ser utilizado no meu caso seja o <mark>va_gl</mark>, logo a linha para ser acrescentada no arquivo seria:</p>
+        <code>VDPAU_DRIVER=va_gl</code>
         <ul>
             <li><p>Intel</p></li>
                 <ul>
@@ -2127,7 +2127,7 @@ EndSection
                 </ul>
             <li><p>AMDGPU</p></li>
                 <ul>
-                    <li>Para <mark>AMDGPU</mark>, execute o comando <mark>grep -i vdpau /var/log/Xorg.0.log</mark> cite o driver da linha <em>VDPAU driver: </em> (que geralmente é <mark>radeonsi</mark>);</li>
+                    <li>Para <mark>AMDGPU</mark>, o driver <mark>radeonsi</mark> foi removido e atualmente em seu lugar existe a camada de tradução <em>libvdpau-va-gl</em> (somente <em>H.264</em>), para usar instale o pacote <mark>libvdpau-va-gl</mark> e deixe o valor da variável <mark>VDPAU_DRIVER=</mark> para <mark>va_gl</mark>;</li>
                 </ul>
             <li><p>NVIDIA</p></li>
                 <ul>
